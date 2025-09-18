@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { ko, enUS, ja, zhCN } from "date-fns/locale";
 import { type Guide } from "@shared/schema";
@@ -12,6 +13,7 @@ interface GuideGridProps {
 
 export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuideSelect }: GuideGridProps) {
   const { t, i18n } = useTranslation();
+  const [, setLocation] = useLocation();
 
   const getDateLocale = () => {
     switch (i18n.language) {
@@ -42,6 +44,20 @@ export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuide
     );
   }
 
+  const handleCardClick = (guide: Guide, event: React.MouseEvent) => {
+    // Prevent default if clicking on checkbox
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT' && target.getAttribute('type') === 'checkbox') {
+      return;
+    }
+    
+    if (isBatchMode) {
+      onGuideSelect(guide.id);
+    } else {
+      setLocation(`/guides/${guide.id}`);
+    }
+  };
+
   return (
     <div className={`grid grid-cols-2 gap-4 ${isBatchMode ? 'batch-select-mode' : ''}`}>
       {guides.map((guide) => (
@@ -50,7 +66,7 @@ export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuide
           className={`guide-item bg-card rounded-xl overflow-hidden shadow-sm border border-border hover:shadow-md transition-all cursor-pointer relative ${
             selectedGuides.includes(guide.id) ? 'selected' : ''
           }`}
-          onClick={() => onGuideSelect(guide.id)}
+          onClick={(e) => handleCardClick(guide, e)}
           data-testid={`card-guide-${guide.id}`}
         >
           {isBatchMode && (

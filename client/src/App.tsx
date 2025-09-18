@@ -10,6 +10,7 @@ import Settings from "@/pages/settings";
 import Explore from "@/pages/explore";
 import ShareLinks from "@/pages/share-links";
 import Profile from "@/pages/profile";
+import GuideDetail from "@/pages/guide-detail";
 import NotFound from "@/pages/not-found";
 import "./lib/i18n";
 
@@ -23,6 +24,7 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Home} />
+          <Route path="/guides/:id" component={GuideDetail} />
           <Route path="/settings" component={Settings} />
           <Route path="/explore" component={Explore} />
           <Route path="/share-links" component={ShareLinks} />
