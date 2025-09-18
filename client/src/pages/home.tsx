@@ -88,7 +88,7 @@ export default function Home() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground korean-text">{t('common.loading')}</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -109,7 +109,7 @@ export default function Home() {
             >
               <i className="fas fa-check-square text-lg"></i>
             </button>
-            <h1 className="text-xl font-semibold korean-text">{t('main.storage')}</h1>
+            <h1 className="text-xl font-semibold">{t('main.storage')}</h1>
             {isBatchMode && (
               <span className="px-2 py-1 bg-primary text-primary-foreground rounded-full text-xs" data-testid="text-selected-count">
                 {t('share.selected', { count: selectedGuides.length })}
@@ -119,7 +119,7 @@ export default function Home() {
           <div className="flex items-center space-x-2">
             <div className="location-badge px-3 py-1 rounded-full text-white text-xs font-medium">
               <i className="fas fa-map-marker-alt mr-1"></i>
-              <span className="korean-text">서울, 강남구</span>
+              <span>서울, 강남구</span>
             </div>
           </div>
         </div>
@@ -135,8 +135,8 @@ export default function Home() {
         {/* Guide Items Grid */}
         <section className="px-4 py-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold korean-text">{t('main.myGuides')}</h2>
-            <span className="text-sm text-muted-foreground korean-text">
+            <h2 className="text-lg font-semibold">{t('main.myGuides')}</h2>
+            <span className="text-sm text-muted-foreground">
               {t('main.total', { count: guides.length })}
             </span>
           </div>

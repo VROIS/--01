@@ -142,7 +142,7 @@ export default function Settings() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground korean-text">{t('common.loading')}</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -158,7 +158,7 @@ export default function Settings() {
               <i className="fas fa-arrow-left text-lg"></i>
             </button>
           </Link>
-          <h1 className="text-xl font-semibold korean-text">{t('settings.title')}</h1>
+          <h1 className="text-xl font-semibold">{t('settings.title')}</h1>
         </div>
       </header>
 
@@ -167,13 +167,13 @@ export default function Settings() {
         {/* Account Settings */}
         <Card>
           <CardHeader>
-            <CardTitle className="korean-text">{t('settings.account')}</CardTitle>
+            <CardTitle>{t('settings.account')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium korean-text">{t('settings.language')}</h3>
-                <p className="text-sm text-muted-foreground korean-text">{t('settings.languageDesc')}</p>
+                <h3 className="font-medium">{t('settings.language')}</h3>
+                <p className="text-sm text-muted-foreground">{t('settings.languageDesc')}</p>
               </div>
               <Select value={preferences.preferredLanguage} onValueChange={handleLanguageChange}>
                 <SelectTrigger className="w-32" data-testid="select-language">
@@ -190,8 +190,8 @@ export default function Settings() {
 
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium korean-text">{t('settings.location')}</h3>
-                <p className="text-sm text-muted-foreground korean-text">{t('settings.locationDesc')}</p>
+                <h3 className="font-medium">{t('settings.location')}</h3>
+                <p className="text-sm text-muted-foreground">{t('settings.locationDesc')}</p>
               </div>
               <Switch
                 checked={preferences.locationEnabled}
@@ -202,8 +202,8 @@ export default function Settings() {
 
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium korean-text">{t('settings.aiContent')}</h3>
-                <p className="text-sm text-muted-foreground korean-text">{t('settings.aiContentDesc')}</p>
+                <h3 className="font-medium">{t('settings.aiContent')}</h3>
+                <p className="text-sm text-muted-foreground">{t('settings.aiContentDesc')}</p>
               </div>
               <Switch
                 checked={preferences.aiContentEnabled}
@@ -217,7 +217,7 @@ export default function Settings() {
         {/* Privacy & Security */}
         <Card>
           <CardHeader>
-            <CardTitle className="korean-text">{t('settings.privacy')}</CardTitle>
+            <CardTitle>{t('settings.privacy')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button
@@ -225,7 +225,7 @@ export default function Settings() {
               className="w-full justify-between"
               data-testid="button-privacy-policy"
             >
-              <span className="korean-text">{t('settings.privacyPolicy')}</span>
+              <span>{t('settings.privacyPolicy')}</span>
               <i className="fas fa-chevron-right text-muted-foreground"></i>
             </Button>
             <Button
@@ -233,7 +233,7 @@ export default function Settings() {
               className="w-full justify-between"
               data-testid="button-data-management"
             >
-              <span className="korean-text">{t('settings.dataManagement')}</span>
+              <span>{t('settings.dataManagement')}</span>
               <i className="fas fa-chevron-right text-muted-foreground"></i>
             </Button>
             <Button
@@ -241,7 +241,7 @@ export default function Settings() {
               className="w-full justify-between"
               data-testid="button-export-data"
             >
-              <span className="korean-text">{t('settings.exportData')}</span>
+              <span>{t('settings.exportData')}</span>
               <i className="fas fa-download text-muted-foreground"></i>
             </Button>
           </CardContent>
@@ -250,13 +250,13 @@ export default function Settings() {
         {/* Share Link Management */}
         <Card>
           <CardHeader>
-            <CardTitle className="korean-text">{t('settings.shareLinkManagement')}</CardTitle>
+            <CardTitle>{t('settings.shareLinkManagement')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {shareLinks.map((link: any) => (
               <div key={link.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <div className="flex-1">
-                  <h3 className="font-medium text-sm korean-text" data-testid={`text-share-name-${link.id}`}>
+                  <h3 className="font-medium text-sm" data-testid={`text-share-name-${link.id}`}>
                     {link.name}
                   </h3>
                   <div className="flex items-center space-x-4 mt-1 text-xs text-muted-foreground">
@@ -301,7 +301,7 @@ export default function Settings() {
             ))}
 
             {shareLinks.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground korean-text">
+              <div className="text-center py-8 text-muted-foreground">
                 No share links created yet
               </div>
             )}
@@ -311,15 +311,15 @@ export default function Settings() {
         {/* App Information */}
         <Card>
           <CardHeader>
-            <CardTitle className="korean-text">{t('settings.appInfo')}</CardTitle>
+            <CardTitle>{t('settings.appInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="korean-text">{t('settings.version')}</span>
+              <span>{t('settings.version')}</span>
               <span className="text-muted-foreground">v2.1.0</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="korean-text">{t('settings.lastUpdate')}</span>
+              <span>{t('settings.lastUpdate')}</span>
               <span className="text-muted-foreground">2024.01.15</span>
             </div>
             <Button
@@ -327,7 +327,7 @@ export default function Settings() {
               className="w-full justify-between"
               data-testid="button-check-update"
             >
-              <span className="korean-text">{t('settings.checkUpdate')}</span>
+              <span>{t('settings.checkUpdate')}</span>
               <i className="fas fa-sync text-muted-foreground"></i>
             </Button>
           </CardContent>

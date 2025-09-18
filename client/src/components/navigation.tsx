@@ -35,7 +35,7 @@ export default function Navigation({ currentPage }: NavigationProps) {
               data-testid={`nav-${item.key}`}
             >
               <i className={`${item.icon} text-lg`}></i>
-              <span className="text-xs korean-text">{item.label}</span>
+              <span className="text-xs">{item.label}</span>
             </button>
           </Link>
         ))}

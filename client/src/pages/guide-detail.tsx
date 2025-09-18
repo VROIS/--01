@@ -33,8 +33,10 @@ export default function GuideDetail() {
     const handleVisibilityChange = () => {
       if (document.hidden && isSpeaking) {
         window.speechSynthesis.pause();
+        // onpause event will handle state update
       } else if (!document.hidden && isPlaying && !isSpeaking && speechSynthesisRef.current) {
         window.speechSynthesis.resume();
+        // onresume event will handle state update
       }
     };
 
@@ -88,12 +90,15 @@ export default function GuideDetail() {
     setLocation("/");
   };
 
-  const handlePlayAudio = () => {
-    if (!guide?.aiGeneratedContent) return;
+  const handlePlayAudio = async () => {
+    if (!guide?.aiGeneratedContent) {
+      console.warn('TTS: No AI generated content available');
+      return;
+    }
 
     // Check if browser supports speech synthesis
     if (!('speechSynthesis' in window)) {
-      console.error('Speech synthesis not supported in this browser');
+      console.error('TTS: Speech synthesis not supported in this browser');
       return;
     }
 
@@ -103,82 +108,147 @@ export default function GuideDetail() {
         // Currently speaking - pause it
         window.speechSynthesis.pause();
         setIsSpeaking(false);
-        console.log('TTS paused');
+        console.log('TTS: Paused');
       } else {
         // Currently paused - resume it
         window.speechSynthesis.resume();
         setIsSpeaking(true);
-        console.log('TTS resumed');
+        console.log('TTS: Resumed');
       }
       return;
     }
 
-    // Create new speech utterance
-    const utterance = new SpeechSynthesisUtterance(guide.aiGeneratedContent);
-    speechSynthesisRef.current = utterance;
+    try {
+      // Ensure we have fresh voices loaded
+      const loadVoices = () => {
+        return new Promise<SpeechSynthesisVoice[]>((resolve) => {
+          let voices = window.speechSynthesis.getVoices();
+          if (voices.length > 0) {
+            resolve(voices);
+          } else {
+            window.speechSynthesis.onvoiceschanged = () => {
+              voices = window.speechSynthesis.getVoices();
+              resolve(voices);
+            };
+          }
+        });
+      };
 
-    // Get appropriate language and voice
-    const getVoiceLang = () => {
-      switch (i18n.language) {
-        case 'ko': return 'ko-KR';
-        case 'en': return 'en-US';
-        case 'ja': return 'ja-JP';
-        case 'zh': return 'zh-CN';
-        default: return 'ko-KR';
+      console.log('TTS: Loading voices...');
+      const voices = await loadVoices();
+      console.log(`TTS: Found ${voices.length} voices`);
+
+      // Get appropriate language
+      const getVoiceLang = () => {
+        switch (i18n.language) {
+          case 'ko': return 'ko-KR';
+          case 'en': return 'en-US';
+          case 'ja': return 'ja-JP';
+          case 'zh': return 'zh-CN';
+          default: return 'ko-KR';
+        }
+      };
+
+      // Limit text length to avoid synthesis issues
+      const maxLength = 1000;
+      let textToSpeak = guide.aiGeneratedContent;
+      if (textToSpeak.length > maxLength) {
+        textToSpeak = textToSpeak.substring(0, maxLength) + '...';
+        console.log(`TTS: Text truncated to ${maxLength} characters`);
       }
-    };
 
-    // Set voice with language preference
-    const targetLang = getVoiceLang();
-    const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(voice => 
-      voice.lang.startsWith(targetLang.substring(0, 2))
-    );
-    
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-    } else {
-      utterance.lang = targetLang;
+      // Create new speech utterance
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      speechSynthesisRef.current = utterance;
+
+      // Set voice with language preference
+      const targetLang = getVoiceLang();
+      console.log(`TTS: Target language: ${targetLang}`);
+      
+      // Find the best voice for the language
+      let selectedVoice = null;
+      
+      // First, try to find exact lang match
+      selectedVoice = voices.find(voice => voice.lang === targetLang);
+      
+      // If not found, try to find language family match (ko, en, ja, zh)
+      if (!selectedVoice) {
+        const langPrefix = targetLang.split('-')[0];
+        selectedVoice = voices.find(voice => voice.lang.startsWith(langPrefix));
+      }
+      
+      // If still not found, use default voice
+      if (!selectedVoice && voices.length > 0) {
+        selectedVoice = voices[0];
+      }
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        console.log(`TTS: Selected voice: ${selectedVoice.name} (${selectedVoice.lang})`);
+      } else {
+        utterance.lang = targetLang;
+        console.log(`TTS: Using language setting: ${targetLang}`);
+      }
+
+      // Configure utterance
+      utterance.rate = 0.9; // Slightly slower for better comprehension
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      // Set up event listeners
+      utterance.onstart = () => {
+        setIsPlaying(true);
+        setIsSpeaking(true);
+        console.log('TTS: Started successfully');
+      };
+
+      utterance.onend = () => {
+        setIsPlaying(false);
+        setIsSpeaking(false);
+        speechSynthesisRef.current = null;
+        console.log('TTS: Ended');
+      };
+
+      utterance.onerror = (event) => {
+        console.error('TTS: Error occurred:', event.error, event);
+        setIsPlaying(false);
+        setIsSpeaking(false);
+        speechSynthesisRef.current = null;
+        
+        // Show user-friendly error message
+        if (event.error === 'synthesis-failed') {
+          console.error('TTS: Speech synthesis failed - this may be due to browser limitations or voice availability');
+        }
+      };
+
+      utterance.onpause = () => {
+        setIsSpeaking(false);
+        console.log('TTS: Paused via event');
+      };
+
+      utterance.onresume = () => {
+        setIsSpeaking(true);
+        console.log('TTS: Resumed via event');
+      };
+
+      // Cancel any existing speech before starting new one
+      if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+        window.speechSynthesis.cancel();
+        console.log('TTS: Cancelled existing speech');
+        // Small delay to ensure cancellation is complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      // Start speech synthesis
+      console.log('TTS: Starting speech synthesis...');
+      window.speechSynthesis.speak(utterance);
+      
+    } catch (error) {
+      console.error('TTS: Unexpected error:', error);
+      setIsPlaying(false);
+      setIsSpeaking(false);
+      speechSynthesisRef.current = null;
     }
-
-    // Configure utterance
-    utterance.rate = 0.9; // Slightly slower for better comprehension
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    // Set up event listeners
-    utterance.onstart = () => {
-      setIsPlaying(true);
-      setIsSpeaking(true);
-      console.log('TTS started');
-    };
-
-    utterance.onend = () => {
-      setIsPlaying(false);
-      setIsSpeaking(false);
-      speechSynthesisRef.current = null;
-      console.log('TTS ended');
-    };
-
-    utterance.onerror = (event) => {
-      console.error('TTS error:', event.error);
-      setIsPlaying(false);
-      setIsSpeaking(false);
-      speechSynthesisRef.current = null;
-    };
-
-    utterance.onpause = () => {
-      setIsSpeaking(false);
-      console.log('TTS paused via event');
-    };
-
-    utterance.onresume = () => {
-      setIsSpeaking(true);
-      console.log('TTS resumed via event');
-    };
-
-    // Start speech synthesis
-    window.speechSynthesis.speak(utterance);
   };
 
   if (isLoading) {
@@ -204,8 +274,8 @@ export default function GuideDetail() {
             <i className="fas fa-exclamation text-2xl text-muted-foreground"></i>
           </div>
           <div>
-            <h3 className="font-semibold korean-text">Guide not found</h3>
-            <p className="text-sm text-muted-foreground korean-text">
+            <h3 className="font-semibold">Guide not found</h3>
+            <p className="text-sm text-muted-foreground">
               This guide may have been deleted or does not exist.
             </p>
           </div>
@@ -251,7 +321,7 @@ export default function GuideDetail() {
                   ) : (
                     <Play className="w-4 h-4" />
                   )}
-                  <span className="ml-1 text-xs korean-text">
+                  <span className="ml-1 text-xs">
                     {isPlaying ? (isSpeaking ? '재생중' : '일시정지') : '음성'}
                   </span>
                 </Button>
@@ -281,21 +351,21 @@ export default function GuideDetail() {
           {/* Title and Meta */}
           <div className="space-y-4">
             <div>
-              <h1 className="text-2xl font-bold korean-text mb-2" data-testid="text-title-detail">
+              <h1 className="text-2xl font-bold mb-2" data-testid="text-title-detail">
                 {guide.title}
               </h1>
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 {guide.locationName && (
-                  <div className="flex items-center korean-text" data-testid="text-location">
+                  <div className="flex items-center" data-testid="text-location">
                     <MapPin className="w-4 h-4 mr-1" />
                     {guide.locationName}
                   </div>
                 )}
-                <div className="flex items-center korean-text" data-testid="text-date-detail">
+                <div className="flex items-center" data-testid="text-date-detail">
                   <Calendar className="w-4 h-4 mr-1" />
                   {formatDate(guide.createdAt!)}
                 </div>
-                <div className="flex items-center korean-text" data-testid="text-views-detail">
+                <div className="flex items-center" data-testid="text-views-detail">
                   <Eye className="w-4 h-4 mr-1" />
                   {t('main.views', { count: guide.viewCount || 0 })}
                 </div>
@@ -305,7 +375,7 @@ export default function GuideDetail() {
             {/* Description */}
             {guide.description && (
               <div className="prose max-w-none">
-                <p className="text-foreground korean-text leading-relaxed" data-testid="text-description-detail">
+                <p className="text-foreground leading-relaxed" data-testid="text-description-detail">
                   {guide.description}
                 </p>
               </div>
@@ -318,10 +388,10 @@ export default function GuideDetail() {
                   <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
                     <i className="fas fa-robot text-xs text-primary"></i>
                   </div>
-                  <h3 className="font-semibold korean-text">AI Generated Content</h3>
+                  <h3 className="font-semibold">AI Generated Content</h3>
                 </div>
                 <div className="bg-card p-4 rounded-lg border">
-                  <p className="text-foreground korean-text leading-relaxed" data-testid="text-ai-content">
+                  <p className="text-foreground leading-relaxed" data-testid="text-ai-content">
                     {guide.aiGeneratedContent}
                   </p>
                 </div>
@@ -331,9 +401,9 @@ export default function GuideDetail() {
             {/* Map Location */}
             {guide.latitude && guide.longitude && !isNaN(Number(guide.latitude)) && !isNaN(Number(guide.longitude)) && (
               <div className="space-y-3">
-                <h3 className="font-semibold korean-text">Location</h3>
+                <h3 className="font-semibold">Location</h3>
                 <div className="bg-card p-4 rounded-lg border">
-                  <p className="text-sm text-muted-foreground korean-text mb-2">
+                  <p className="text-sm text-muted-foreground mb-2">
                     {Number(guide.latitude).toFixed(6)}, {Number(guide.longitude).toFixed(6)}
                   </p>
                   <Button

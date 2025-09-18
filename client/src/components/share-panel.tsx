@@ -80,7 +80,7 @@ export default function SharePanel({ selectedGuideIds, onClose }: SharePanelProp
     <div className="fixed inset-x-0 bottom-0 z-50 floating-share-panel">
       <div className="bg-card border-t border-border p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold korean-text">{t('share.title')}</h3>
+          <h3 className="text-lg font-semibold">{t('share.title')}</h3>
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-muted transition-colors"
@@ -92,14 +92,14 @@ export default function SharePanel({ selectedGuideIds, onClose }: SharePanelProp
 
         <div className="space-y-4">
           <div>
-            <Label htmlFor="linkName" className="korean-text">{t('share.linkName')}</Label>
+            <Label htmlFor="linkName">{t('share.linkName')}</Label>
             <Input
               id="linkName"
               type="text"
               placeholder={t('share.linkNamePlaceholder')}
               value={linkName}
               onChange={(e) => setLinkName(e.target.value)}
-              className="korean-text mt-2"
+              className="mt-2"
               data-testid="input-link-name"
             />
           </div>
@@ -111,7 +111,7 @@ export default function SharePanel({ selectedGuideIds, onClose }: SharePanelProp
               onCheckedChange={(checked) => setIncludeLocation(checked as boolean)}
               data-testid="checkbox-include-location"
             />
-            <Label htmlFor="includeLocation" className="text-sm korean-text">
+            <Label htmlFor="includeLocation" className="text-sm">
               {t('share.includeLocation')}
             </Label>
           </div>
@@ -123,7 +123,7 @@ export default function SharePanel({ selectedGuideIds, onClose }: SharePanelProp
               onCheckedChange={(checked) => setIncludeAudio(checked as boolean)}
               data-testid="checkbox-include-audio"
             />
-            <Label htmlFor="includeAudio" className="text-sm korean-text">
+            <Label htmlFor="includeAudio" className="text-sm">
               {t('share.includeAudio')}
             </Label>
           </div>
@@ -132,7 +132,7 @@ export default function SharePanel({ selectedGuideIds, onClose }: SharePanelProp
             <Button
               onClick={handleCreateLink}
               disabled={createShareLinkMutation.isPending}
-              className="flex-1 korean-text"
+              className="flex-1"
               data-testid="button-create-share"
             >
               {createShareLinkMutation.isPending ? (
@@ -146,7 +146,7 @@ export default function SharePanel({ selectedGuideIds, onClose }: SharePanelProp
             </Button>
             <Button
               variant="outline"
-              className="korean-text"
+              className=""
               data-testid="button-preview-share"
             >
               {t('share.preview')}

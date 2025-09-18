@@ -69,7 +69,7 @@ export default function ShareLinks() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground korean-text">{t('common.loading')}</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -79,8 +79,8 @@ export default function ShareLinks() {
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 bg-card border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-xl font-semibold korean-text">{t('nav.shareLinks')}</h1>
-          <span className="text-sm text-muted-foreground korean-text">
+          <h1 className="text-xl font-semibold">{t('nav.shareLinks')}</h1>
+          <span className="text-sm text-muted-foreground">
             {t('main.total', { count: shareLinks.length })}
           </span>
         </div>
@@ -111,7 +111,7 @@ export default function ShareLinks() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h3 className="font-medium korean-text" data-testid={`text-link-name-${link.id}`}>
+                      <h3 className="font-medium" data-testid={`text-link-name-${link.id}`}>
                         {link.name}
                       </h3>
                       <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground">
@@ -163,8 +163,8 @@ export default function ShareLinks() {
               <i className="fas fa-link text-2xl text-muted-foreground"></i>
             </div>
             <div>
-              <h3 className="font-semibold korean-text">No share links yet</h3>
-              <p className="text-sm text-muted-foreground korean-text">
+              <h3 className="font-semibold">No share links yet</h3>
+              <p className="text-sm text-muted-foreground">
                 Create share links from your guides to share with others
               </p>
             </div>

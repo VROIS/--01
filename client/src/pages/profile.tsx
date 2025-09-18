@@ -37,7 +37,7 @@ export default function Profile() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground korean-text">{t('common.loading')}</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -47,7 +47,7 @@ export default function Profile() {
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 bg-card border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-xl font-semibold korean-text">{t('nav.profile')}</h1>
+          <h1 className="text-xl font-semibold">{t('nav.profile')}</h1>
           <Link href="/settings">
             <Button variant="ghost" size="sm" data-testid="button-settings">
               <i className="fas fa-cog"></i>
@@ -88,25 +88,25 @@ export default function Profile() {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle className="korean-text">Quick Actions</CardTitle>
+            <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Link href="/">
               <Button variant="ghost" className="w-full justify-start" data-testid="button-my-guides">
                 <i className="fas fa-folder mr-3"></i>
-                <span className="korean-text">내 가이드</span>
+                <span >내 가이드</span>
               </Button>
             </Link>
             <Link href="/share-links">
               <Button variant="ghost" className="w-full justify-start" data-testid="button-share-links">
                 <i className="fas fa-link mr-3"></i>
-                <span className="korean-text">공유링크 관리</span>
+                <span >공유링크 관리</span>
               </Button>
             </Link>
             <Link href="/settings">
               <Button variant="ghost" className="w-full justify-start" data-testid="button-settings-full">
                 <i className="fas fa-cog mr-3"></i>
-                <span className="korean-text">설정</span>
+                <span >설정</span>
               </Button>
             </Link>
           </CardContent>
@@ -115,17 +115,17 @@ export default function Profile() {
         {/* Statistics */}
         <Card>
           <CardHeader>
-            <CardTitle className="korean-text">Statistics</CardTitle>
+            <CardTitle >Statistics</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-primary" data-testid="text-guides-count">0</div>
-                <div className="text-sm text-muted-foreground korean-text">가이드</div>
+                <div className="text-sm text-muted-foreground">가이드</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-secondary" data-testid="text-shares-count">0</div>
-                <div className="text-sm text-muted-foreground korean-text">공유링크</div>
+                <div className="text-sm text-muted-foreground">공유링크</div>
               </div>
             </div>
           </CardContent>
@@ -141,7 +141,7 @@ export default function Profile() {
               data-testid="button-logout"
             >
               <i className="fas fa-sign-out-alt mr-2"></i>
-              <span className="korean-text">로그아웃</span>
+              <span >로그아웃</span>
             </Button>
           </CardContent>
         </Card>

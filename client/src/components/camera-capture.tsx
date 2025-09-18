@@ -180,14 +180,14 @@ export default function CameraCapture() {
             <i className="fas fa-camera text-2xl text-primary"></i>
           </div>
           <div>
-            <h3 className="font-semibold korean-text">{t('main.newGuide')}</h3>
-            <p className="text-sm text-muted-foreground korean-text">{t('main.newGuideDesc')}</p>
+            <h3 className="font-semibold">{t('main.newGuide')}</h3>
+            <p className="text-sm text-muted-foreground">{t('main.newGuideDesc')}</p>
           </div>
           <div className="flex items-center justify-center space-x-4 text-xs text-muted-foreground">
-            <span className="flex items-center korean-text">
+            <span className="flex items-center">
               <i className="fas fa-map-marker-alt mr-1"></i>{t('main.gpsCapture')}
             </span>
-            <span className="flex items-center korean-text">
+            <span className="flex items-center">
               <i className="fas fa-robot mr-1"></i>{t('main.aiContent')}
             </span>
           </div>
@@ -197,7 +197,7 @@ export default function CameraCapture() {
       <Dialog open={showCamera} onOpenChange={handleClose}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="korean-text">{t('main.newGuide')}</DialogTitle>
+            <DialogTitle>{t('main.newGuide')}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -232,8 +232,8 @@ export default function CameraCapture() {
                     <i className="fas fa-check text-2xl text-primary"></i>
                   </div>
                   <div>
-                    <h3 className="font-semibold korean-text">Photo Captured!</h3>
-                    <p className="text-sm text-muted-foreground korean-text">
+                    <h3 className="font-semibold">Photo Captured!</h3>
+                    <p className="text-sm text-muted-foreground">
                       Creating guide with AI content generation...
                     </p>
                   </div>

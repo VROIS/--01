@@ -8,7 +8,7 @@ export default function Explore() {
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 bg-card border-b border-border">
         <div className="flex items-center px-4 py-3">
-          <h1 className="text-xl font-semibold korean-text">{t('nav.explore')}</h1>
+          <h1 className="text-xl font-semibold">{t('nav.explore')}</h1>
         </div>
       </header>
 
@@ -18,8 +18,8 @@ export default function Explore() {
             <i className="fas fa-compass text-2xl text-muted-foreground"></i>
           </div>
           <div>
-            <h3 className="font-semibold korean-text">Explore Feature</h3>
-            <p className="text-sm text-muted-foreground korean-text">
+            <h3 className="font-semibold">Explore Feature</h3>
+            <p className="text-sm text-muted-foreground">
               Discover guides shared by other users
             </p>
           </div>

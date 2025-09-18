@@ -35,8 +35,8 @@ export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuide
           <i className="fas fa-camera text-2xl text-muted-foreground"></i>
         </div>
         <div>
-          <h3 className="font-semibold korean-text">No guides yet</h3>
-          <p className="text-sm text-muted-foreground korean-text">
+          <h3 className="font-semibold">No guides yet</h3>
+          <p className="text-sm text-muted-foreground">
             Create your first guide by taking a photo!
           </p>
         </div>
@@ -96,7 +96,7 @@ export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuide
           
           <div className="p-3">
             <div className="flex items-start justify-between mb-2">
-              <h3 className="font-medium text-sm korean-text" data-testid={`text-title-${guide.id}`}>
+              <h3 className="font-medium text-sm" data-testid={`text-title-${guide.id}`}>
                 {guide.title}
               </h3>
               {guide.locationName && (
@@ -106,15 +106,15 @@ export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuide
               )}
             </div>
             
-            <p className="text-xs text-muted-foreground korean-text line-clamp-2" data-testid={`text-description-${guide.id}`}>
+            <p className="text-xs text-muted-foreground line-clamp-2" data-testid={`text-description-${guide.id}`}>
               {guide.description}
             </p>
             
             <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-              <span className="korean-text" data-testid={`text-date-${guide.id}`}>
+              <span data-testid={`text-date-${guide.id}`}>
                 {formatDate(guide.createdAt!)}
               </span>
-              <span className="korean-text" data-testid={`text-views-${guide.id}`}>
+              <span data-testid={`text-views-${guide.id}`}>
                 {t('main.views', { count: guide.viewCount || 0 })}
               </span>
             </div>

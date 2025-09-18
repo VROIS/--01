@@ -22,21 +22,21 @@ export default function Landing() {
           <div className="mx-auto w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
             <i className="fas fa-map-marker-alt text-3xl text-primary"></i>
           </div>
-          <h1 className="text-3xl font-bold text-white korean-text">{t('app.title')}</h1>
-          <p className="text-white/80 korean-text">{t('app.subtitle')}</p>
+          <h1 className="text-3xl font-bold text-white">{t('app.title')}</h1>
+          <p className="text-white/80">{t('app.subtitle')}</p>
         </div>
 
         {/* Language Selection */}
         <Card className="p-6 space-y-4">
-          <h3 className="text-lg font-semibold korean-text">{t('auth.languageSelect')}</h3>
+          <h3 className="text-lg font-semibold">{t('auth.languageSelect')}</h3>
           <LanguageSelector />
         </Card>
 
         {/* Simplified Authentication */}
         <Card className="p-6 space-y-6">
           <div className="text-center">
-            <h2 className="text-xl font-semibold korean-text">{t('auth.simpleLogin')}</h2>
-            <p className="text-sm text-muted-foreground mt-1 korean-text">{t('auth.loginSubtitle')}</p>
+            <h2 className="text-xl font-semibold">{t('auth.simpleLogin')}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{t('auth.loginSubtitle')}</p>
           </div>
 
           <div className="space-y-4">
@@ -45,7 +45,6 @@ export default function Landing() {
               placeholder={t('auth.email')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="korean-text"
               data-testid="input-email"
             />
             <Input
@@ -53,19 +52,18 @@ export default function Landing() {
               placeholder={t('auth.phone')}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="korean-text"
               data-testid="input-phone"
             />
             <Button
               onClick={handleLogin}
-              className="w-full korean-text"
+              className="w-full"
               data-testid="button-login"
             >
               {t('auth.getVerification')}
             </Button>
           </div>
 
-          <div className="text-center text-sm text-muted-foreground korean-text">
+          <div className="text-center text-sm text-muted-foreground">
             {t('auth.terms')}
           </div>
         </Card>
