@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>손안의 가이드 V2.0 - Real-time Smart Assistant</title>
+    <meta name="description" content="실시간 스마트 가이드 - 카메라, 앨범, 마이크로 즉시 정보를 제공하는 AI 어시스턴트">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                    },
+                    backdropBlur: {
+                        'xs': '2px',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Glass morphism effects */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Gradient backgrounds */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-bg-dark {
+            background: linear-gradient(135deg, #2D3748 0%, #1A202C 100%);
+        }
+        
+        /* Animation for streaming text */
+        .streaming-text {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Mic button pulse animation */
+        .mic-active {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(45deg, #ef4444, #f97316);
+        }
+        
+        /* Camera preview styles */
+        .camera-preview {
+            aspect-ratio: 4/3;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body class="min-h-screen transition-all duration-300">
+    <!-- Background with gradient -->
+    <div class="fixed inset-0 gradient-bg dark:gradient-bg-dark transition-all duration-300"></div>
+    
+    <!-- Main container -->
+    <div class="relative z-10 min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="p-4">
+            <div class="glass dark:glass-dark rounded-2xl p-4 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-xl font-bold text-white">손안의 가이드 V2.0</h1>
+                        <p class="text-sm text-white/70">Real-time Smart Assistant</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <!-- Language selector -->
+                        <select id="languageSelect" class="glass dark:glass-dark rounded-lg px-3 py-2 text-white text-sm border-0 focus:ring-2 focus:ring-white/30" data-testid="select-language">
+                            <option value="ko" class="bg-gray-800">한국어</option>
+                            <option value="en" class="bg-gray-800">English</option>
+                            <option value="ja" class="bg-gray-800">日本語</option>
+                            <option value="zh" class="bg-gray-800">中文</option>
+                        </select>
+                        
+                        <!-- Dark mode toggle -->
+                        <button id="darkModeToggle" class="glass dark:glass-dark rounded-lg p-2 text-white hover:bg-white/10 transition-colors" data-testid="button-darkmode">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <main class="flex-1 p-4 pb-24">
+            <!-- Input section -->
+            <div class="glass dark:glass-dark rounded-2xl p-6 shadow-lg mb-6">
+                <div class="space-y-4">
+                    <!-- Text input -->
+                    <div>
+                        <textarea 
+                            id="textInput" 
+                            placeholder="무엇이든 물어보세요... (What would you like to know?)"
+                            class="w-full bg-transparent text-white placeholder-white/50 resize-none border-0 focus:ring-0 p-0"
+                            rows="3"
+                            data-testid="input-text"
+                        ></textarea>
+                    </div>
+                    
+                    <!-- Image preview -->
+                    <div id="imagePreview" class="hidden">
+                        <img id="previewImage" class="w-full camera-preview rounded-lg" alt="Preview" data-testid="img-preview">
+                        <button id="removeImage" class="mt-2 text-red-400 hover:text-red-300 text-sm" data-testid="button-remove-image">
+                            ✕ Remove image
+                        </button>
+                    </div>
+                    
+                    <!-- Action buttons -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <!-- Camera button -->
+                            <button id="cameraBtn" class="glass dark:glass-dark rounded-lg p-3 text-white hover:bg-white/10 transition-colors" data-testid="button-camera">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Gallery button -->
+                            <button id="galleryBtn" class="glass dark:glass-dark rounded-lg p-3 text-white hover:bg-white/10 transition-colors" data-testid="button-gallery">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Mic button -->
+                            <button id="micBtn" class="glass dark:glass-dark rounded-lg p-3 text-white hover:bg-white/10 transition-colors" data-testid="button-mic">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Send button -->
+                        <button id="sendBtn" class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg px-6 py-3 text-white font-medium hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" data-testid="button-send">
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Response section -->
+            <div id="responseSection" class="glass dark:glass-dark rounded-2xl p-6 shadow-lg hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-white">AI Response</h3>
+                    <div class="flex items-center gap-2">
+                        <!-- TTS Controls -->
+                        <button id="playBtn" class="glass dark:glass-dark rounded-lg p-2 text-white hover:bg-white/10 transition-colors" data-testid="button-play">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15M9 10v4a1 1 0 001 1h1M9 10V9a1 1 0 011-1h1m0 0V7a1 1 0 011-1h3a1 1 0 011 1v3M9 7a1 1 0 011-1h1m-1 1v1m0 0v1m0-2h1m0 0v2"></path>
+                            </svg>
+                        </button>
+                        <button id="pauseBtn" class="glass dark:glass-dark rounded-lg p-2 text-white hover:bg-white/10 transition-colors hidden" data-testid="button-pause">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </button>
+                        <button id="stopBtn" class="glass dark:glass-dark rounded-lg p-2 text-white hover:bg-white/10 transition-colors" data-testid="button-stop">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Loading indicator -->
+                <div id="loadingIndicator" class="flex items-center gap-3 text-white/70 mb-4 hidden">
+                    <div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    <span class="text-sm">AI is thinking...</span>
+                </div>
+                
+                <!-- Response content -->
+                <div id="responseContent" class="text-white prose prose-invert max-w-none" data-testid="text-response">
+                    <!-- Streaming response will appear here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Status bar -->
+        <div class="fixed bottom-4 left-4 right-4">
+            <div id="statusBar" class="glass dark:glass-dark rounded-xl p-3 text-center text-white/70 text-sm hidden" data-testid="status-bar">
+                Ready to assist
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for gallery -->
+    <input type="file" id="fileInput" accept="image/*" style="display: none;" data-testid="input-file">
+    
+    <!-- Hidden camera video for capture -->
+    <video id="cameraVideo" autoplay playsinline style="display: none;"></video>
+    <canvas id="cameraCanvas" style="display: none;"></canvas>
+
+    <!-- Main app script -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>

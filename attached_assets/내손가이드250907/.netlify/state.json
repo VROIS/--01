@@ -1,0 +1,21 @@
+{
+	"siteId": "8d59b65f-5cad-4d2b-bffe-7e9b72a31349",
+	"geolocation": {
+		"data": {
+			"city": "Paris",
+			"country": {
+				"code": "FR",
+				"name": "France"
+			},
+			"subdivision": {
+				"code": "IDF",
+				"name": "Île-de-France"
+			},
+			"timezone": "Europe/Paris",
+			"latitude": 48.8558,
+			"longitude": 2.3494,
+			"postalCode": "75015"
+		},
+		"timestamp": 1757979810247
+	}
+}

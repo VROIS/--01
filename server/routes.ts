@@ -4,9 +4,11 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateLocationBasedContent, getLocationName, generateShareLinkDescription } from "./gemini";
 import { insertGuideSchema, insertShareLinkSchema } from "@shared/schema";
+import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 
 // Configure multer for image uploads
 const upload = multer({
@@ -23,7 +25,136 @@ const upload = multer({
   }
 });
 
+// Initialize Gemini AI
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+
+// Ensure uploads directory exists
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads', { recursive: true });
+}
+
+// Ensure shared guidebooks directory exists
+if (!fs.existsSync('shared_guidebooks')) {
+  fs.mkdirSync('shared_guidebooks', { recursive: true });
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Vanilla JS App API Routes (No authentication required)
+  
+  // Gemini streaming endpoint
+  app.post('/api/gemini', async (req, res) => {
+    try {
+      const { base64Image, prompt, systemInstruction } = req.body;
+
+      const isPromptEmpty = !prompt || prompt.trim() === '';
+      const isImageEmpty = !base64Image;
+
+      if (isPromptEmpty && isImageEmpty) {
+        return res.status(400).json({ error: "요청 본문에 필수 데이터(prompt 또는 base64Image)가 누락되었습니다." });
+      }
+
+      let parts = [];
+
+      if (base64Image) {
+        parts.push({
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: base64Image,
+          },
+        });
+      }
+
+      if (prompt && prompt.trim() !== '') {
+        parts.push({ text: prompt });
+      }
+
+      const model = 'gemini-2.5-flash';
+      const contents = { parts };
+
+      const config: any = {
+        systemInstruction,
+        thinkingConfig: { thinkingBudget: 0 } // Speed optimization
+      };
+
+      console.log("Gemini API(스트리밍)로 전송할 요청 본문:", JSON.stringify({ model, contents, config }));
+
+      // Generate streaming response
+      const responseStream = await ai.models.generateContentStream({ model, contents, config });
+
+      // Set up streaming response
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Transfer-Encoding', 'chunked');
+
+      // Stream the response
+      for await (const chunk of responseStream) {
+        const text = chunk.text;
+        if (text) {
+          res.write(text);
+        }
+      }
+      
+      res.end();
+
+    } catch (error) {
+      console.error("Gemini API 오류:", error);
+      res.status(500).json({ error: `AI 통신 중 오류: ${error}` });
+    }
+  });
+
+  // Share endpoints
+  app.post('/api/share', async (req, res) => {
+    try {
+      const { contents, name } = req.body;
+      
+      if (!Array.isArray(contents) || contents.length === 0) {
+        return res.status(400).json({ error: "공유할 항목이 없습니다." });
+      }
+      
+      if (contents.length > 30) {
+        return res.status(400).json({ error: "한 번에 최대 30개까지만 공유할 수 있습니다." });
+      }
+
+      const guidebookId = crypto.randomBytes(4).toString('base64url').slice(0, 6);
+      const guidebookData = { 
+        contents, 
+        name, 
+        createdAt: new Date().toISOString() 
+      };
+
+      // Save to file system
+      const filePath = path.join('shared_guidebooks', `${guidebookId}.json`);
+      fs.writeFileSync(filePath, JSON.stringify(guidebookData, null, 2));
+
+      res.json({ guidebookId });
+    } catch (error) {
+      console.error("Share 생성 오류:", error);
+      res.status(500).json({ error: "가이드북 생성 중 오류가 발생했습니다." });
+    }
+  });
+
+  app.get('/api/share', async (req, res) => {
+    try {
+      const guidebookId = req.query.id;
+      
+      if (!guidebookId) {
+        return res.status(400).json({ error: "가이드북 ID가 필요합니다." });
+      }
+
+      const filePath = path.join('shared_guidebooks', `${guidebookId}.json`);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: `해당 가이드북(${guidebookId})을 찾을 수 없습니다.` });
+      }
+
+      const guidebookData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      res.json(guidebookData);
+      
+    } catch (error) {
+      console.error("Share 조회 오류:", error);
+      res.status(500).json({ error: "가이드북을 불러오는 중 오류가 발생했습니다." });
+    }
+  });
+
   // Auth middleware
   await setupAuth(app);
 

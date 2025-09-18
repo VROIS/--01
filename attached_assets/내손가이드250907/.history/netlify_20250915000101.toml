@@ -1,0 +1,21 @@
+# Netlify 배포를 위한 최종 설정 파일입니다.
+# 이 파일은 Netlify에게 이 프로젝트를 어떻게 다루어야 할지 알려주는 '설계도' 역할을 합니다.
+
+
+
+[build]
+  # dist 폴더를 배포(여기에 index.html 등 모든 정적 파일이 있음)
+  command = "echo 'No build command required'"
+  publish = "dist"
+
+[functions]
+  # 서버 기능(gemini.js)이 들어있는 폴더의 위치를 알려줍니다。
+  # 이 설정이 없으면 Netlify는 서버 기능의 존재를 알지 못해 404 오류가 발생합니다.
+  directory = "netlify/functions"
+
+# 사용자가 어떤 주소로 들어오든 항상 index.html을 보여주도록 하여,
+# 새로고침 시 404 오류가 발생하는 것을 막아주는 중요한 설정입니다。
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
