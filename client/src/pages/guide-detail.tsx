@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MapPin, Calendar, Eye, Play, Pause } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { type Guide } from "@shared/schema";
 import { format } from "date-fns";
 import { ko, enUS, ja, zhCN } from "date-fns/locale";
@@ -13,6 +13,53 @@ export default function GuideDetail() {
   const [, setLocation] = useLocation();
   const { t, i18n } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Cleanup speech synthesis on component unmount or guide change
+  useEffect(() => {
+    return () => {
+      if (speechSynthesisRef.current) {
+        window.speechSynthesis.cancel();
+        speechSynthesisRef.current = null;
+        setIsPlaying(false);
+        setIsSpeaking(false);
+      }
+    };
+  }, [id]);
+
+  // Handle visibility change to pause/resume speech
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && isSpeaking) {
+        window.speechSynthesis.pause();
+      } else if (!document.hidden && isPlaying && !isSpeaking && speechSynthesisRef.current) {
+        window.speechSynthesis.resume();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isPlaying, isSpeaking]);
+
+  // Load voices when component mounts
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      // Sometimes voices load asynchronously
+      const loadVoices = () => {
+        const voices = window.speechSynthesis.getVoices();
+        console.log('Available TTS voices:', voices.length);
+      };
+      
+      // Load immediately if available
+      loadVoices();
+      
+      // Also load when voices change
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
 
   const { data: guide, isLoading } = useQuery<Guide>({
     queryKey: ["/api/guides", id],
@@ -43,8 +90,95 @@ export default function GuideDetail() {
 
   const handlePlayAudio = () => {
     if (!guide?.aiGeneratedContent) return;
-    // TODO: Implement audio playback
-    setIsPlaying(!isPlaying);
+
+    // Check if browser supports speech synthesis
+    if (!('speechSynthesis' in window)) {
+      console.error('Speech synthesis not supported in this browser');
+      return;
+    }
+
+    // Handle pause/resume if already playing
+    if (isPlaying && speechSynthesisRef.current) {
+      if (isSpeaking) {
+        // Currently speaking - pause it
+        window.speechSynthesis.pause();
+        setIsSpeaking(false);
+        console.log('TTS paused');
+      } else {
+        // Currently paused - resume it
+        window.speechSynthesis.resume();
+        setIsSpeaking(true);
+        console.log('TTS resumed');
+      }
+      return;
+    }
+
+    // Create new speech utterance
+    const utterance = new SpeechSynthesisUtterance(guide.aiGeneratedContent);
+    speechSynthesisRef.current = utterance;
+
+    // Get appropriate language and voice
+    const getVoiceLang = () => {
+      switch (i18n.language) {
+        case 'ko': return 'ko-KR';
+        case 'en': return 'en-US';
+        case 'ja': return 'ja-JP';
+        case 'zh': return 'zh-CN';
+        default: return 'ko-KR';
+      }
+    };
+
+    // Set voice with language preference
+    const targetLang = getVoiceLang();
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(voice => 
+      voice.lang.startsWith(targetLang.substring(0, 2))
+    );
+    
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    } else {
+      utterance.lang = targetLang;
+    }
+
+    // Configure utterance
+    utterance.rate = 0.9; // Slightly slower for better comprehension
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    // Set up event listeners
+    utterance.onstart = () => {
+      setIsPlaying(true);
+      setIsSpeaking(true);
+      console.log('TTS started');
+    };
+
+    utterance.onend = () => {
+      setIsPlaying(false);
+      setIsSpeaking(false);
+      speechSynthesisRef.current = null;
+      console.log('TTS ended');
+    };
+
+    utterance.onerror = (event) => {
+      console.error('TTS error:', event.error);
+      setIsPlaying(false);
+      setIsSpeaking(false);
+      speechSynthesisRef.current = null;
+    };
+
+    utterance.onpause = () => {
+      setIsSpeaking(false);
+      console.log('TTS paused via event');
+    };
+
+    utterance.onresume = () => {
+      setIsSpeaking(true);
+      console.log('TTS resumed via event');
+    };
+
+    // Start speech synthesis
+    window.speechSynthesis.speak(utterance);
   };
 
   if (isLoading) {
@@ -106,8 +240,20 @@ export default function GuideDetail() {
                   variant="outline"
                   size="sm"
                   data-testid="button-play-audio"
+                  className={`${isPlaying ? 'bg-primary/10 text-primary border-primary/20' : ''}`}
                 >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  {isPlaying ? (
+                    isSpeaking ? (
+                      <Pause className="w-4 h-4" />
+                    ) : (
+                      <Play className="w-4 h-4" />
+                    )
+                  ) : (
+                    <Play className="w-4 h-4" />
+                  )}
+                  <span className="ml-1 text-xs korean-text">
+                    {isPlaying ? (isSpeaking ? '재생중' : '일시정지') : '음성'}
+                  </span>
                 </Button>
               )}
             </div>
