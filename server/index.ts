@@ -47,6 +47,14 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Serve the vanilla JS app at root
+  app.use(express.static('public'));
+  
+  // Set up root route to serve vanilla JS app
+  app.get('/', (req, res) => {
+    res.sendFile('public/index.html', { root: process.cwd() });
+  });
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
