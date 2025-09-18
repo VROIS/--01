@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { generateLocationBasedContent, getLocationName, generateShareLinkDescription } from "./gemini";
+import { generateLocationBasedContent, getLocationName, generateShareLinkDescription, type GuideContent } from "./gemini";
 import { insertGuideSchema, insertShareLinkSchema } from "@shared/schema";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";

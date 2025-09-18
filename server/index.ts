@@ -3,8 +3,8 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -47,13 +47,6 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Serve the vanilla JS app at root
-  app.use(express.static('public'));
-  
-  // Set up root route to serve vanilla JS app
-  app.get('/', (req, res) => {
-    res.sendFile('public/index.html', { root: process.cwd() });
-  });
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
