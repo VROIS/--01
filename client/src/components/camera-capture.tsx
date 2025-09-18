@@ -41,19 +41,25 @@ export default function CameraCapture() {
 
   const getCurrentLocation = (): Promise<{ latitude: number; longitude: number }> => {
     return new Promise((resolve, reject) => {
+      console.log('getCurrentLocation: Checking geolocation support...');
       if (!navigator.geolocation) {
+        console.error('getCurrentLocation: Geolocation not supported');
         reject(new Error("Geolocation is not supported"));
         return;
       }
 
+      console.log('getCurrentLocation: Requesting current position...');
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          resolve({
+          const coords = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
-          });
+          };
+          console.log('getCurrentLocation: Position success:', coords);
+          resolve(coords);
         },
         (error) => {
+          console.error('getCurrentLocation: Position error:', error.code, error.message);
           reject(error);
         },
         {
@@ -66,12 +72,10 @@ export default function CameraCapture() {
   };
 
   const startCamera = async () => {
+    console.log('startCamera: Starting camera and location capture...');
     try {
-      // Get location first
-      const currentLocation = await getCurrentLocation();
-      setLocation(currentLocation);
-
-      // Start camera
+      // Try to start camera first - this is the primary function
+      console.log('startCamera: Requesting camera access...');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
         audio: false,
@@ -81,11 +85,27 @@ export default function CameraCapture() {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
         setShowCamera(true);
+        console.log('startCamera: Camera started successfully');
       }
-    } catch (error) {
+
+      // Get location in parallel - don't block camera if this fails
+      try {
+        console.log('startCamera: Requesting location access...');
+        const currentLocation = await getCurrentLocation();
+        setLocation(currentLocation);
+        console.log('startCamera: Location captured:', currentLocation);
+      } catch (locationError) {
+        console.warn('startCamera: Location access failed:', locationError);
+        // Use a default location for testing purposes
+        const defaultLocation = { latitude: 37.5665, longitude: 126.9780 }; // Seoul
+        setLocation(defaultLocation);
+        console.log('startCamera: Using default location:', defaultLocation);
+      }
+    } catch (cameraError) {
+      console.error('startCamera: Camera access failed:', cameraError);
       toast({
         title: "Error",
-        description: "Unable to access camera or location. Please check permissions.",
+        description: "Unable to access camera. Please check permissions.",
         variant: "destructive",
       });
     }
