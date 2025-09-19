@@ -706,6 +706,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('이름과 링크가 복사되었어요!');
             });
             
+            // 5. 성공 시 버튼 상태 복구
+            archiveShareBtn.innerHTML = originalBtnContent;
+            archiveShareBtn.disabled = false;
+            
         } catch (error) {
             console.error("가이드북 생성 오류:", error);
             showToast('오류: ' + error.message);
