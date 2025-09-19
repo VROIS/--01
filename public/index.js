@@ -682,6 +682,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         '<button id="copyShareLinkBtn" class="px-4 py-2 bg-blue-500 text-white rounded">이름+링크 복사</button>' +
                     '</div>' +
                 '</div>';
+                
+            // CSS 클래스 수정: 모달을 화면에 표시
+            shareModalContent.classList.remove('translate-y-full');
+            shareModalContent.classList.add('translate-y-0');
             
             // 3. 모달 표시
             shareModal.classList.remove('hidden');
