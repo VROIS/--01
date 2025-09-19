@@ -15,7 +15,9 @@ import NotFound from "@/pages/not-found";
 import "./lib/i18n";
 
 function Router() {
+  console.log("Router component rendered");
   const { isAuthenticated, isLoading } = useAuth();
+  console.log("Router auth state:", { isAuthenticated, isLoading });
 
   return (
     <Switch>
