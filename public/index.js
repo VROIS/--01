@@ -682,6 +682,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         '<button id="copyShareLinkBtn" class="px-4 py-2 bg-blue-500 text-white rounded">이름+링크 복사</button>' +
                     '</div>' +
                 '</div>';
+            
+            // 3. 모달 표시
+            shareModal.classList.remove('hidden');
+            
+            // 4. 모달 이벤트 리스너 추가
+            const newCloseBtn = document.getElementById('closeShareModalBtn');
+            const copyBtn = document.getElementById('copyShareLinkBtn');
+            
+            newCloseBtn.addEventListener('click', () => {
+                shareModal.classList.add('hidden');
+            });
+            
+            copyBtn.addEventListener('click', async () => {
+                const nameInput = document.getElementById('shareNameInput');
+                const linkInput = document.getElementById('shareLinkInput');
+                const textToCopy = `${nameInput.value}\n${linkInput.value}`;
+                await navigator.clipboard.writeText(textToCopy);
+                showToast('이름과 링크가 복사되었어요!');
+            });
+            
         } catch (error) {
             console.error("가이드북 생성 오류:", error);
             showToast('오류: ' + error.message);
