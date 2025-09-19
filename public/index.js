@@ -664,10 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 2. 공유 모달에 링크 표시 (유튜버 공유 스타일)
             // 공유 모달 내용 동적 생성
-            let linkName = '';
-            if (contentsToShare.length > 0) {
-                linkName = contentsToShare[0].description || '';
-            }
+            let linkName = ''; // 빈칸으로 시작 (사용자가 직접 입력해야 함)
             shareModalContent.innerHTML =
                 '<div class="p-4 border-b border-gray-200 flex justify-between items-center">' +
                     '<h2 class="text-lg font-bold text-gray-800">공유하기</h2>' +
