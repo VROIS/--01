@@ -41,6 +41,15 @@ if (!fs.existsSync('shared_guidebooks')) {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Vanilla JS App API Routes (No authentication required)
   
+  // API health check endpoint
+  app.head('/api', (req, res) => {
+    res.status(200).end();
+  });
+  
+  app.get('/api', (req, res) => {
+    res.json({ status: 'ok', message: '내손가이드 API 서버가 정상 작동 중입니다.' });
+  });
+  
   // Gemini streaming endpoint
   app.post('/api/gemini', async (req, res) => {
     try {

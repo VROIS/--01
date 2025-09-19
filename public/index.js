@@ -643,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 4. 전체 콘텐츠 배열을 백엔드로 전송합니다.
-            const response = await fetch('/.netlify/functions/share', {
+            const response = await fetch('/api/share', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ contents: contentsToShare }),
@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             const { guidebookId } = result;
-            const shareUrl = `${window.location.origin}/.netlify/functions/share?id=${guidebookId}`;
+            const shareUrl = `${window.location.origin}/share.html?id=${guidebookId}`;
     
             // 1. 클립보드 복사
             await navigator.clipboard.writeText(shareUrl);

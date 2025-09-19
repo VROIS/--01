@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         const params = new URLSearchParams(window.location.search);
-        const guidebookId = params.get('guidebook_id');
+        const guidebookId = params.get('id');
 
         if (!guidebookId) {
             showError('가이드북 ID를 찾을 수 없습니다. 링크가 올바른지 확인해주세요.');
