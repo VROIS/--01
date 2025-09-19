@@ -697,6 +697,14 @@ document.addEventListener('DOMContentLoaded', () => {
             copyBtn.addEventListener('click', async () => {
                 const nameInput = document.getElementById('shareNameInput');
                 const linkInput = document.getElementById('shareLinkInput');
+                
+                // 링크 이름 입력 검증
+                if (!nameInput.value.trim()) {
+                    showToast('링크 이름을 입력해주세요!');
+                    nameInput.focus();
+                    return;
+                }
+                
                 const textToCopy = `${nameInput.value}\n${linkInput.value}`;
                 await navigator.clipboard.writeText(textToCopy);
                 showToast('이름과 링크가 복사되었어요!');
