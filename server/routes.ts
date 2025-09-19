@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -406,14 +406,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Serve uploaded images
-  app.use('/uploads', (req, res, next) => {
-    const imagePath = path.join('.', 'uploads', req.path);
-    if (fs.existsSync(imagePath)) {
-      res.sendFile(path.resolve(imagePath));
-    } else {
-      res.status(404).json({ message: "Image not found" });
-    }
-  });
+  // Serve uploads securely
+  app.use('/uploads', express.static('uploads', { 
+    fallthrough: false,
+    dotfiles: 'deny'
+  }));
 
   const httpServer = createServer(app);
   return httpServer;
