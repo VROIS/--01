@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Share Modal Elements (Now used for loading state)
     const shareModal = document.getElementById('shareModal');
     const shareModalContent = document.getElementById('shareModalContent');
-    const closeShareModalBtn = document.getElementById('closeShareModalBtn');
 
     // Pages
     const featuresPage = document.getElementById('featuresPage');
