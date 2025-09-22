@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             recognition.continuous = false;
             recognition.lang = 'ko-KR';
             recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
+            recognition.maxAlternatives = 3;
         }
     }
     
