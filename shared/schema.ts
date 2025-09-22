@@ -34,6 +34,10 @@ export const users = pgTable("users", {
   preferredLanguage: varchar("preferred_language").default('ko'),
   locationEnabled: boolean("location_enabled").default(true),
   aiContentEnabled: boolean("ai_content_enabled").default(true),
+  credits: integer("credits").default(0),
+  isAdmin: boolean("is_admin").default(false),
+  referredBy: varchar("referred_by"),
+  referralCode: varchar("referral_code").unique(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -69,6 +73,17 @@ export const shareLinks = pgTable("share_links", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Credit transactions table for tracking credit usage and purchases
+export const creditTransactions = pgTable("credit_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: varchar("type").notNull(), // 'purchase', 'usage', 'referral_bonus', 'admin_grant'
+  amount: integer("amount").notNull(), // positive for gain, negative for usage
+  description: text("description").notNull(),
+  referenceId: varchar("reference_id"), // stripe payment id, referral user id, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Create insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -92,6 +107,11 @@ export const insertShareLinkSchema = createInsertSchema(shareLinks).omit({
   updatedAt: true,
 });
 
+export const insertCreditTransactionSchema = createInsertSchema(creditTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -99,3 +119,5 @@ export type InsertGuide = z.infer<typeof insertGuideSchema>;
 export type Guide = typeof guides.$inferSelect;
 export type InsertShareLink = z.infer<typeof insertShareLinkSchema>;
 export type ShareLink = typeof shareLinks.$inferSelect;
+export type InsertCreditTransaction = z.infer<typeof insertCreditTransactionSchema>;
+export type CreditTransaction = typeof creditTransactions.$inferSelect;
