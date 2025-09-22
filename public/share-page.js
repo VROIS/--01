@@ -6,8 +6,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const descriptionEl = document.getElementById('guidebook-description');
 
     const showError = (message) => {
+        console.error("Share page error:", message);
         if (loader) loader.classList.add('hidden');
-        contentContainer.innerHTML = `<p class="text-red-500 text-center">${message}</p>`;
+        contentContainer.innerHTML = `
+            <div class="text-center py-10">
+                <div class="text-red-500 text-lg mb-4">⚠️ 오류가 발생했습니다</div>
+                <p class="text-gray-700 mb-4">${message}</p>
+                <button onclick="window.location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    다시 시도
+                </button>
+            </div>
+        `;
     };
 
     try {
@@ -30,7 +39,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const guidebook = await response.json();
         // 이제 contentIds 대신 contents 배열을 받습니다.
-        const { contents, createdAt } = guidebook;
+        const { contents, createdAt, name } = guidebook;
+        
+        // Open Graph URL 동적 설정 (카톡 공유 최적화)
+        const currentUrl = window.location.href;
+        const ogUrlMeta = document.querySelector('meta[property="og:url"]');
+        if (ogUrlMeta) {
+            ogUrlMeta.content = currentUrl;
+        }
+        
+        // 가이드북 이름이 있으면 제목 업데이트
+        if (name) {
+            document.title = `${name} - 내손가이드`;
+            const ogTitleMeta = document.querySelector('meta[property="og:title"]');
+            if (ogTitleMeta) {
+                ogTitleMeta.content = `${name} - 내손가이드`;
+            }
+        }
 
         if (!contents || !Array.isArray(contents) || contents.length === 0) {
             showError('이 가이드북에는 공유된 항목이 없습니다.');
@@ -41,7 +66,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         if (descriptionEl) {
             const createdDate = new Date(createdAt).toLocaleDateString('ko-KR');
-            descriptionEl.textContent = `이 가이드북은 ${contents.length}개의 콘텐츠를 포함하고 있으며, ${createdDate}에 만들어졌습니다.`;
+            const guideName = name ? `"${name}" 가이드북은` : '이 가이드북은';
+            descriptionEl.textContent = `${guideName} ${contents.length}개의 콘텐츠를 포함하고 있으며, ${createdDate}에 만들어졌습니다.`;
         }
 
         // 각 콘텐츠(이미지와 설명)를 페이지에 렌더링합니다.
