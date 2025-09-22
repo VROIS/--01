@@ -258,6 +258,53 @@ document.addEventListener('DOMContentLoaded', () => {
         resetSpeechState();
     }
 
+    // 🔧 [공유 버그 수정] 클립보드 API fallback (모바일 호환성)
+    async function copyToClipboard(text) {
+        try {
+            // 최신 Clipboard API 사용 (HTTPS 필요)
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+                return;
+            }
+        } catch (err) {
+            console.warn("Clipboard API 실패, fallback 시도:", err);
+        }
+        
+        // Fallback: textarea 요소를 이용한 복사 (모바일 호환)
+        try {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            
+            // iOS Safari를 위한 특별 처리
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                textarea.style.fontSize = '16px'; // 줌 방지
+                textarea.setAttribute('readonly', '');
+                const range = document.createRange();
+                range.selectNodeContents(textarea);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                textarea.setSelectionRange(0, 999999);
+            } else {
+                textarea.select();
+            }
+            
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            if (!successful) {
+                throw new Error('execCommand 복사 실패');
+            }
+        } catch (fallbackErr) {
+            console.error("Fallback 복사도 실패:", fallbackErr);
+            throw new Error('클립보드 복사가 지원되지 않는 브라우저입니다');
+        }
+    }
+
     // --- App Initialization ---
     async function initializeApp() {
         try {
@@ -677,9 +724,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const { guidebookId } = result;
             const shareUrl = `${window.location.origin}/share.html?id=${guidebookId}`;
     
-            // 1. 클립보드 복사
-            await navigator.clipboard.writeText(shareUrl);
-            showToast("가이드북 링크가 클립보드에 복사되었어요!");
+            // 1. 클립보드 복사 (모바일 호환성 향상)
+            try {
+                await copyToClipboard(shareUrl);
+                showToast("가이드북 링크가 클립보드에 복사되었어요!");
+            } catch (e) {
+                console.warn("클립보드 복사 실패:", e);
+                showToast("링크가 준비되었습니다. 아래 모달에서 복사해주세요.");
+            }
             toggleSelectionMode(false); // Exit selection mode on success
 
             // 2. 공유 모달에 링크 표시 (유튜버 공유 스타일)
@@ -726,8 +778,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 const textToCopy = `${nameInput.value}\n${linkInput.value}`;
-                await navigator.clipboard.writeText(textToCopy);
-                showToast('이름과 링크가 복사되었어요!');
+                try {
+                    await copyToClipboard(textToCopy);
+                    showToast('이름과 링크가 복사되었어요!');
+                    copyBtn.textContent = "복사됨!";
+                    setTimeout(() => copyBtn.textContent = "이름(사용자가 직접 입력함)+링크 복사", 2000);
+                } catch (e) {
+                    showToast("복사에 실패했습니다. 텍스트를 선택해서 수동 복사해주세요.");
+                    linkInput.select();
+                }
             });
             
             // 5. 성공 시 버튼 상태 복구
