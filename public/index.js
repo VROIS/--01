@@ -365,6 +365,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function processImage(dataUrl, sourceButton) {
+        // 🔍 성능 모니터링 시작
+        const startTime = performance.now();
+        const fileSizeKB = Math.round((dataUrl.length * 3/4) / 1024);
+        console.log(`📊 [성능모니터] 이미지 크기: ${fileSizeKB}KB, 처리 시작`);
+        
         sourceButton.disabled = true;
         cameFromArchive = false;
         if (synth.speaking || synth.pending) synth.cancel();
