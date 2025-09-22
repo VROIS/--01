@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
+        // 🔧 [공유링크 수정] URL 쿼리 파라미터에서 ID 가져오기
         const params = new URLSearchParams(window.location.search);
         const guidebookId = params.get('id');
 

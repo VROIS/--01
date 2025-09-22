@@ -838,6 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             const { guidebookId } = result;
+            // 🔧 [공유링크 수정] 기본 쿼리 파라미터 형태 사용  
             const shareUrl = `${window.location.origin}/share.html?id=${guidebookId}`;
     
             // 1. 클립보드 복사 (모바일 호환성 향상)
