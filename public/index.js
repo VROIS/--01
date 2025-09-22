@@ -195,8 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function showMainPage() {
         cameFromArchive = false; // Reset navigation state
-        synth.cancel();
-        resetSpeechState();
+        stopSpeech(); // 중앙화된 음성 중지
         showPage(mainPage);
 
         detailPage.classList.remove('bg-friendly');
@@ -234,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function resetSpeechState() {
+        // 🔧 [버그 수정 1] 더 강력한 음성 상태 초기화
         utteranceQueue = [];
         isSpeaking = false;
         isPaused = false;
@@ -241,6 +241,21 @@ document.addEventListener('DOMContentLoaded', () => {
             currentlySpeakingElement.classList.remove('speaking');
         }
         currentlySpeakingElement = null;
+        
+        // 모든 speaking 클래스 제거 (중복 방지)
+        const allSpeakingElements = document.querySelectorAll('.speaking');
+        allSpeakingElements.forEach(el => el.classList.remove('speaking'));
+    }
+
+    // 🔧 [버그 수정 1] 중앙화된 음성 중지 유틸리티 (경쟁 조건 방지)
+    function stopSpeech() {
+        // 즉시 음성 중지 (타이머 없음)
+        if (synth.speaking || synth.pending) {
+            synth.cancel();
+        }
+        
+        // 상태 완전 초기화
+        resetSpeechState();
     }
 
     // --- App Initialization ---
@@ -268,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (synth && !synth.speaking) {
             const unlockUtterance = new SpeechSynthesisUtterance('');
             synth.speak(unlockUtterance);
-            synth.cancel();
+            stopSpeech(); // 중앙화된 음성 중지
         }
     
         mainLoader.classList.remove('hidden');
@@ -318,7 +333,8 @@ document.addEventListener('DOMContentLoaded', () => {
             video.srcObject = stream;
             video.play().catch(e => console.error("Video play failed:", e));
             video.onloadedmetadata = () => {
-                [shootBtn, uploadBtn, micBtn].forEach(btn => {
+                // 🔧 [버그 수정 2] 업로드는 카메라와 독립적, 촬영/마이크만 카메라 의존
+                [shootBtn, micBtn].forEach(btn => {
                     if (btn) btn.disabled = false;
                 });
                 isCameraActive = true;
@@ -355,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function handleFileSelect(event) {
+        // 🔧 [버그 수정 2] 이미지 업로드는 카메라와 독립적으로 허용
         const file = event.target.files?.[0];
         if (file) {
             const reader = new FileReader();
@@ -372,8 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         sourceButton.disabled = true;
         cameFromArchive = false;
-        if (synth.speaking || synth.pending) synth.cancel();
-        resetSpeechState();
+        stopSpeech(); // 중앙화된 음성 중지
 
         showDetailPage();
         
@@ -486,8 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function processTextQuery(prompt) {
         cameFromArchive = false;
-        if (synth.speaking || synth.pending) synth.cancel();
-        resetSpeechState();
+        stopSpeech(); // 중앙화된 음성 중지
         
         showDetailPage();
         
@@ -786,9 +801,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
 
     function populateDetailPageFromArchive(item) {
-        synth.cancel(); // Stop any currently playing audio immediately
+        // 🔧 [버그 수정 1] 중앙화된 음성 중지 로직
+        stopSpeech();
+        
         cameFromArchive = true;
-        resetSpeechState();
         
         resultImage.src = item.imageDataUrl || '';
         resultImage.classList.toggle('hidden', !item.imageDataUrl);
@@ -858,8 +874,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function restartAudio() {
-        synth.cancel();
-        resetSpeechState();
+        stopSpeech(); // 중앙화된 음성 중지
 
         const sentences = Array.from(descriptionText.querySelectorAll('span'));
         if (sentences.length === 0) {
