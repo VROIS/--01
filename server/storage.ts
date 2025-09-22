@@ -44,6 +44,7 @@ export interface IStorage {
   deductCredits(userId: string, amount: number, description: string): Promise<boolean>;
   addCredits(userId: string, amount: number, type: string, description: string, referenceId?: string): Promise<User>;
   getCreditHistory(userId: string, limit?: number): Promise<CreditTransaction[]>;
+  awardSignupBonus(userId: string, referrerCode: string): Promise<{ bonusAwarded: boolean, newBalance: number, message?: string }>;
   generateReferralCode(userId: string): Promise<string>;
   processReferralReward(referralCode: string, newUserId: string): Promise<void>;
   processCashbackReward(paymentAmount: number, userId: string): Promise<void>;
@@ -240,6 +241,50 @@ export class DatabaseStorage implements IStorage {
       .where(eq(creditTransactions.userId, userId))
       .orderBy(desc(creditTransactions.createdAt))
       .limit(limit);
+  }
+
+  async awardSignupBonus(userId: string, referrerCode: string): Promise<{ bonusAwarded: boolean, newBalance: number, message?: string }> {
+    // 이미 보너스를 받았는지 확인
+    const existingBonus = await db.query.creditTransactions.findFirst({
+      where: and(
+        eq(creditTransactions.userId, userId),
+        eq(creditTransactions.type, 'referral_signup_bonus')
+      )
+    });
+    
+    if (existingBonus) {
+      const currentCredits = await this.getUserCredits(userId);
+      return { bonusAwarded: false, newBalance: currentCredits, message: 'Already received signup bonus' };
+    }
+    
+    // 추천인 찾기
+    const referrer = await db.query.users.findFirst({
+      where: eq(users.referralCode, referrerCode)
+    });
+    
+    if (!referrer) {
+      const currentCredits = await this.getUserCredits(userId);
+      return { bonusAwarded: false, newBalance: currentCredits, message: 'Invalid referral code' };
+    }
+    
+    // 자기 자신 추천 방지
+    if (referrer.id === userId) {
+      const currentCredits = await this.getUserCredits(userId);
+      return { bonusAwarded: false, newBalance: currentCredits, message: 'Cannot refer yourself' };
+    }
+    
+    // 새 사용자에게 2크레딧 지급
+    const user = await this.addCredits(userId, 2, 'referral_signup_bonus', `${referrerCode}님의 추천으로 가입 보너스`, referrer.id);
+    
+    // 추천인에게도 1크레딧 지급
+    await this.addCredits(referrer.id, 1, 'referral_reward', `${userId} 추천 성공 보상`, userId);
+    
+    // 사용자의 추천인 정보 업데이트
+    await db.update(users)
+      .set({ referredBy: referrer.id })
+      .where(eq(users.id, userId));
+    
+    return { bonusAwarded: true, newBalance: user.credits };
   }
 
   async generateReferralCode(userId: string): Promise<string> {

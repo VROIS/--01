@@ -23,6 +23,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 🔧 [공유링크 수정] URL 쿼리 파라미터에서 ID 가져오기
         const params = new URLSearchParams(window.location.search);
         const guidebookId = params.get('id');
+        const refCode = params.get('ref'); // 🔗 추천 코드 감지
+
+        // 💰 추천 링크 처리
+        if (refCode) {
+            localStorage.setItem('referrer', refCode);
+            console.log(`🔗 추천코드 감지: ${refCode}`);
+            
+            // 추천 배너 표시
+            showReferralBanner(refCode);
+        }
 
         if (!guidebookId) {
             showError('가이드북 ID를 찾을 수 없습니다. 링크가 올바른지 확인해주세요.');
@@ -93,3 +103,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         showError(`가이드북을 불러오는 중 오류가 발생했습니다: ${error.message}`);
     }
 });
+
+// 🔗 추천 배너 함수들
+window.showReferralBanner = function(refCode) {
+    const banner = document.getElementById('referralBanner');
+    const referrerName = document.getElementById('referrerName');
+    
+    if (banner && referrerName) {
+        referrerName.textContent = `${refCode}`;
+        banner.classList.remove('hidden');
+    }
+};
+
+window.signUpWithBonus = function() {
+    // 추천인 정보를 저장하고 메인 앱으로 이동
+    const referrer = localStorage.getItem('referrer');
+    const params = referrer ? `?ref=${referrer}` : '';
+    window.open(`/${params}`, '_blank');
+};

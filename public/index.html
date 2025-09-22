@@ -651,7 +651,32 @@
             <h1 class="text-xl font-bold text-gray-800">설정</h1>
         </header>
         <div class="content-safe-area p-4 md:p-6 space-y-8">
-             <!-- Authentication Section -->
+             <!-- 💳 크레딧 현황 섹션 -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-lg shadow-sm text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold mb-1">💎 드림샷 스튜디오</h2>
+                        <p class="text-sm opacity-90">AI 이미지 & 영상 제작</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold" id="creditBalance">--</div>
+                        <div class="text-xs opacity-75" id="creditStatus">크레딧 잔액</div>
+                    </div>
+                </div>
+                <div class="mt-4 flex space-x-2">
+                    <button id="creditPurchaseBtn" class="flex-1 bg-white/20 text-white py-2 px-4 rounded-md hover:bg-white/30 transition duration-300 text-sm font-medium">
+                        💳 충전하기
+                    </button>
+                    <button id="creditHistoryBtn" class="flex-1 bg-white/20 text-white py-2 px-4 rounded-md hover:bg-white/30 transition duration-300 text-sm font-medium">
+                        📊 내역보기
+                    </button>
+                    <button id="referralCodeBtn" class="flex-1 bg-white/20 text-white py-2 px-4 rounded-md hover:bg-white/30 transition duration-300 text-sm font-medium">
+                        🔗 추천코드
+                    </button>
+                </div>
+            </div>
+
+            <!-- Authentication Section -->
             <div id="authSection" class="bg-white p-6 rounded-lg shadow-sm">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">관리자 접근</h2>
                 <form id="authForm" class="space-y-4">
@@ -676,22 +701,36 @@
                     <textarea id="textPromptTextarea" rows="6" class="w-full p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"></textarea>
                 </div>
                 
-                <!-- v1.8: Advanced AI Features (Prototype) -->
-                <div class="bg-white p-6 rounded-lg shadow-sm">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-2">이미지 합성 (베타)</h2>
-                    <p class="text-sm text-gray-500 mb-4">보관함의 배경 사진과 인물 사진을 합성합니다. (v2.0 지원 예정)</p>
-                    <textarea id="imageSynthesisPromptTextarea" rows="4" placeholder="예시: 이 사진을 배경으로 CF의 주인공 같은 사진을 만들어 주세요." class="w-full p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"></textarea>
-                    <button id="generateImageBtn" class="mt-4 w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition duration-300">
-                        이미지 만들기 (데모)
+                <!-- 🎨 드림샷 스튜디오 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-lg font-semibold text-gray-800">🎨 AI 이미지 합성</h2>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl font-bold text-green-600">5</span>
+                            <span class="text-sm text-gray-500">크레딧</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">보관함의 배경 사진과 인물 사진을 합성하여 CF 주인공 같은 이미지를 만듭니다.</p>
+                    <textarea id="imageSynthesisPromptTextarea" rows="4" placeholder="예시: 이 사진을 배경으로 CF의 주인공 같은 사진을 만들어 주세요." class="w-full p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+                    <button id="generateImageBtn" class="mt-4 w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition duration-300 flex items-center justify-center space-x-2">
+                        <span>🎨 이미지 생성하기</span>
+                        <span class="text-xs bg-green-700 px-2 py-1 rounded">-5 크레딧</span>
                     </button>
                 </div>
                 
-                <div class="bg-white p-6 rounded-lg shadow-sm">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-2">AI 영상 제작 (베타)</h2>
-                    <p class="text-sm text-gray-500 mb-4">보관함의 사진과 해설로 1분 내외의 영상을 만듭니다. (v2.0 지원 예정)</p>
-                    <textarea id="videoGenerationPromptTextarea" rows="4" placeholder="예시: 가이드가 작품 앞에서 텍스트를 나레이션하며 설명하는 영상을 만들어줘." class="w-full p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"></textarea>
-                     <button id="generateVideoBtn" class="mt-4 w-full bg-purple-600 text-white font-bold py-2 px-4 rounded-md hover:bg-purple-700 transition duration-300">
-                        영상 만들기 (데모)
+                <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-purple-500">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-lg font-semibold text-gray-800">🎬 AI 영상 제작</h2>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-2xl font-bold text-purple-600">10</span>
+                            <span class="text-sm text-gray-500">크레딧</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">보관함의 사진과 해설로 1분 내외의 여행 가이드 영상을 자동 제작합니다.</p>
+                    <textarea id="videoGenerationPromptTextarea" rows="4" placeholder="예시: 가이드가 작품 앞에서 텍스트를 나레이션하며 설명하는 영상을 만들어줘." class="w-full p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"></textarea>
+                     <button id="generateVideoBtn" class="mt-4 w-full bg-purple-600 text-white font-bold py-2 px-4 rounded-md hover:bg-purple-700 transition duration-300 flex items-center justify-center space-x-2">
+                        <span>🎬 영상 생성하기</span>
+                        <span class="text-xs bg-purple-700 px-2 py-1 rounded">-10 크레딧</span>
                     </button>
                 </div>
 

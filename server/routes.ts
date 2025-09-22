@@ -451,6 +451,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/credits/deduct', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { amount, description } = req.body;
+      
+      // 🎯 관리자 무제한 크레딧 체크
+      const user = await storage.getUser(userId);
+      if (user?.email === 'admin123' || user?.isAdmin) {
+        return res.json({ success: true, credits: 999999, isAdmin: true });
+      }
+      
+      const success = await storage.deductCredits(userId, amount, description);
+      if (success) {
+        const updatedCredits = await storage.getUserCredits(userId);
+        res.json({ success: true, credits: updatedCredits });
+      } else {
+        res.status(400).json({ success: false, message: '크레딧이 부족합니다.' });
+      }
+    } catch (error) {
+      console.error("Error deducting credits:", error);
+      res.status(500).json({ message: "크레딧 차감 중 오류가 발생했습니다." });
+    }
+  });
+
   app.post('/api/credits/purchase', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -475,6 +499,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing credit purchase:", error);
       res.status(500).json({ message: "Failed to process credit purchase" });
+    }
+  });
+
+  app.post('/api/referral/signup-bonus', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { referrerCode } = req.body;
+      
+      const result = await storage.awardSignupBonus(userId, referrerCode);
+      res.json(result);
+    } catch (error) {
+      console.error("Error processing signup bonus:", error);
+      res.status(500).json({ message: "Failed to process signup bonus" });
     }
   });
 

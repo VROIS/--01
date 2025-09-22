@@ -64,6 +64,20 @@
         </main>
 
         <footer class="text-center mt-12 text-sm text-gray-500">
+            <div id="referralBanner" class="hidden mt-6 mx-auto max-w-md">
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-2">🎁 특별 혜택!</h3>
+                    <p class="text-sm mb-3"><span id="referrerName">추천인</span>님이 추천한 드림샷 스튜디오에서 AI로 나만의 여행 사진과 영상을 만들어보세요!</p>
+                    <div class="flex space-x-2">
+                        <button onclick="signUpWithBonus()" class="flex-1 bg-white text-blue-600 font-bold py-2 px-4 rounded hover:bg-gray-100 text-sm" data-testid="button-signup-bonus">
+                            🆓 가입하고 2 크레딧 받기
+                        </button>
+                        <button onclick="window.open('/', '_blank')" class="flex-1 bg-blue-700 text-white font-bold py-2 px-4 rounded hover:bg-blue-800 text-sm" data-testid="button-try-now">
+                            체험하기
+                        </button>
+                    </div>
+                </div>
+            </div>
             <p>손안에 가이드</p>
         </footer>
     </div>

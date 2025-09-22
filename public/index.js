@@ -69,7 +69,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const textPromptTextarea = document.getElementById('textPromptTextarea');
     const savePromptsBtn = document.getElementById('savePromptsBtn');
     const resetPromptsBtn = document.getElementById('resetPromptsBtn');
-    // v1.8: New Demo Elements
+    // 💳 드림샷 스튜디오 Elements
+    const creditBalance = document.getElementById('creditBalance');
+    const creditStatus = document.getElementById('creditStatus');
+    const creditPurchaseBtn = document.getElementById('creditPurchaseBtn');
+    const creditHistoryBtn = document.getElementById('creditHistoryBtn');
+    const referralCodeBtn = document.getElementById('referralCodeBtn');
     const imageSynthesisPromptTextarea = document.getElementById('imageSynthesisPromptTextarea');
     const generateImageBtn = document.getElementById('generateImageBtn');
     const videoGenerationPromptTextarea = document.getElementById('videoGenerationPromptTextarea');
@@ -97,6 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isSelectionMode = false;
     let selectedItemIds = new Set();
     let cameFromArchive = false;
+    let userCredits = 0;
+    let isAdmin = false;
     
     // --- IndexedDB Setup ---
     const DB_NAME = 'TravelGuideDB';
@@ -312,6 +319,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initializeApp() {
         try {
             await openDB();
+            await loadCreditBalance(); // 💳 크레딧 잔액 로드
+            await handleReferralBonus(); // 🔗 추천 보너스 처리
         } catch(e) {
             console.error("Failed to open database", e);
             showToast("데이터베이스를 열 수 없습니다. 앱이 정상적으로 작동하지 않을 수 있습니다.");
@@ -1200,25 +1209,320 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function handleGenerateImageDemo() {
-        if (!imageSynthesisPromptTextarea.value.trim()) return showToast('이미지 합성을 위한 프롬프트를 입력해주세요.');
-        generateImageBtn.disabled = true;
-        showToast('멋진 이미지를 만들고 있어요...', 3000);
-        setTimeout(() => {
-            showToast('이미지 생성이 완료되었습니다! (데모)');
-            generateImageBtn.disabled = false;
-        }, 4000);
+    // 💳 크레딧 시스템 함수들
+    async function loadCreditBalance() {
+        try {
+            const response = await fetch('/api/credits');
+            if (response.ok) {
+                const data = await response.json();
+                userCredits = data.credits;
+                isAdmin = data.isAdmin;
+                updateCreditDisplay();
+            }
+        } catch (error) {
+            console.error('크레딧 조회 오류:', error);
+        }
     }
 
-    function handleGenerateVideoDemo() {
-        if (!videoGenerationPromptTextarea.value.trim()) return showToast('영상 제작을 위한 프롬프트를 입력해주세요.');
-        generateVideoBtn.disabled = true;
-        showToast('AI가 영상을 제작 중입니다 (약 10초 소요)...', 8000);
-        setTimeout(() => {
-            showToast('영상이 완성되었습니다! (데모)');
-            generateVideoBtn.disabled = false;
-        }, 9000);
+    function updateCreditDisplay() {
+        if (creditBalance && creditStatus) {
+            if (isAdmin) {
+                creditBalance.textContent = '∞';
+                creditStatus.textContent = '관리자 모드';
+            } else {
+                creditBalance.textContent = userCredits.toLocaleString();
+                creditStatus.textContent = '크레딧 잔액';
+            }
+        }
     }
+
+    async function deductCreditsForService(amount, description) {
+        try {
+            // 🛡️ 서버 검증을 통한 크레딧 차감
+            const response = await fetch('/api/credits/deduct', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount, description })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                userCredits = data.credits;
+                isAdmin = data.isAdmin || false;
+                updateCreditDisplay();
+                showToast(`💎 ${amount} 크레딧을 사용했습니다.`);
+                return true;
+            } else {
+                showToast(data.message || '크레딧이 부족합니다.');
+                return false;
+            }
+        } catch (error) {
+            console.error('크레딧 차감 오류:', error);
+            showToast('크레딧 처리 중 오류가 발생했습니다.');
+            return false;
+        }
+    }
+
+    async function handleGenerateImage() {
+        if (!imageSynthesisPromptTextarea.value.trim()) {
+            return showToast('이미지 합성을 위한 프롬프트를 입력해주세요.');
+        }
+
+        // 크레딧 체크
+        if (!isAdmin && userCredits < 5) {
+            showToast('크레딧이 부족합니다. 충전 후 이용해주세요.');
+            return;
+        }
+
+        generateImageBtn.disabled = true;
+        const originalText = generateImageBtn.innerHTML;
+        generateImageBtn.innerHTML = '<span>🎨 이미지 생성 중...</span>';
+
+        try {
+            // 크레딧 차감
+            const success = await deductCreditsForService(5, '🎨 AI 이미지 합성');
+            if (!success && !isAdmin) {
+                throw new Error('크레딧 차감 실패');
+            }
+
+            showToast('AI가 멋진 이미지를 생성하고 있습니다...', 3000);
+            
+            // 실제 이미지 생성 로직 (추후 구현)
+            setTimeout(() => {
+                showToast('🎨 이미지 생성이 완료되었습니다!');
+                generateImageBtn.disabled = false;
+                generateImageBtn.innerHTML = originalText;
+            }, 4000);
+
+        } catch (error) {
+            console.error('이미지 생성 오류:', error);
+            showToast('이미지 생성 중 오류가 발생했습니다.');
+            generateImageBtn.disabled = false;
+            generateImageBtn.innerHTML = originalText;
+        }
+    }
+
+    async function handleGenerateVideo() {
+        if (!videoGenerationPromptTextarea.value.trim()) {
+            return showToast('영상 제작을 위한 프롬프트를 입력해주세요.');
+        }
+
+        // 크레딧 체크
+        if (!isAdmin && userCredits < 10) {
+            showToast('크레딧이 부족합니다. 충전 후 이용해주세요.');
+            return;
+        }
+
+        generateVideoBtn.disabled = true;
+        const originalText = generateVideoBtn.innerHTML;
+        generateVideoBtn.innerHTML = '<span>🎬 영상 제작 중...</span>';
+
+        try {
+            // 크레딧 차감
+            const success = await deductCreditsForService(10, '🎬 AI 영상 제작');
+            if (!success && !isAdmin) {
+                throw new Error('크레딧 차감 실패');
+            }
+
+            showToast('AI가 여행 가이드 영상을 제작 중입니다 (약 10초 소요)...', 8000);
+            
+            // 실제 영상 생성 로직 (추후 구현)
+            setTimeout(() => {
+                showToast('🎬 영상 제작이 완료되었습니다!');
+                generateVideoBtn.disabled = false;
+                generateVideoBtn.innerHTML = originalText;
+            }, 9000);
+
+        } catch (error) {
+            console.error('영상 생성 오류:', error);
+            showToast('영상 제작 중 오류가 발생했습니다.');
+            generateVideoBtn.disabled = false;
+            generateVideoBtn.innerHTML = originalText;
+        }
+    }
+
+    function showCreditPurchaseModal() {
+        const prices = [
+            { credits: 10, price: '$4.99', popular: false },
+            { credits: 25, price: '$9.99', popular: true },
+            { credits: 50, price: '$19.99', popular: false },
+            { credits: 100, price: '$34.99', popular: false }
+        ];
+
+        let modalHTML = `
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div class="bg-white rounded-lg max-w-md w-full max-h-96 overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold">💳 크레딧 충전</h2>
+                            <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">✕</button>
+                        </div>
+                        <div class="space-y-3">
+        `;
+
+        prices.forEach(item => {
+            const popular = item.popular ? ' border-2 border-blue-500 bg-blue-50' : '';
+            modalHTML += `
+                <div class="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 ${popular}" onclick="purchaseCredits(${item.credits}, '${item.price}')">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div class="font-semibold">${item.credits} 크레딧</div>
+                            <div class="text-sm text-gray-500">${item.credits/5}회 이미지 또는 ${item.credits/10}회 영상</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-blue-600">${item.price}</div>
+                            ${item.popular ? '<div class="text-xs bg-blue-500 text-white px-2 py-1 rounded">인기</div>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        modalHTML += `
+                        </div>
+                        <div class="mt-4 text-xs text-gray-500 text-center">
+                            💡 팁: 추천링크로 가입자가 들어올 때마다 3 크레딧 + 현금 킥백!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    window.purchaseCredits = async function(credits, price) {
+        showToast(`${credits} 크레딧 (${price}) 결제 준비 중...`);
+        document.querySelector('.fixed').remove();
+        
+        // 임시 테스트용 크레딧 추가 (실제로는 Stripe 결제 후)
+        try {
+            const response = await fetch('/api/credits/purchase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    amount: credits, 
+                    paymentIntentId: `demo_${Date.now()}` 
+                })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                userCredits = data.credits;
+                updateCreditDisplay();
+                showToast(`🎉 ${credits} 크레딧이 충전되었습니다!`);
+            } else {
+                showToast('충전 중 오류가 발생했습니다.');
+            }
+        } catch (error) {
+            console.error('크레딧 충전 오류:', error);
+            showToast('충전 처리 중 오류가 발생했습니다.');
+        }
+    };
+
+    // 🔗 추천 보너스 처리 함수
+    async function handleReferralBonus() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const refCode = params.get('ref');
+            const referrer = localStorage.getItem('referrer');
+            
+            if (refCode || referrer) {
+                const finalRef = refCode || referrer;
+                console.log(`🔗 추천코드 감지: ${finalRef}`);
+                
+                // 새 사용자에게 추천 보너스 2크레딧 지급
+                const response = await fetch('/api/referral/signup-bonus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ referrerCode: finalRef })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.bonusAwarded) {
+                        userCredits = data.newBalance;
+                        updateCreditDisplay();
+                        showToast(`🎉 ${finalRef}님의 추천으로 2 크레딧을 받았습니다!`);
+                        localStorage.removeItem('referrer'); // 한번만 적용
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('추천 보너스 처리 오류:', error);
+        }
+    }
+
+    function showCreditHistory() {
+        // 크레딧 사용 내역 표시
+        showToast('크레딧 사용 내역을 불러오는 중...');
+        // TODO: 크레딧 내역 조회 API 연동
+    }
+
+    async function showReferralCode() {
+        try {
+            const response = await fetch('/api/referral-code');
+            if (response.ok) {
+                const data = await response.json();
+                const referralUrl = `${window.location.origin}/share.html?ref=${data.referralCode}`;
+                
+                // 공유 모달 생성
+                const modalHTML = `
+                    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white p-6 rounded-lg max-w-md mx-4">
+                            <h3 class="text-xl font-bold mb-4 text-center">🔗 내 추천 코드</h3>
+                            <div class="bg-gray-100 p-3 rounded text-center mb-4">
+                                <strong>${data.referralCode}</strong>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4 text-center">
+                                친구가 이 링크로 가입하면 둘 다 크레딧을 받고, 친구가 결제하면 30% 현금 킹백!
+                            </p>
+                            <div class="space-y-3">
+                                <button onclick="copyToClipboard('${referralUrl}')" 
+                                        class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600" data-testid="button-copy-link">
+                                    링크 복사하기
+                                </button>
+                                <button onclick="shareReferral('${referralUrl}')" 
+                                        class="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600" data-testid="button-share-referral">
+                                    친구에게 공유하기
+                                </button>
+                                <button onclick="this.closest('.fixed').remove()" 
+                                        class="w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400" data-testid="button-close-modal">
+                                    닫기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            } else {
+                showToast('추천 코드를 불러올 수 없습니다.');
+            }
+        } catch (error) {
+            console.error('추천 코드 오류:', error);
+            showToast('추천 코드 처리 중 오류가 발생했습니다.');
+        }
+    }
+
+    window.copyToClipboard = function(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('📋 링크가 복사되었습니다!');
+        });
+    };
+
+    window.shareReferral = function(url) {
+        if (navigator.share) {
+            navigator.share({
+                title: '드림샷 스튜디오 - AI 여행 사진 생성',
+                text: 'AI로 나만의 여행 사진과 영상을 만들어보세요! 가입하면 2 크레딧 무료!',
+                url: url
+            });
+        } else {
+            window.copyToClipboard(url);
+            showToast('링크가 복사되었습니다. 친구에게 전송해보세요!');
+        }
+    };
 
 
     // --- Event Listeners ---
@@ -1253,8 +1557,12 @@ document.addEventListener('DOMContentLoaded', () => {
     authForm?.addEventListener('submit', handleAuth);
     savePromptsBtn?.addEventListener('click', savePrompts);
     resetPromptsBtn?.addEventListener('click', resetPrompts);
-    generateImageBtn?.addEventListener('click', handleGenerateImageDemo);
-    generateVideoBtn?.addEventListener('click', handleGenerateVideoDemo);
+    // 💳 드림샷 스튜디오 이벤트 리스너
+    generateImageBtn?.addEventListener('click', handleGenerateImage);
+    generateVideoBtn?.addEventListener('click', handleGenerateVideo);
+    creditPurchaseBtn?.addEventListener('click', showCreditPurchaseModal);
+    creditHistoryBtn?.addEventListener('click', showCreditHistory);
+    referralCodeBtn?.addEventListener('click', showReferralCode);
 
     initializeApp();
 
