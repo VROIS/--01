@@ -201,6 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
         detailPage.classList.remove('bg-friendly');
         cameraStartOverlay.classList.add('hidden');
         mainFooter.classList.remove('hidden');
+        
+        // 🔧 [업로드 버튼 수정] 메인 페이지 진입 시 업로드 버튼 항상 활성화
+        if (uploadBtn) uploadBtn.disabled = false;
 
         if (stream && !isCameraActive) {
             resumeCamera();
@@ -334,6 +337,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     
         mainLoader.classList.remove('hidden');
+        
+        // 🔧 [업로드 버튼 수정] 업로드는 카메라와 독립적으로 항상 활성화
+        if (uploadBtn) uploadBtn.disabled = false;
     
         try {
             if (!stream) {
@@ -343,8 +349,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error(`Initialization error: ${error.message}`);
-            showToast("카메라 시작에 실패했습니다. 권한을 확인해주세요.");
-            showPage(featuresPage);
+            showToast("카메라 시작에 실패했습니다. 업로드 기능만 사용할 수 있어요.");
+            
+            // 🔧 [카메라 실패시 업로드 유지] 메인 페이지에서 카메라 없이 업로드만 사용
+            if (uploadBtn) uploadBtn.disabled = false;
+            if (shootBtn) shootBtn.disabled = true; // 촬영 버튼만 비활성화
+            if (micBtn) micBtn.disabled = true; // 음성인식 버튼도 비활성화
+            // showPage(featuresPage)를 제거하여 메인 페이지에 머물며 업로드만 사용
         } finally {
             mainLoader.classList.add('hidden');
         }
@@ -407,25 +418,130 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function capturePhoto() {
-        if (!video.videoWidth || !video.videoHeight) return;
+        if (!video.videoWidth || !video.videoHeight) {
+            showToast("카메라가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
+            return;
+        }
+        
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const context = canvas.getContext('2d');
+        
         if (context) {
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            processImage(canvas.toDataURL('image/jpeg'), shootBtn);
+            const dataUrl = canvas.toDataURL('image/jpeg');
+            
+            // 🔧 [검은화면 감지] 캡처된 이미지가 검은화면인지 확인
+            if (isBlackScreen(context)) {
+                showToast("화면이 너무 어둡습니다. 조명을 확인하거나 다른 장소에서 시도해보세요.");
+                return;
+            }
+            
+            processImage(dataUrl, shootBtn);
         }
     }
+    
     
     function handleFileSelect(event) {
         // 🔧 [버그 수정 2] 이미지 업로드는 카메라와 독립적으로 허용
         const file = event.target.files?.[0];
         if (file) {
+            // 🔧 [파일 유효성 검사] 업로드된 파일 검증
+            if (!file.type.startsWith('image/')) {
+                showToast("이미지 파일만 업로드할 수 있습니다.");
+                event.target.value = '';
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) { // 10MB 제한
+                showToast("파일 크기가 너무 큽니다. 10MB 이하 파일을 선택해주세요.");
+                event.target.value = '';
+                return;
+            }
+            
             const reader = new FileReader();
-            reader.onload = (e) => processImage(e.target?.result, uploadBtn);
+            reader.onload = (e) => {
+                const dataUrl = e.target?.result;
+                if (dataUrl) {
+                    // 🔧 [빈 이미지 검사] 업로드된 이미지 유효성 확인
+                    validateAndProcessImage(dataUrl, uploadBtn);
+                }
+            };
+            reader.onerror = () => {
+                showToast("파일을 읽는 중 오류가 발생했습니다.");
+            };
             reader.readAsDataURL(file);
         }
         event.target.value = '';
+    }
+    
+    // 🔧 [이미지 유효성 검사] 업로드된 이미지가 유효한지 확인
+    function validateAndProcessImage(dataUrl, sourceButton) {
+        const img = new Image();
+        img.onload = () => {
+            // 이미지가 너무 작거나 비정상적인 경우 체크
+            if (img.width < 10 || img.height < 10) {
+                showToast("이미지가 너무 작습니다. 더 큰 이미지를 선택해주세요.");
+                return;
+            }
+            
+            // 임시 캔버스로 검은화면 여부 확인
+            const tempCanvas = document.createElement('canvas');
+            const tempContext = tempCanvas.getContext('2d');
+            if (!tempContext) {
+                showToast("이미지 처리 중 오류가 발생했습니다.");
+                return;
+            }
+            tempCanvas.width = Math.min(img.width, 100); // 성능을 위해 축소
+            tempCanvas.height = Math.min(img.height, 100);
+            tempContext.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+            
+            if (isBlackScreen(tempContext, tempCanvas)) {
+                showToast("이미지가 너무 어둡습니다. 더 밝은 이미지를 선택해주세요.");
+                return;
+            }
+            
+            processImage(dataUrl, sourceButton);
+        };
+        img.onerror = () => {
+            showToast("이미지를 불러올 수 없습니다. 다른 파일을 선택해주세요.");
+        };
+        img.src = dataUrl;
+    }
+    
+    // 🔧 [검은화면 감지 함수 개선] 임시 캔버스도 지원하도록 수정
+    function isBlackScreen(context, targetCanvas = canvas) {
+        try {
+            const imageData = context.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
+            const data = imageData.data;
+            
+            // 샘플 픽셀들의 밝기 평균 계산 (성능을 위해 10x10 그리드 샘플링)
+            let totalBrightness = 0;
+            let sampleCount = 0;
+            const step = Math.max(1, Math.floor(targetCanvas.width / 10));
+            
+            for (let x = 0; x < targetCanvas.width; x += step) {
+                for (let y = 0; y < targetCanvas.height; y += step) {
+                    const index = (y * targetCanvas.width + x) * 4;
+                    const r = data[index];
+                    const g = data[index + 1];
+                    const b = data[index + 2];
+                    
+                    // 밝기 계산 (0-255)
+                    const brightness = (r + g + b) / 3;
+                    totalBrightness += brightness;
+                    sampleCount++;
+                }
+            }
+            
+            const averageBrightness = totalBrightness / sampleCount;
+            
+            // 평균 밝기가 30 미만이면 검은화면으로 판단
+            return averageBrightness < 30;
+        } catch (error) {
+            console.warn("검은화면 감지 중 오류:", error);
+            return false; // 오류 시 검은화면이 아닌 것으로 처리
+        }
     }
 
     async function processImage(dataUrl, sourceButton) {
@@ -1111,6 +1227,9 @@ document.addEventListener('DOMContentLoaded', () => {
     micBtn?.addEventListener('click', handleMicButtonClick);
     archiveBtn?.addEventListener('click', showArchivePage);
     uploadInput?.addEventListener('change', handleFileSelect);
+    
+    // 🔧 [초기 업로드 버튼 활성화] 페이지 로드시 업로드는 항상 사용 가능
+    if (uploadBtn) uploadBtn.disabled = false;
     
     backBtn?.addEventListener('click', () => cameFromArchive ? showArchivePage() : showMainPage());
     archiveBackBtn?.addEventListener('click', showMainPage);
