@@ -42,8 +42,16 @@ export function optimizeImage(dataUrl, maxWidth = 1024, maxHeight = 1024) {
 
             ctx.drawImage(img, 0, 0, width, height);
             
+            // 🔍 압축률 테스트용 - localStorage에서 설정 읽기
+            const testQuality = parseFloat(localStorage.getItem('imageQuality')) || 0.9;
+            console.log(`📊 [압축테스트] 사용 품질: ${testQuality}, 크기: ${width}x${height}`);
+            
             // 리사이즈된 이미지를 JPEG 데이터 URL로 가져옵니다.
-            resolve(canvas.toDataURL('image/jpeg', 0.9)); // 0.9는 품질 설정입니다.
+            const result = canvas.toDataURL('image/jpeg', testQuality);
+            const fileSizeKB = Math.round((result.length * 3/4) / 1024);
+            console.log(`📊 [압축결과] 최종 크기: ${fileSizeKB}KB`);
+            
+            resolve(result);
         };
         img.onerror = (error) => {
             console.error("이미지 로딩 오류:", error);
