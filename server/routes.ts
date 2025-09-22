@@ -421,6 +421,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     dotfiles: 'deny'
   }));
 
+  // 💳 크레딧 시스템 API
+  app.get('/api/credits', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      // 🎯 관리자 무제한 크레딧 체크
+      if (user?.email === 'admin123' || user?.isAdmin) {
+        return res.json({ credits: 999999, isAdmin: true });
+      }
+      
+      const credits = await storage.getUserCredits(userId);
+      res.json({ credits, isAdmin: false });
+    } catch (error) {
+      console.error("Error fetching credits:", error);
+      res.status(500).json({ message: "Failed to fetch credits" });
+    }
+  });
+
+  app.get('/api/credits/history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const history = await storage.getCreditHistory(userId);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching credit history:", error);
+      res.status(500).json({ message: "Failed to fetch credit history" });
+    }
+  });
+
+  app.post('/api/credits/purchase', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { amount, paymentIntentId } = req.body;
+      
+      // TODO: Stripe 결제 검증 후 크레딧 추가
+      // const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      // if (paymentIntent.status === 'succeeded') {
+      
+      const user = await storage.addCredits(
+        userId,
+        amount,
+        'purchase',
+        `크레딧 구매: ${amount}개`,
+        paymentIntentId
+      );
+
+      // 💰 추천인 킥백 처리
+      await storage.processCashbackReward(amount * 100, userId); // 센트 단위로 변환
+      
+      res.json({ success: true, credits: user.credits });
+    } catch (error) {
+      console.error("Error processing credit purchase:", error);
+      res.status(500).json({ message: "Failed to process credit purchase" });
+    }
+  });
+
+  app.get('/api/referral-code', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const referralCode = await storage.generateReferralCode(userId);
+      res.json({ referralCode });
+    } catch (error) {
+      console.error("Error generating referral code:", error);
+      res.status(500).json({ message: "Failed to generate referral code" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -46,6 +46,7 @@ export interface IStorage {
   getCreditHistory(userId: string, limit?: number): Promise<CreditTransaction[]>;
   generateReferralCode(userId: string): Promise<string>;
   processReferralReward(referralCode: string, newUserId: string): Promise<void>;
+  processCashbackReward(paymentAmount: number, userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -132,6 +133,15 @@ export class DatabaseStorage implements IStorage {
       .insert(shareLinks)
       .values({ ...shareLink, userId })
       .returning();
+    
+    // 🎁 공유링크 생성 보상: 1 크레딧 지급
+    await this.addCredits(
+      userId, 
+      1, 
+      'share_link_bonus', 
+      `공유링크 생성 보상: ${shareLink.name}`
+    );
+    
     return newShareLink;
   }
 
@@ -265,23 +275,47 @@ export class DatabaseStorage implements IStorage {
       .set({ referredBy: referrer.id, updatedAt: new Date() })
       .where(eq(users.id, newUserId));
     
-    // Add referral bonus to referrer (3 credits)
+    // 🎁 향상된 추천 보상: 추천인 5 크레딧, 신규 2 크레딧
     await this.addCredits(
       referrer.id, 
-      3, 
+      5, 
       'referral_bonus', 
       `추천 보상: ${newUserId}`, 
       newUserId
     );
     
-    // Add welcome bonus to new user (1 credit)
     await this.addCredits(
       newUserId,
-      1,
+      2,
       'referral_bonus',
       `추천 가입 보너스`,
       referrer.id
     );
+  }
+
+  async processCashbackReward(paymentAmount: number, userId: string): Promise<void> {
+    const user = await this.getUser(userId);
+    if (!user?.referredBy) return;
+    
+    // 💰 현금 킥백: 결제 금액의 30%를 추천인에게
+    const cashbackAmount = Math.round(paymentAmount * 0.3);
+    
+    await this.addCredits(
+      user.referredBy,
+      cashbackAmount,
+      'cashback_reward',
+      `현금 킥백: $${(paymentAmount/100).toFixed(2)}의 30%`,
+      userId
+    );
+    
+    // 📊 킥백 지급 기록
+    await db.insert(creditTransactions).values({
+      userId: user.referredBy,
+      type: 'cashback_reward',
+      amount: cashbackAmount,
+      description: `💰 현금 킥백: ${user.email || userId}님 결제 $${(paymentAmount/100).toFixed(2)}`,
+      referenceId: userId,
+    });
   }
 }
 
