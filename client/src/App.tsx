@@ -11,6 +11,8 @@ import Explore from "@/pages/explore";
 import ShareLinks from "@/pages/share-links";
 import Profile from "@/pages/profile";
 import GuideDetail from "@/pages/guide-detail";
+import Credits from "@/pages/credits";
+import DreamStudio from "@/pages/dream-studio";
 import NotFound from "@/pages/not-found";
 import "./lib/i18n";
 
@@ -31,6 +33,8 @@ function Router() {
           <Route path="/explore" component={Explore} />
           <Route path="/share-links" component={ShareLinks} />
           <Route path="/profile" component={Profile} />
+          <Route path="/credits" component={Credits} />
+          <Route path="/dream-studio" component={DreamStudio} />
         </>
       )}
       <Route component={NotFound} />

@@ -12,7 +12,8 @@ export default function Navigation({ currentPage }: NavigationProps) {
   const navItems = [
     { href: "/", icon: "fas fa-home", label: t('nav.home'), key: "home" },
     { href: "/explore", icon: "fas fa-compass", label: t('nav.explore'), key: "explore" },
-    { href: "/share-links", icon: "fas fa-link", label: t('nav.shareLinks'), key: "share-links" },
+    { href: "/credits", icon: "fas fa-coins", label: "크레딧", key: "credits" },
+    { href: "/dream-studio", icon: "fas fa-magic", label: "드림샷", key: "dream-studio" },
     { href: "/profile", icon: "fas fa-user", label: t('nav.profile'), key: "profile" },
   ];
 
