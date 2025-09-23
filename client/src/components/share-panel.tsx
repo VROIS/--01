@@ -28,31 +28,32 @@ export default function SharePanel({ selectedGuideIds, onClose }: SharePanelProp
       includeLocation: boolean;
       includeAudio: boolean;
     }) => {
-      return await apiRequest("POST", "/api/share-links", data);
+      return await apiRequest("POST", "/api/generate-share-html", data);
     },
-    onSuccess: (shareLink) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/share-links"] });
+    onSuccess: (response: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/guides"] });
       
       // Copy link to clipboard
-      const shareUrl = `${window.location.origin}/share/${shareLink.id}`;
+      const shareUrl = response.shareUrl;
       navigator.clipboard.writeText(shareUrl).then(() => {
         toast({
-          title: "Success",
-          description: "Share link created and copied to clipboard!",
+          title: "성공",
+          description: `공유 페이지가 생성되었습니다! (${response.itemCount}개 항목)`,
         });
       }).catch(() => {
         toast({
-          title: "Success",
-          description: "Share link created successfully!",
+          title: "성공", 
+          description: `공유 페이지가 생성되었습니다!`,
         });
       });
       
       onClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error("공유 페이지 생성 오류:", error);
       toast({
-        title: "Error",
-        description: "Failed to create share link. Please try again.",
+        title: "오류",
+        description: error?.response?.data?.error || "공유 페이지 생성에 실패했습니다.",
         variant: "destructive",
       });
     },

@@ -660,19 +660,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // HTML 데이터 준비
-      const shareItems = guides.map(guide => ({
-        id: guide.id,
-        title: guide.title || "제목 없음",
-        description: guide.description || "",
-        imageBase64: guide.imageData?.replace(/^data:image\/[a-z]+;base64,/, '') || "",
-        location: includeLocation ? guide.location : undefined
-      }));
+      const shareItems = guides.map(guide => {
+        let imageBase64 = "";
+        
+        // imageUrl에서 Base64 데이터 읽기
+        if (guide.imageUrl) {
+          try {
+            if (guide.imageUrl.startsWith('data:image/')) {
+              // 이미 Base64 형태인 경우
+              imageBase64 = guide.imageUrl.replace(/^data:image\/[a-z]+;base64,/, '');
+            } else {
+              // 파일 경로인 경우 파일을 읽어서 Base64로 변환
+              const imagePath = path.join(process.cwd(), guide.imageUrl);
+              if (fs.existsSync(imagePath)) {
+                const imageBuffer = fs.readFileSync(imagePath);
+                imageBase64 = imageBuffer.toString('base64');
+              }
+            }
+          } catch (error) {
+            console.error(`이미지 읽기 실패 (${guide.imageUrl}):`, error);
+          }
+        }
+
+        return {
+          id: guide.id,
+          title: guide.title || "제목 없음",
+          description: guide.description || "",
+          imageBase64,
+          location: includeLocation ? (guide.locationName || undefined) : undefined
+        };
+      });
 
       const sharePageData = {
         title: name,
         items: shareItems,
         createdAt: new Date().toISOString(),
-        location: includeLocation ? guides[0]?.location : undefined,
+        location: includeLocation ? (guides[0]?.locationName || undefined) : undefined,
         includeAudio: includeAudio || false
       };
 
