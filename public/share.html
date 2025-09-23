@@ -109,9 +109,9 @@
 
         <!-- ✨ [NEW] 상세페이지 - 보관함과 동일한 구조 -->
         <div id="shareDetailPage" class="fixed inset-0 z-50 hidden ui-layer">
-            <img id="shareResultImage" src="" alt="분석된 이미지" class="w-full h-full object-cover">
-            <header class="absolute top-0 left-0 right-0 z-10 p-4">
-                <button id="shareBackBtn" class="w-12 h-12 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-white shadow-2xl" aria-label="뒤로가기" data-testid="button-back">
+            <img id="shareResultImage" src="" alt="분석된 이미지" class="full-screen-bg">
+            <header class="header-safe-area">
+                <button id="shareBackBtn" class="w-12 h-12 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl absolute top-1/2 left-4 -translate-y-1/2" aria-label="뒤로가기" data-testid="button-back">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                     </svg>
@@ -129,24 +129,22 @@
                     </div>
                 </div>
                 
-                <div id="shareTextOverlay" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent p-6 pb-24">
-                    <div id="shareDescriptionText" class="text-white text-xl leading-relaxed max-h-60 overflow-y-auto"></div>
+                <div id="shareTextOverlay" class="text-content">
+                    <div id="shareDescriptionText" class="readable-on-image text-xl leading-relaxed"></div>
                 </div>
             </div>
             
-            <footer id="shareDetailFooter" class="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md p-4">
-                <div class="flex justify-center space-x-6">
-                    <button id="shareAudioBtn" aria-label="오디오 재생" class="w-16 h-16 flex items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-2xl" data-testid="button-audio">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
-                            <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.648c1.295.748 1.295 2.538 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                    <button id="shareTextToggleBtn" aria-label="해설 읽기" class="w-16 h-16 flex items-center justify-center rounded-full bg-gray-500 hover:bg-gray-600 text-white shadow-2xl" data-testid="button-text-toggle">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                    </button>
-                </div>
+            <footer id="shareDetailFooter" class="footer-safe-area" style="background: transparent;">
+                <button id="shareAudioBtn" aria-label="오디오 재생" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl" data-testid="button-audio">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.648c1.295.748 1.295 2.538 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <button id="shareTextToggleBtn" aria-label="해설 읽기" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl" data-testid="button-text-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </button>
                 
             </footer>
         </div>
