@@ -103,6 +103,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             itemDiv.className = 'guidebook-item relative cursor-pointer bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden aspect-square';
             itemDiv.setAttribute('data-testid', `content-item-${index}`);
 
+            // 🎯 [메인앱 동일] 이미지 클릭 시 상세페이지 열기
+            itemDiv.addEventListener('click', () => {
+                populateShareDetailPage(content, index + 1);
+            });
+
             // 🔒 XSS 방지를 위해 DOM 구조 안전하게 생성
             if (content.imageDataUrl) {
                 const img = document.createElement('img');
@@ -327,38 +332,188 @@ function updateAudioButton(btn, state) {
 }
 
 // 🎯 상세페이지 표시 함수 (이미 받아온 데이터 사용)
-function showShareDetailPage(content, index) {
-    // 음성 중지
+// 🎯 [메인앱 복사] 상세페이지 표시 함수 (메인 앱의 populateDetailPageFromArchive와 동일)
+function populateShareDetailPage(item, guideNumber) {
+    // 🔧 [버그 수정 1] 중앙화된 음성 중지 로직
     stopSpeech();
     
-    // DOM 요소들 가져오기
-    const detailPage = document.getElementById('shareDetailPage');
-    const resultImage = document.getElementById('shareResultImage');
-    const descriptionText = document.getElementById('shareDescriptionText');
-    const audioBtn = document.getElementById('shareAudioBtn');
-    const textOverlay = document.getElementById('shareTextOverlay');
+    const shareDetailPage = document.getElementById('shareDetailPage');
+    const shareResultImage = document.getElementById('shareResultImage');
+    const shareDescriptionText = document.getElementById('shareDescriptionText');
+    const shareTextOverlay = document.getElementById('shareTextOverlay');
+    const shareDetailFooter = document.getElementById('shareDetailFooter');
     
-    // 이미지 설정
-    if (content.imageDataUrl) {
-        resultImage.src = content.imageDataUrl;
+    shareResultImage.src = item.imageDataUrl || '';
+    shareResultImage.classList.toggle('hidden', !item.imageDataUrl);
+
+    shareDescriptionText.innerHTML = '';
+    
+    shareTextOverlay.classList.remove('hidden');
+    shareDetailFooter.classList.remove('hidden');
+    
+    const description = item.description || '';
+    
+    // 🎯 [메인앱 동일] 문장별로 나누어 span 생성 및 음성 큐 추가
+    const sentences = description.match(/[^.?!]+[.?!]+/g) || [description];
+    sentences.forEach(sentence => {
+        if (!sentence) return;
+        const span = document.createElement('span');
+        span.textContent = sentence.trim() + ' ';
+        shareDescriptionText.appendChild(span);
+        queueForSpeech(sentence.trim(), span);
+    });
+
+    updateShareAudioButton('play');
+    shareDetailPage.classList.remove('hidden');
+}
+
+// 🎯 [메인앱 복사] 음성 상태 초기화 (메인 앱과 동일)
+function resetSpeechState() {
+    // 🔧 [버그 수정 1] 더 강력한 음성 상태 초기화
+    utteranceQueue = [];
+    isSpeaking = false;
+    isPaused = false;
+    if (currentlySpeakingElement) {
+        currentlySpeakingElement.classList.remove('speaking');
+    }
+    currentlySpeakingElement = null;
+    
+    // 모든 speaking 클래스 제거 (중복 방지)
+    const allSpeakingElements = document.querySelectorAll('.speaking');
+    allSpeakingElements.forEach(el => el.classList.remove('speaking'));
+}
+
+// 🎯 [메인앱 복사] 중앙화된 음성 중지 (메인 앱과 동일)
+function stopSpeech() {
+    // 즉시 음성 중지 (타이머 없음)
+    if (synth.speaking || synth.pending) {
+        synth.cancel();
     }
     
-    // 설명 텍스트 설정
-    if (content.description) {
-        descriptionText.textContent = content.description;
-        // 음성 버튼에 현재 컨텐츠 저장
-        audioBtn.dataset.currentContent = JSON.stringify(content);
+    // 상태 완전 초기화
+    resetSpeechState();
+}
+
+// 🎯 [메인앱 복사] 다음 문장 재생 (메인 앱과 동일)
+function playNextInQueue() {
+    if (isPaused || utteranceQueue.length === 0) {
+        if (utteranceQueue.length === 0) {
+            isSpeaking = false;
+            isPaused = false;
+            if(currentlySpeakingElement) currentlySpeakingElement.classList.remove('speaking');
+            currentlySpeakingElement = null;
+            updateShareAudioButton('play');
+        }
+        return;
     }
     
-    // 상세페이지 표시
-    detailPage.classList.remove('hidden');
-    textOverlay.classList.remove('hidden');
+    isSpeaking = true;
+    const { utterance, element } = utteranceQueue.shift();
     
-    // 🎵 자동 음성 재생 (보관함과 동일)
-    if (content.description) {
-        setTimeout(() => {
-            playContentAudio(content.description, descriptionText, audioBtn);
-        }, 300);
+    if (currentlySpeakingElement) {
+        currentlySpeakingElement.classList.remove('speaking');
+    }
+    element.classList.add('speaking');
+    currentlySpeakingElement = element;
+    
+    utterance.onend = () => {
+        playNextInQueue();
+    };
+
+    synth.speak(utterance);
+}
+
+// 🎯 [메인앱 복사] 음성 재생 큐에 추가 (메인 앱과 동일)
+function queueForSpeech(text, element) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ko-KR';
+    utteranceQueue.push({ utterance, element });
+
+    if (!isSpeaking && !synth.speaking && !isPaused) {
+        updateShareAudioButton('pause');
+        playNextInQueue();
+    }
+}
+
+// 🎯 [메인앱 복사] 음성 재시작 (메인 앱과 동일)
+function restartShareAudio() {
+    stopSpeech(); // 중앙화된 음성 중지
+
+    const shareDescriptionText = document.getElementById('shareDescriptionText');
+    const sentences = Array.from(shareDescriptionText.querySelectorAll('span'));
+    if (sentences.length === 0) {
+         const description = shareDescriptionText.textContent || '';
+         const sentenceChunks = description.match(/[^.?!]+[.?!]+/g) || [description];
+         sentenceChunks.forEach(sentence => {
+            if (sentence.trim()) queueForSpeech(sentence.trim(), document.createElement('span'));
+         });
+    } else {
+         sentences.forEach(span => {
+            const text = span.textContent.trim();
+            if (text) queueForSpeech(text, span);
+        });
+    }
+    playNextInQueue();
+}
+
+// 🎯 [메인앱 복사] 오디오 버튼 클릭 처리 (메인 앱과 동일)
+function handleShareAudioButtonClick() {
+    if (!isSpeaking && utteranceQueue.length > 0) {
+        isPaused = false;
+        if (synth.paused) synth.resume();
+        else playNextInQueue();
+        updateShareAudioButton('pause');
+    } else if (isSpeaking && !isPaused) {
+        isPaused = true;
+        synth.pause();
+        updateShareAudioButton('resume');
+    } else if (isSpeaking && isPaused) {
+        isPaused = false;
+        synth.resume();
+        updateShareAudioButton('pause');
+    }
+}
+
+// 🎯 [메인앱 복사] 오디오 버튼 더블클릭 감지 (메인 앱과 동일)
+function onShareAudioBtnClick() {
+    const now = Date.now();
+    if (now - lastAudioClickTime < 350) {
+        restartShareAudio();
+    } else {
+        handleShareAudioButtonClick();
+    }
+    lastAudioClickTime = now;
+}
+
+// 🎯 [메인앱 복사] 오디오 버튼 상태 업데이트 (메인 앱과 동일)
+function updateShareAudioButton(state) {
+const playIcon = '<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.648c1.295.748 1.295 2.538 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" /></svg>';
+const pauseIcon = '<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M6.75 5.25a.75 .75 0 01.75-.75H9a.75 .75 0 01.75.75v13.5a.75 .75 0 01-.75.75H7.5a.75 .75 0 01-.75-.75V5.25zm7.5 0a.75 .75 0 01.75-.75h1.5a.75 .75 0 01.75.75v13.5a.75 .75 0 01-.75.75h-1.5a.75 .75 0 01-.75-.75V5.25z" clip-rule="evenodd" /></svg>';
+const loadingIcon = '<div class="w-8 h-8 rounded-full animate-spin loader-blue"></div>';
+
+    const shareAudioBtn = document.getElementById('shareAudioBtn');
+    if (!shareAudioBtn) return;
+
+    shareAudioBtn.disabled = state === 'loading' || state === 'disabled';
+    
+    switch (state) {
+        case 'play':
+        case 'resume':
+            shareAudioBtn.innerHTML = playIcon;
+            shareAudioBtn.setAttribute('aria-label', '오디오 재생');
+            break;
+        case 'pause':
+            shareAudioBtn.innerHTML = pauseIcon;
+            shareAudioBtn.setAttribute('aria-label', '오디오 일시정지');
+            break;
+        case 'loading':
+            shareAudioBtn.innerHTML = loadingIcon;
+             shareAudioBtn.setAttribute('aria-label', '오디오 로딩 중');
+            break;
+        case 'disabled':
+             shareAudioBtn.innerHTML = playIcon;
+             shareAudioBtn.setAttribute('aria-label', '오디오 재생 불가');
+            break;
     }
 }
 
@@ -370,4 +525,32 @@ function hideShareDetailPage() {
     const detailPage = document.getElementById('shareDetailPage');
     detailPage.classList.add('hidden');
 }
+
+// 🎯 [메인앱 동일] 이벤트 리스너 연결
+document.addEventListener('DOMContentLoaded', () => {
+    // 공유 상세페이지 버튼들
+    const shareAudioBtn = document.getElementById('shareAudioBtn');
+    const shareBackBtn = document.getElementById('shareBackBtn');
+    const shareTextToggleBtn = document.getElementById('shareTextToggleBtn');
+    
+    // 🎵 오디오 버튼 이벤트 (메인 앱과 동일)
+    if (shareAudioBtn) {
+        shareAudioBtn.addEventListener('click', onShareAudioBtnClick);
+    }
+    
+    // 🔙 뒤로 가기 버튼
+    if (shareBackBtn) {
+        shareBackBtn.addEventListener('click', hideShareDetailPage);
+    }
+    
+    // 📝 텍스트 토글 버튼 (메인 앱과 동일)
+    if (shareTextToggleBtn) {
+        shareTextToggleBtn.addEventListener('click', () => {
+            const shareTextOverlay = document.getElementById('shareTextOverlay');
+            if (shareTextOverlay) {
+                shareTextOverlay.classList.toggle('hidden');
+            }
+        });
+    }
+});
 
