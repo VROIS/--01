@@ -1,0 +1,293 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">가이드북 - 내손가이드</title>
+    <meta name="description" content="직접 체험한 실제 여행 가이드북을 확인해보세요. 사진과 함께하는 생생한 여행 정보를 제공합니다.">
+    <meta name="keywords" content="여행가이드, 여행정보, 내손가이드, 여행공유, 여행사진">
+    <meta name="author" content="내손가이드">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph 태그 (카톡, 페이스북 등 소셜 공유용) -->
+    <meta id="og-title" property="og:title" content="가이드북 - 내손가이드">
+    <meta id="og-description" property="og:description" content="직접 체험한 실제 여행 가이드북을 확인해보세요.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
+    <meta property="og:site_name" content="내손가이드">
+    <meta property="og:locale" content="ko_KR">
+    
+    <!-- Twitter Card 태그 -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta id="twitter-title" name="twitter:title" content="가이드북 - 내손가이드">
+    <meta id="twitter-description" name="twitter:description" content="직접 체험한 실제 여행 가이드북을 확인해보세요.">
+    
+    <!-- 브라우저 호환성 개선 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://hangeul.pstatic.net">
+    <link rel="stylesheet" href="https://hangeul.pstatic.net/maruburi/maruburi.css">
+    <style>
+        :root {
+            --gemini-blue: #4285F4;
+        }
+        body {
+            font-family: 'MaruBuri', sans-serif;
+            touch-action: manipulation; 
+            -webkit-tap-highlight-color: transparent; 
+            background-color: #FFFEFA;
+        }
+        
+        .full-screen-bg { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+            object-fit: cover; 
+            z-index: 1; 
+        }
+        .ui-layer { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: 10; 
+            display: flex; 
+            flex-direction: column; 
+            opacity: 0;
+            transition: opacity 0.15s ease-out;
+            visibility: hidden;
+        }
+        .ui-layer.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .header-safe-area { 
+            width: 100%; 
+            height: 80px; 
+            flex-shrink: 0; 
+            z-index: 30; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 1rem;
+            position: relative;
+        }
+        .content-safe-area { 
+            flex: 1; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; 
+            background: transparent;
+            z-index: 20;
+        }
+        .footer-safe-area { 
+            width: 100%; 
+            height: 100px; 
+            flex-shrink: 0; 
+            z-index: 30; 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            padding: 0 1rem;
+        }
+        .loader-container { 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        .loader { 
+            border: 6px solid rgba(0,0,0,0.2); 
+            border-radius: 50%; 
+            border-top: 6px solid #1f2937; 
+            width: 60px; 
+            height: 60px; 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        .text-content {
+            padding: 2rem 1.5rem;
+            line-height: 1.8;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+        .interactive-btn {
+            transition: transform 0.1s ease, background-color 0.2s ease;
+            position: relative;
+        }
+        .interactive-btn:active { 
+            transform: scale(0.95); 
+        }
+        .interactive-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: scale(1) !important;
+        }
+        .readable-on-image {
+            color: white;
+            text-shadow: 0px 2px 8px rgba(0, 0, 0, 0.95);
+        }
+        .text-gemini-blue { color: var(--gemini-blue); }
+        .guidebook-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .guidebook-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .guidebook-item:hover {
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        /* 🎵 음성 재생 중 하이라이트 - 보관함과 동일 */
+        .speaking {
+            background-color: rgba(0, 0, 0, 0.4);
+            transition: background-color 0.3s ease-in-out;
+            border-radius: 6px;
+            padding: 0.1em 0.2em;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        /* 오디오 버튼 애니메이션 */
+        .audio-btn {
+            transition: all 0.2s ease;
+        }
+        .audio-btn:hover {
+            transform: scale(1.1);
+        }
+        /* 🎯 3×10 모자이크 그리드 스타일 */
+        .guidebook-item {
+            transition: all 0.3s ease;
+        }
+        .guidebook-item:hover {
+            transform: translateY(-2px);
+        }
+        /* 텍스트 라인 클램프 */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 id="guidebook-title" class="text-3xl font-bold text-gray-800">공유된 가이드북</h1>
+            <p id="guidebook-location" class="text-gray-500 mt-1 text-sm"></p>
+            <p id="guidebook-created-date" class="text-gray-600 mt-2"></p>
+        </header>
+
+        <!-- 🎯 3×10 모자이크 그리드 구조 -->
+        <main class="max-w-6xl mx-auto">
+            <!-- Loading spinner -->
+            <div id="loader" class="text-center py-10">
+                <div class="inline-block w-8 h-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+                    <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+                </div>
+                <p class="mt-4 text-gray-700">가이드북을 불러오는 중입니다...</p>
+            </div>
+            
+            <!-- 3×10 모자이크 그리드 컨테이너 -->
+            <div id="guidebook-content" class="grid grid-cols-3 gap-4 p-4">
+                <!-- Guidebook items will be inserted here in 3x10 grid -->
+            </div>
+            
+        </main>
+
+        <!-- ✨ 상세페이지 - 보관함과 100% 동일한 구조 -->
+        <div id="shareDetailPage" class="ui-layer">
+            <img id="shareResultImage" src="" alt="분석된 이미지" class="full-screen-bg">
+            <header class="header-safe-area">
+                <button id="shareBackBtn" class="w-12 h-12 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl absolute top-1/2 left-4 -translate-y-1/2" aria-label="뒤로가기" data-testid="button-back">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                    </svg>
+                </button>
+                <div id="shareLoadingHeader" class="text-center">
+                    <h1 class="text-xl font-bold readable-on-image"></h1>
+                </div>
+            </header>
+            <div class="content-safe-area">
+                <div id="shareLoader" class="loader-container">
+                    <div class="loader"></div>
+                    <p id="shareLoadingText" class="readable-on-image text-lg mt-4 font-semibold text-center px-4">잠시만 기다려주세요...</p>
+                </div>
+                <div id="shareTextOverlay" class="text-content hidden">
+                    <p id="shareDescriptionText" class="readable-on-image text-xl leading-relaxed"></p>
+                </div>
+            </div>
+            <footer id="shareDetailFooter" class="footer-safe-area hidden" style="background: transparent;">
+                <button id="shareAudioBtn" aria-label="오디오 재생" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl" data-testid="button-audio">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.648c1.295.748 1.295 2.538 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <button id="shareTextToggleBtn" aria-label="해설 읽기" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl" data-testid="button-text-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </button>
+                <button id="shareHomeBtn" aria-label="내손가이드 앱으로 이동" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl" data-testid="button-home">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                    </svg>
+                </button>
+            </footer>
+        </div>
+
+        <footer class="text-center mt-12 text-sm text-gray-500">
+            <div id="referralBanner" class="hidden mt-6 mx-auto max-w-md">
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-2">🎁 특별 혜택!</h3>
+                    <p class="text-sm mb-3"><span id="referrerName">추천인</span>님이 추천한 드림샷 스튜디오에서 AI로 나만의 여행 사진과 영상을 만들어보세요!</p>
+                    <div class="flex space-x-2">
+                        <button onclick="signUpWithBonus()" class="flex-1 bg-white text-blue-600 font-bold py-2 px-4 rounded hover:bg-gray-100 text-sm" data-testid="button-signup-bonus">
+                            🆓 가입하고 2 크레딧 받기
+                        </button>
+                        <button onclick="window.open('/', '_blank')" class="flex-1 bg-blue-700 text-white font-bold py-2 px-4 rounded hover:bg-blue-800 text-sm" data-testid="button-try-now">
+                            체험하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <p>손안에 가이드</p>
+        </footer>
+    </div>
+
+    <script src="./share-page.js"></script>
+    <script>
+        // 서비스 워커 등록 (보관함과 동일)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

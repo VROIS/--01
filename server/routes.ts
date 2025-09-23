@@ -165,6 +165,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate HTML share page endpoint (NEW)
+  app.post('/api/generate-share-html', async (req, res) => {
+    try {
+      const { name, guideIds, includeLocation, includeAudio } = req.body;
+      
+      if (!Array.isArray(guideIds) || guideIds.length === 0) {
+        return res.status(400).json({ error: "공유할 가이드가 없습니다." });
+      }
+      
+      if (guideIds.length > 20) {
+        return res.status(400).json({ error: "한 번에 최대 20개까지만 공유할 수 있습니다." });
+      }
+
+      // Fetch actual guide data from database
+      const actualGuides = await storage.getGuidesByIds(guideIds);
+      
+      if (actualGuides.length === 0) {
+        return res.status(404).json({ error: "선택한 가이드를 찾을 수 없습니다." });
+      }
+      
+      // Helper function to convert image to base64
+      const imageToBase64 = async (imageUrl: string): Promise<string> => {
+        try {
+          if (!imageUrl) {
+            // Return a small placeholder image
+            return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+          }
+          
+          // If it's a local file path
+          if (imageUrl.startsWith('/uploads/') || !imageUrl.startsWith('http')) {
+            const imagePath = path.join(process.cwd(), 'uploads', path.basename(imageUrl));
+            if (fs.existsSync(imagePath)) {
+              const imageBuffer = fs.readFileSync(imagePath);
+              return imageBuffer.toString('base64');
+            }
+          }
+          
+          // For HTTP URLs, we'll use placeholder for now
+          return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+        } catch (error) {
+          console.error('이미지 변환 오류:', error);
+          return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+        }
+      };
+      
+      // Convert guides to template format with real data
+      const guidesWithBase64 = await Promise.all(
+        actualGuides.map(async (guide) => ({
+          id: guide.id,
+          title: guide.title,
+          description: guide.aiGeneratedContent || guide.description || `${guide.title}에 대한 설명입니다.`,
+          imageBase64: await imageToBase64(guide.imageUrl || ''),
+          location: includeLocation ? (guide.locationName || undefined) : undefined
+        }))
+      );
+
+      // Generate HTML using our template with real data
+      const htmlContent = generateShareHtml({
+        title: name || "공유된 가이드북",
+        items: guidesWithBase64,
+        createdAt: new Date().toISOString(),
+        location: includeLocation && guidesWithBase64[0]?.location ? guidesWithBase64[0].location : undefined,
+        includeAudio: includeAudio || false
+      });
+
+      // Generate safe filename for download
+      const safeName = (name || "공유된가이드북").replace(/[^a-zA-Z0-9가-힣\s]/g, '').trim() || "공유된가이드북";
+      const fileName = `${safeName}-공유페이지.html`;
+      
+      // Return HTML content directly for client-side download
+      res.json({ 
+        htmlContent: htmlContent,
+        fileName: fileName,
+        itemCount: guidesWithBase64.length
+      });
+      
+    } catch (error) {
+      console.error("HTML 공유 페이지 생성 오류:", error);
+      res.status(500).json({ error: "공유 페이지 생성 중 오류가 발생했습니다." });
+    }
+  });
+
   // Auth middleware
   await setupAuth(app);
 

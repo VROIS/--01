@@ -33,18 +33,23 @@ export default function SharePanel({ selectedGuideIds, onClose }: SharePanelProp
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/guides"] });
       
-      // Copy link to clipboard
-      const shareUrl = response.shareUrl;
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        toast({
-          title: "성공",
-          description: `공유 페이지가 생성되었습니다! (${response.itemCount}개 항목)`,
-        });
-      }).catch(() => {
-        toast({
-          title: "성공", 
-          description: `공유 페이지가 생성되었습니다!`,
-        });
+      // Download HTML file directly
+      const { htmlContent, fileName, itemCount } = response;
+      
+      // Create blob and download file
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "성공",
+        description: `공유 페이지가 다운로드되었습니다! (${itemCount}개 항목)`,
       });
       
       onClose();
