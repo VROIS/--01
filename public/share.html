@@ -152,12 +152,14 @@
             border-radius: 0.5rem;
             padding: 1rem;
         }
-        /* 🎵 음성 재생 중 하이라이트 */
+        /* 🎵 음성 재생 중 하이라이트 - 보관함과 동일 */
         .speaking {
-            background-color: #fef3c7;
-            border-radius: 0.25rem;
-            padding: 0.125rem 0.25rem;
-            animation: pulse 2s infinite;
+            background-color: rgba(0, 0, 0, 0.4);
+            transition: background-color 0.3s ease-in-out;
+            border-radius: 6px;
+            padding: 0.1em 0.2em;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
         }
         @keyframes pulse {
             0%, 100% { opacity: 1; }

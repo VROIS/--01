@@ -39,6 +39,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         console.log('Received shareData:', shareData);
         
+        // 🔄 오프라인 지원: 로컬스토리지에 데이터 저장
+        try {
+            localStorage.setItem(`share-${shareId}`, JSON.stringify(shareData));
+            console.log('💾 공유 데이터를 로컬스토리지에 저장했습니다:', shareId);
+        } catch (e) {
+            console.warn('로컬스토리지 저장 실패:', e);
+        }
+        
         if (!shareData || !shareData.contents || shareData.contents.length === 0) {
             throw new Error('유효하지 않은 공유 데이터입니다.');
         }
@@ -76,6 +84,51 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (error) {
         console.error('가이드북 로딩 오류:', error);
+        
+        // 🔄 오프라인 지원: 로컬스토리지에서 데이터 복구 시도
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const shareId = urlParams.get('id');
+            const cachedData = localStorage.getItem(`share-${shareId}`);
+            
+            if (cachedData) {
+                const shareData = JSON.parse(cachedData);
+                console.log('📦 오프라인 모드: 로컬스토리지에서 데이터 복구:', shareId);
+                
+                // 타이틀과 설명 설정
+                descriptionEl.textContent = shareData.name || '공유된 가이드북 (오프라인)';
+                
+                // 로더 숨기고 그리드 생성
+                loader.style.display = 'none';
+                
+                shareData.contents.forEach((content, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'archive-item cursor-pointer';
+                    itemDiv.dataset.id = `content-item-${index}`;
+
+                    const img = document.createElement('img');
+                    img.src = content.imageDataUrl;
+                    img.alt = content.description.substring(0, 30);
+                    img.loading = 'lazy';
+                    img.className = 'w-full h-full object-cover aspect-square';
+
+                    itemDiv.appendChild(img);
+                    contentContainer.appendChild(itemDiv);
+
+                    itemDiv.addEventListener('click', () => {
+                        console.log('Item clicked (offline):', content);
+                        populateShareDetailPage(content);
+                    });
+                });
+
+                setupDetailPageEventListeners();
+                return; // 성공적으로 복구됨
+            }
+        } catch (localError) {
+            console.warn('로컬스토리지 복구 실패:', localError);
+        }
+        
+        // 로컬스토리지에서도 복구 실패
         showError(`가이드북을 불러오는 중 오류가 발생했습니다: ${error.message}`);
     }
 });
