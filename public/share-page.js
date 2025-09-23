@@ -37,7 +37,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const shareData = response.json ? await response.json() : response;
         
-        console.log('Received shareData:', shareData);
+        console.log('🔍 Received shareData:', shareData);
+        console.log('🔍 shareData.name:', shareData.name);
+        console.log('🔍 shareData.linkName:', shareData.linkName);
+        console.log('🔍 shareData keys:', Object.keys(shareData));
         
         // 🔄 오프라인 지원: 로컬스토리지에 데이터 저장
         try {
@@ -51,8 +54,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error('유효하지 않은 공유 데이터입니다.');
         }
 
-        // 타이틀과 설명 설정
-        descriptionEl.textContent = shareData.name || '공유된 가이드북';
+        // 🔥 새로운 헤더 시스템 적용
+        const titleEl = document.getElementById('guidebook-title');
+        const locationEl = document.getElementById('guidebook-location');
+        const createdDateEl = document.getElementById('guidebook-created-date');
+        
+        // 링크 이름을 타이틀로 사용
+        const linkName = shareData.name || shareData.linkName || '공유된 가이드북';
+        titleEl.textContent = linkName;
+        
+        // 🔥 페이지 타이틀과 메타태그 동적 업데이트
+        document.title = `${linkName} - 내손가이드`;
+        document.getElementById('page-title').textContent = `${linkName} - 내손가이드`;
+        document.getElementById('og-title').setAttribute('content', `${linkName} - 내손가이드`);
+        document.getElementById('twitter-title').setAttribute('content', `${linkName} - 내손가이드`);
+        
+        // GPS 위치 정보 표시 (사진촬영시만, 업로드시 제외)
+        if (shareData.location && shareData.location.trim() !== '') {
+            locationEl.textContent = `📍 ${shareData.location}`;
+            locationEl.style.display = 'block';
+        } else {
+            locationEl.style.display = 'none';
+        }
+        
+        // 생성일자 표시 (인간적인 형태로)
+        if (shareData.createdAt) {
+            const date = new Date(shareData.createdAt);
+            const formattedDate = date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            createdDateEl.textContent = `${formattedDate}에 생성`;
+        }
 
         // 로더 숨기고 그리드 생성 - 보관함과 동일한 방식
         loader.style.display = 'none';
@@ -338,10 +372,12 @@ function setupDetailPageEventListeners() {
     const shareBackBtn = document.getElementById('shareBackBtn');
     const shareAudioBtn = document.getElementById('shareAudioBtn');
     const shareTextToggleBtn = document.getElementById('shareTextToggleBtn');
+    const shareHomeBtn = document.getElementById('shareHomeBtn');
     
     console.log('Found shareBackBtn:', !!shareBackBtn);
     console.log('Found shareAudioBtn:', !!shareAudioBtn);
     console.log('Found shareTextToggleBtn:', !!shareTextToggleBtn);
+    console.log('Found shareHomeBtn:', !!shareHomeBtn);
     
     if (shareBackBtn) {
         shareBackBtn.addEventListener('click', () => {
@@ -367,6 +403,13 @@ function setupDetailPageEventListeners() {
             } else {
                 console.log('shareTextOverlay not found');
             }
+        });
+    }
+    
+    if (shareHomeBtn) {
+        shareHomeBtn.addEventListener('click', () => {
+            console.log('Home button clicked');
+            window.open('/', '_blank');
         });
     }
 }
