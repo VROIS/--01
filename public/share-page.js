@@ -146,21 +146,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             // 🎵 이미지 클릭시 자동 음성 재생  
             itemDiv.addEventListener('click', (e) => {
                 if (!e.target.closest('.audio-btn')) {
-                    const descriptionText = itemDiv.querySelector('.description-text');
-                    const audioBtn = itemDiv.querySelector('.audio-btn');
                     if (content.description) {
-                        playContentAudio(content.description, descriptionText, audioBtn);
+                        playContentAudio(content.description, description, audioBtn);
                     }
                 }
             });
             
             // 🎵 음성 버튼 클릭 처리
-            const audioBtn = itemDiv.querySelector('.audio-btn');
             if (audioBtn && content.description) {
                 audioBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const descriptionText = itemDiv.querySelector('.description-text');
-                    playContentAudio(content.description, descriptionText, audioBtn);
+                    playContentAudio(content.description, description, audioBtn);
                 });
             }
             
