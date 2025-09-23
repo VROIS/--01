@@ -165,6 +165,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public share page endpoint - accessible without authentication
+  app.get('/share/:id', async (req, res) => {
+    try {
+      const shareId = req.params.id;
+      
+      // Get share link data
+      const shareLink = await storage.getShareLink(shareId);
+      if (!shareLink || !shareLink.isActive) {
+        return res.status(404).send(`
+          <!DOCTYPE html>
+          <html lang="ko">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>공유 페이지를 찾을 수 없습니다 - 내손가이드</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5;">
+            <h1>🔍 페이지를 찾을 수 없습니다</h1>
+            <p>요청하신 공유 페이지가 존재하지 않거나 삭제되었습니다.</p>
+            <a href="/" style="color: #007bff; text-decoration: none;">내손가이드 홈페이지로 이동</a>
+          </body>
+          </html>
+        `);
+      }
+
+      // Increment view count
+      await storage.incrementShareLinkViews(shareId);
+
+      // Get actual guide data
+      const guides = await storage.getGuidesByIds(shareLink.guideIds);
+      if (guides.length === 0) {
+        return res.status(404).send(`
+          <!DOCTYPE html>
+          <html lang="ko">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>가이드를 찾을 수 없습니다 - 내손가이드</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5;">
+            <h1>📚 가이드를 찾을 수 없습니다</h1>
+            <p>이 공유 페이지에 포함된 가이드가 더 이상 존재하지 않습니다.</p>
+            <a href="/" style="color: #007bff; text-decoration: none;">내손가이드 홈페이지로 이동</a>
+          </body>
+          </html>
+        `);
+      }
+
+      // Helper function to convert image to base64
+      const imageToBase64 = async (imageUrl: string): Promise<string> => {
+        try {
+          if (!imageUrl) {
+            return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+          }
+          
+          if (imageUrl.startsWith('/uploads/') || !imageUrl.startsWith('http')) {
+            const imagePath = path.join(process.cwd(), 'uploads', path.basename(imageUrl));
+            if (fs.existsSync(imagePath)) {
+              const imageBuffer = fs.readFileSync(imagePath);
+              return imageBuffer.toString('base64');
+            }
+          }
+          
+          return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+        } catch (error) {
+          console.error('이미지 변환 오류:', error);
+          return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+        }
+      };
+
+      // Convert guides to template format with real data
+      const guidesWithBase64 = await Promise.all(
+        guides.map(async (guide) => ({
+          id: guide.id,
+          title: guide.title,
+          description: guide.aiGeneratedContent || guide.description || `${guide.title}에 대한 설명입니다.`,
+          imageBase64: await imageToBase64(guide.imageUrl || ''),
+          location: shareLink.includeLocation ? (guide.locationName || undefined) : undefined
+        }))
+      );
+
+      // Generate HTML using our template
+      const htmlContent = generateShareHtml({
+        title: shareLink.name,
+        items: guidesWithBase64,
+        createdAt: shareLink.createdAt?.toISOString() || new Date().toISOString(),
+        location: (shareLink.includeLocation || false) && guidesWithBase64[0]?.location ? guidesWithBase64[0].location : undefined,
+        includeAudio: shareLink.includeAudio || false
+      });
+
+      // Set proper headers for caching and content type
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minute cache
+      res.send(htmlContent);
+      
+    } catch (error) {
+      console.error("공유 페이지 조회 오류:", error);
+      res.status(500).send(`
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>오류 발생 - 내손가이드</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5;">
+          <h1>⚠️ 오류가 발생했습니다</h1>
+          <p>공유 페이지를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.</p>
+          <a href="/" style="color: #007bff; text-decoration: none;">내손가이드 홈페이지로 이동</a>
+        </body>
+        </html>
+      `);
+    }
+  });
+
   // Generate HTML share page endpoint (NEW)
   app.post('/api/generate-share-html', async (req, res) => {
     try {
@@ -707,6 +822,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("스크립트 최적화 오류:", error);
       res.status(500).json({ message: "스크립트 최적화에 실패했습니다." });
+    }
+  });
+
+  // Create share link with URL (instead of HTML download)
+  app.post('/api/create-share-link', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, guideIds, includeLocation, includeAudio } = req.body;
+      
+      if (!name || !Array.isArray(guideIds) || guideIds.length === 0) {
+        return res.status(400).json({ error: "이름과 가이드를 선택해주세요." });
+      }
+
+      if (guideIds.length > 30) {
+        return res.status(400).json({ error: "한 번에 최대 30개까지만 공유할 수 있습니다." });
+      }
+
+      // Verify guides exist and belong to user (or are public)
+      const guides = await storage.getGuidesByIds(guideIds);
+      if (guides.length === 0) {
+        return res.status(404).json({ error: "선택한 가이드를 찾을 수 없습니다." });
+      }
+
+      // Create share link in database
+      const shareLink = await storage.createShareLink(userId, {
+        name: name.trim(),
+        guideIds: guideIds,
+        includeLocation: includeLocation || false,
+        includeAudio: includeAudio || false
+      });
+
+      // Return the share URL
+      const shareUrl = `${req.protocol}://${req.get('host')}/share/${shareLink.id}`;
+      
+      res.json({ 
+        shareUrl: shareUrl,
+        shareId: shareLink.id,
+        itemCount: guides.length
+      });
+      
+    } catch (error) {
+      console.error("공유 링크 생성 오류:", error);
+      res.status(500).json({ error: "공유 링크 생성 중 오류가 발생했습니다." });
     }
   });
 
