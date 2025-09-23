@@ -226,6 +226,9 @@ function populateShareDetailPage(item) {
     const shareResultImage = document.getElementById('shareResultImage');
     const shareDescriptionText = document.getElementById('shareDescriptionText');
     const shareTextOverlay = document.getElementById('shareTextOverlay');
+    const shareLoader = document.getElementById('shareLoader');
+    const shareLoadingHeader = document.getElementById('shareLoadingHeader');
+    const shareDetailFooter = document.getElementById('shareDetailFooter');
     
     if (!shareDetailPage || !shareResultImage || !shareDescriptionText) {
         console.error('Required share page elements not found');
@@ -242,9 +245,12 @@ function populateShareDetailPage(item) {
     // 텍스트 초기화
     shareDescriptionText.innerHTML = '';
     
-    // 오버레이 표시 (보관함과 동일)
+    // 보관함과 100% 동일한 요소 표시/숨김 순서
+    shareLoader.classList.add('hidden');
     shareTextOverlay.classList.remove('hidden');
     shareTextOverlay.classList.remove('animate-in');
+    shareLoadingHeader.classList.add('hidden');
+    shareDetailFooter.classList.remove('hidden');
     
     const description = item.description || '';
     
@@ -260,8 +266,8 @@ function populateShareDetailPage(item) {
 
     updateAudioButton('play');
     
-    // 상세페이지 표시
-    shareDetailPage.classList.remove('hidden');
+    // 상세페이지 표시 (보관함과 동일)
+    shareDetailPage.classList.add('visible');
 }
 
 function hideShareDetailPage() {
@@ -270,7 +276,7 @@ function hideShareDetailPage() {
     
     const shareDetailPage = document.getElementById('shareDetailPage');
     if (shareDetailPage) {
-        shareDetailPage.classList.add('hidden');
+        shareDetailPage.classList.remove('visible');
     }
 }
 
