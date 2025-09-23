@@ -9,6 +9,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+import { generateShareHtml } from "./html-template";
 
 // Configure multer for image uploads
 const upload = multer({
@@ -624,6 +625,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("스크립트 최적화 오류:", error);
       res.status(500).json({ message: "스크립트 최적화에 실패했습니다." });
+    }
+  });
+
+  // HTML 공유 페이지 생성
+  app.post('/api/generate-share-html', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, guideIds, includeLocation, includeAudio } = req.body;
+
+      if (!name || !guideIds || !Array.isArray(guideIds) || guideIds.length === 0) {
+        return res.status(400).json({ 
+          error: "이름과 가이드 ID 목록이 필요합니다." 
+        });
+      }
+
+      // 최대 20개로 제한 (2*10 그리드)
+      if (guideIds.length > 20) {
+        return res.status(400).json({ 
+          error: "최대 20개까지만 공유할 수 있습니다." 
+        });
+      }
+
+      // 사용자의 가이드들 조회
+      const guides = [];
+      for (const guideId of guideIds) {
+        const guide = await storage.getGuide(guideId);
+        if (!guide || guide.userId !== userId) {
+          return res.status(404).json({ 
+            error: `가이드 ${guideId}를 찾을 수 없습니다.` 
+          });
+        }
+        guides.push(guide);
+      }
+
+      // HTML 데이터 준비
+      const shareItems = guides.map(guide => ({
+        id: guide.id,
+        title: guide.title || "제목 없음",
+        description: guide.description || "",
+        imageBase64: guide.imageData?.replace(/^data:image\/[a-z]+;base64,/, '') || "",
+        location: includeLocation ? guide.location : undefined
+      }));
+
+      const sharePageData = {
+        title: name,
+        items: shareItems,
+        createdAt: new Date().toISOString(),
+        location: includeLocation ? guides[0]?.location : undefined,
+        includeAudio: includeAudio || false
+      };
+
+      // HTML 생성
+      const htmlContent = generateShareHtml(sharePageData);
+      
+      // 파일명 생성 (안전한 파일명으로 변환)
+      const safeFileName = name.replace(/[^a-zA-Z0-9가-힣\s]/g, '').replace(/\s+/g, '-');
+      const fileName = `share-${safeFileName}-${Date.now()}.html`;
+      const filePath = path.join(process.cwd(), 'public', fileName);
+
+      // HTML 파일 저장
+      fs.writeFileSync(filePath, htmlContent, 'utf8');
+
+      // 공유 URL 생성
+      const shareUrl = `${req.protocol}://${req.get('host')}/${fileName}`;
+
+      console.log(`📄 HTML 공유 페이지 생성 완료: ${fileName}`);
+      
+      res.json({
+        success: true,
+        shareUrl,
+        fileName,
+        itemCount: shareItems.length,
+        createdAt: sharePageData.createdAt
+      });
+
+    } catch (error) {
+      console.error("HTML 공유 페이지 생성 오류:", error);
+      res.status(500).json({ 
+        error: "공유 페이지 생성에 실패했습니다.",
+        details: error instanceof Error ? error.message : "알 수 없는 오류"
+      });
     }
   });
 
