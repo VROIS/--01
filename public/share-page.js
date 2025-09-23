@@ -103,10 +103,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             itemDiv.className = 'guidebook-item relative cursor-pointer bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden aspect-square';
             itemDiv.setAttribute('data-testid', `content-item-${index}`);
 
-            // 🎯 [메인앱 동일] 이미지 클릭 시 상세페이지 열기
-            itemDiv.addEventListener('click', () => {
-                populateShareDetailPage(content, index + 1);
-            });
 
             // 🔒 XSS 방지를 위해 DOM 구조 안전하게 생성
             if (content.imageDataUrl) {
@@ -138,9 +134,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             bottomDiv.appendChild(description);
             itemDiv.appendChild(bottomDiv);
             
-            // 🎯 이미지 클릭시 상세페이지 표시 (보관함과 완전히 동일)
+            // 🎯 이미지 클릭시 상세페이지 표시 
             itemDiv.addEventListener('click', (e) => {
-                showShareDetailPage(content, index);
+                console.log('Item clicked:', index + 1, content);
+                populateShareDetailPage(content, index + 1);
             });
             
             contentContainer.appendChild(itemDiv);
@@ -148,31 +145,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
         // 🎯 상세페이지 뒤로가기 버튼 이벤트 리스너
+        console.log('Setting up detail page event listeners...');
         const shareBackBtn = document.getElementById('shareBackBtn');
         if (shareBackBtn) {
-            shareBackBtn.addEventListener('click', hideShareDetailPage);
+            console.log('Found shareBackBtn, adding click listener');
+            shareBackBtn.addEventListener('click', () => {
+                console.log('Back button clicked');
+                hideShareDetailPage();
+            });
+        } else {
+            console.log('shareBackBtn not found');
         }
 
         // 🎯 상세페이지 음성 버튼 이벤트 리스너
         const shareAudioBtn = document.getElementById('shareAudioBtn');
         if (shareAudioBtn) {
+            console.log('Found shareAudioBtn, adding click listener');
             shareAudioBtn.addEventListener('click', () => {
-                const currentContent = shareAudioBtn.dataset.currentContent;
-                if (currentContent) {
-                    const content = JSON.parse(currentContent);
-                    const descElement = document.getElementById('shareDescriptionText');
-                    playContentAudio(content.description, descElement, shareAudioBtn);
-                }
+                console.log('Audio button clicked');
+                onShareAudioBtnClick();
             });
+        } else {
+            console.log('shareAudioBtn not found');
         }
 
         // 🎯 상세페이지 텍스트 토글 버튼 
         const shareTextToggleBtn = document.getElementById('shareTextToggleBtn');
         if (shareTextToggleBtn) {
+            console.log('Found shareTextToggleBtn, adding click listener');
             shareTextToggleBtn.addEventListener('click', () => {
+                console.log('Text toggle button clicked');
                 const textOverlay = document.getElementById('shareTextOverlay');
-                textOverlay.classList.toggle('hidden');
+                if (textOverlay) {
+                    textOverlay.classList.toggle('hidden');
+                    console.log('Text overlay toggled, hidden:', textOverlay.classList.contains('hidden'));
+                } else {
+                    console.log('shareTextOverlay not found');
+                }
             });
+        } else {
+            console.log('shareTextToggleBtn not found');
         }
 
     } catch (error) {
@@ -334,6 +346,7 @@ function updateAudioButton(btn, state) {
 // 🎯 상세페이지 표시 함수 (이미 받아온 데이터 사용)
 // 🎯 [메인앱 복사] 상세페이지 표시 함수 (메인 앱의 populateDetailPageFromArchive와 동일)
 function populateShareDetailPage(item, guideNumber) {
+    console.log('populateShareDetailPage called:', item, guideNumber);
     // 🔧 [버그 수정 1] 중앙화된 음성 중지 로직
     stopSpeech();
     
@@ -511,31 +524,4 @@ function hideShareDetailPage() {
     detailPage.classList.add('hidden');
 }
 
-// 🎯 [메인앱 동일] 이벤트 리스너 연결
-document.addEventListener('DOMContentLoaded', () => {
-    // 공유 상세페이지 버튼들
-    const shareAudioBtn = document.getElementById('shareAudioBtn');
-    const shareBackBtn = document.getElementById('shareBackBtn');
-    const shareTextToggleBtn = document.getElementById('shareTextToggleBtn');
-    
-    // 🎵 오디오 버튼 이벤트 (메인 앱과 동일)
-    if (shareAudioBtn) {
-        shareAudioBtn.addEventListener('click', onShareAudioBtnClick);
-    }
-    
-    // 🔙 뒤로 가기 버튼
-    if (shareBackBtn) {
-        shareBackBtn.addEventListener('click', hideShareDetailPage);
-    }
-    
-    // 📝 텍스트 토글 버튼 (메인 앱과 동일)
-    if (shareTextToggleBtn) {
-        shareTextToggleBtn.addEventListener('click', () => {
-            const shareTextOverlay = document.getElementById('shareTextOverlay');
-            if (shareTextOverlay) {
-                shareTextOverlay.classList.toggle('hidden');
-            }
-        });
-    }
-});
 
