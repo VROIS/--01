@@ -97,8 +97,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const maxItems = 30; // 진정한 3×10 그리드
         const limitedContents = contents.slice(0, maxItems);
         
-        // 🎯 전역 콘텐츠 배열 설정 (미니그리드에서 사용)
-        globalContents = limitedContents;
         
         limitedContents.forEach((content, index) => {
             const itemDiv = document.createElement('div');
@@ -121,54 +119,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             const bottomDiv = document.createElement('div');
             bottomDiv.className = 'absolute bottom-0 left-0 right-0 p-3';
             
-            const headerDiv = document.createElement('div');
-            headerDiv.className = 'flex justify-between items-end';
-            
             const title = document.createElement('h3');
             title.className = 'text-white text-sm font-medium mb-1';
             title.textContent = `가이드 ${index + 1}`;
             
-            const audioBtn = document.createElement('button');
-            audioBtn.className = 'audio-btn bg-blue-500 hover:bg-blue-600 text-white p-1.5 rounded-full transition-colors flex-shrink-0';
-            audioBtn.setAttribute('data-testid', `button-play-${index}`);
-            audioBtn.title = '음성 재생';
-            audioBtn.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-            
             const description = document.createElement('p');
-            description.className = `description-text text-white text-xs leading-tight line-clamp-2 ${textHidden ? 'hidden' : ''}`;
+            description.className = 'text-white text-xs leading-tight line-clamp-2';
             // 🔒 XSS 방지: textContent 사용
             const descText = content.description || '내용 없음';
             description.textContent = descText.length > 80 ? descText.substring(0, 80) + '...' : descText;
             
-            headerDiv.appendChild(title);
-            headerDiv.appendChild(audioBtn);
-            bottomDiv.appendChild(headerDiv);
+            bottomDiv.appendChild(title);
             bottomDiv.appendChild(description);
             itemDiv.appendChild(bottomDiv);
             
-            // 🎯 이미지 클릭시 상세페이지 표시 (보관함과 동일한 방식)
+            // 🎯 이미지 클릭시 상세페이지 표시 (보관함과 완전히 동일)
             itemDiv.addEventListener('click', (e) => {
-                if (!e.target.closest('.audio-btn')) {
-                    showShareDetailPage(content, index);
-                }
+                showShareDetailPage(content, index);
             });
-            
-            // 🎵 음성 버튼 클릭 처리
-            if (audioBtn && content.description) {
-                audioBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    playContentAudio(content.description, description, audioBtn);
-                });
-            }
             
             contentContainer.appendChild(itemDiv);
         });
 
-        // 🎯 텍스트 토글 버튼 이벤트 리스너
-        const textToggleBtn = document.getElementById('textToggleBtn');
-        if (textToggleBtn) {
-            textToggleBtn.addEventListener('click', toggleText);
-        }
 
         // 🎯 상세페이지 뒤로가기 버튼 이벤트 리스너
         const shareBackBtn = document.getElementById('shareBackBtn');
@@ -382,10 +354,7 @@ function showShareDetailPage(content, index) {
     detailPage.classList.remove('hidden');
     textOverlay.classList.remove('hidden');
     
-    // 🎯 하단 미니그리드 생성
-    createBottomMiniGrid(index);
-    
-    // 🎵 자동 음성 재생
+    // 🎵 자동 음성 재생 (보관함과 동일)
     if (content.description) {
         setTimeout(() => {
             playContentAudio(content.description, descriptionText, audioBtn);
@@ -402,71 +371,3 @@ function hideShareDetailPage() {
     detailPage.classList.add('hidden');
 }
 
-// 🎯 하단 미니그리드 생성 함수
-function createBottomMiniGrid(currentIndex) {
-    const bottomGrid = document.querySelector('#shareBottomGrid .grid');
-    const contentContainer = document.getElementById('guidebook-content');
-    const gridItems = contentContainer.querySelectorAll('.guidebook-item');
-    
-    // 기존 미니그리드 초기화
-    bottomGrid.innerHTML = '';
-    
-    // 각 그리드 아이템을 미니버전으로 생성
-    gridItems.forEach((item, index) => {
-        const miniItem = document.createElement('div');
-        miniItem.className = `mini-grid-item w-8 h-8 rounded cursor-pointer border-2 transition-all ${
-            index === currentIndex ? 'border-blue-500 ring-2 ring-blue-300' : 'border-white/30 hover:border-white/60'
-        }`;
-        
-        // 미니 이미지 추가
-        const img = item.querySelector('img');
-        if (img) {
-            const miniImg = document.createElement('img');
-            miniImg.src = img.src;
-            miniImg.alt = `미니 가이드 ${index + 1}`;
-            miniImg.className = 'w-full h-full object-cover rounded';
-            miniItem.appendChild(miniImg);
-        }
-        
-        // 클릭 이벤트 - 해당 아이템으로 상세페이지 전환
-        miniItem.addEventListener('click', () => {
-            // 현재 콘텐츠 찾기
-            const contentData = JSON.parse(document.getElementById('shareAudioBtn').dataset.currentContent || '{}');
-            const allContents = getCurrentContents(); // 전역 컨텐츠 배열 접근 필요
-            if (allContents && allContents[index]) {
-                showShareDetailPage(allContents[index], index);
-            }
-        });
-        
-        bottomGrid.appendChild(miniItem);
-    });
-}
-
-// 🎯 현재 콘텐츠 배열 접근을 위한 전역 변수 (메인 로딩 부분에서 설정)
-let globalContents = [];
-
-// 🎯 텍스트 숨김 토글 기능
-function toggleText() {
-    textHidden = !textHidden;
-    const allDescriptions = document.querySelectorAll('.description-text');
-    const toggleBtn = document.getElementById('textToggleBtn');
-    
-    allDescriptions.forEach(desc => {
-        desc.classList.toggle('hidden', textHidden);
-    });
-    
-    // 버튼 아이콘 변경
-    const icon = toggleBtn.querySelector('svg');
-    if (textHidden) {
-        icon.innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
-        toggleBtn.title = '텍스트 표시';
-    } else {
-        icon.innerHTML = '<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>';
-        toggleBtn.title = '텍스트 숨김';
-    }
-}
-
-// 🎯 전역 콘텐츠 접근 함수
-function getCurrentContents() {
-    return globalContents;
-}
