@@ -97,6 +97,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const maxItems = 30; // 진정한 3×10 그리드
         const limitedContents = contents.slice(0, maxItems);
         
+        // 🎯 전역 콘텐츠 배열 설정 (미니그리드에서 사용)
+        globalContents = limitedContents;
+        
         limitedContents.forEach((content, index) => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'guidebook-item relative cursor-pointer bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden aspect-square';
@@ -143,12 +146,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             bottomDiv.appendChild(description);
             itemDiv.appendChild(bottomDiv);
             
-            // 🎵 이미지 클릭시 자동 음성 재생  
+            // 🎯 이미지 클릭시 상세페이지 표시 (보관함과 동일한 방식)
             itemDiv.addEventListener('click', (e) => {
                 if (!e.target.closest('.audio-btn')) {
-                    if (content.description) {
-                        playContentAudio(content.description, description, audioBtn);
-                    }
+                    showShareDetailPage(content, index);
                 }
             });
             
@@ -167,6 +168,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         const textToggleBtn = document.getElementById('textToggleBtn');
         if (textToggleBtn) {
             textToggleBtn.addEventListener('click', toggleText);
+        }
+
+        // 🎯 상세페이지 뒤로가기 버튼 이벤트 리스너
+        const shareBackBtn = document.getElementById('shareBackBtn');
+        if (shareBackBtn) {
+            shareBackBtn.addEventListener('click', hideShareDetailPage);
+        }
+
+        // 🎯 상세페이지 음성 버튼 이벤트 리스너
+        const shareAudioBtn = document.getElementById('shareAudioBtn');
+        if (shareAudioBtn) {
+            shareAudioBtn.addEventListener('click', () => {
+                const currentContent = shareAudioBtn.dataset.currentContent;
+                if (currentContent) {
+                    const content = JSON.parse(currentContent);
+                    const descElement = document.getElementById('shareDescriptionText');
+                    playContentAudio(content.description, descElement, shareAudioBtn);
+                }
+            });
+        }
+
+        // 🎯 상세페이지 텍스트 토글 버튼 
+        const shareTextToggleBtn = document.getElementById('shareTextToggleBtn');
+        if (shareTextToggleBtn) {
+            shareTextToggleBtn.addEventListener('click', () => {
+                const textOverlay = document.getElementById('shareTextOverlay');
+                textOverlay.classList.toggle('hidden');
+            });
         }
 
     } catch (error) {
@@ -325,6 +354,97 @@ function updateAudioButton(btn, state) {
     }
 }
 
+// 🎯 상세페이지 표시 함수 (이미 받아온 데이터 사용)
+function showShareDetailPage(content, index) {
+    // 음성 중지
+    stopSpeech();
+    
+    // DOM 요소들 가져오기
+    const detailPage = document.getElementById('shareDetailPage');
+    const resultImage = document.getElementById('shareResultImage');
+    const descriptionText = document.getElementById('shareDescriptionText');
+    const audioBtn = document.getElementById('shareAudioBtn');
+    const textOverlay = document.getElementById('shareTextOverlay');
+    
+    // 이미지 설정
+    if (content.imageDataUrl) {
+        resultImage.src = content.imageDataUrl;
+    }
+    
+    // 설명 텍스트 설정
+    if (content.description) {
+        descriptionText.textContent = content.description;
+        // 음성 버튼에 현재 컨텐츠 저장
+        audioBtn.dataset.currentContent = JSON.stringify(content);
+    }
+    
+    // 상세페이지 표시
+    detailPage.classList.remove('hidden');
+    textOverlay.classList.remove('hidden');
+    
+    // 🎯 하단 미니그리드 생성
+    createBottomMiniGrid(index);
+    
+    // 🎵 자동 음성 재생
+    if (content.description) {
+        setTimeout(() => {
+            playContentAudio(content.description, descriptionText, audioBtn);
+        }, 300);
+    }
+}
+
+// 🎯 상세페이지 숨김 함수
+function hideShareDetailPage() {
+    // 음성 중지
+    stopSpeech();
+    
+    const detailPage = document.getElementById('shareDetailPage');
+    detailPage.classList.add('hidden');
+}
+
+// 🎯 하단 미니그리드 생성 함수
+function createBottomMiniGrid(currentIndex) {
+    const bottomGrid = document.querySelector('#shareBottomGrid .grid');
+    const contentContainer = document.getElementById('guidebook-content');
+    const gridItems = contentContainer.querySelectorAll('.guidebook-item');
+    
+    // 기존 미니그리드 초기화
+    bottomGrid.innerHTML = '';
+    
+    // 각 그리드 아이템을 미니버전으로 생성
+    gridItems.forEach((item, index) => {
+        const miniItem = document.createElement('div');
+        miniItem.className = `mini-grid-item w-8 h-8 rounded cursor-pointer border-2 transition-all ${
+            index === currentIndex ? 'border-blue-500 ring-2 ring-blue-300' : 'border-white/30 hover:border-white/60'
+        }`;
+        
+        // 미니 이미지 추가
+        const img = item.querySelector('img');
+        if (img) {
+            const miniImg = document.createElement('img');
+            miniImg.src = img.src;
+            miniImg.alt = `미니 가이드 ${index + 1}`;
+            miniImg.className = 'w-full h-full object-cover rounded';
+            miniItem.appendChild(miniImg);
+        }
+        
+        // 클릭 이벤트 - 해당 아이템으로 상세페이지 전환
+        miniItem.addEventListener('click', () => {
+            // 현재 콘텐츠 찾기
+            const contentData = JSON.parse(document.getElementById('shareAudioBtn').dataset.currentContent || '{}');
+            const allContents = getCurrentContents(); // 전역 컨텐츠 배열 접근 필요
+            if (allContents && allContents[index]) {
+                showShareDetailPage(allContents[index], index);
+            }
+        });
+        
+        bottomGrid.appendChild(miniItem);
+    });
+}
+
+// 🎯 현재 콘텐츠 배열 접근을 위한 전역 변수 (메인 로딩 부분에서 설정)
+let globalContents = [];
+
 // 🎯 텍스트 숨김 토글 기능
 function toggleText() {
     textHidden = !textHidden;
@@ -344,4 +464,9 @@ function toggleText() {
         icon.innerHTML = '<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>';
         toggleBtn.title = '텍스트 숨김';
     }
+}
+
+// 🎯 전역 콘텐츠 접근 함수
+function getCurrentContents() {
+    return globalContents;
 }
