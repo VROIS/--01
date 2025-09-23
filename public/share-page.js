@@ -367,21 +367,6 @@ function populateShareDetailPage(item, guideNumber) {
     shareDetailPage.classList.remove('hidden');
 }
 
-// 🎯 [메인앱 복사] 음성 상태 초기화 (메인 앱과 동일)
-function resetSpeechState() {
-    // 🔧 [버그 수정 1] 더 강력한 음성 상태 초기화
-    utteranceQueue = [];
-    isSpeaking = false;
-    isPaused = false;
-    if (currentlySpeakingElement) {
-        currentlySpeakingElement.classList.remove('speaking');
-    }
-    currentlySpeakingElement = null;
-    
-    // 모든 speaking 클래스 제거 (중복 방지)
-    const allSpeakingElements = document.querySelectorAll('.speaking');
-    allSpeakingElements.forEach(el => el.classList.remove('speaking'));
-}
 
 // 🎯 [메인앱 복사] 중앙화된 음성 중지 (메인 앱과 동일)
 function stopSpeech() {
