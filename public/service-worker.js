@@ -40,8 +40,15 @@ self.addEventListener('fetch', event => {
             }
             return networkResponse;
           }).catch(() => {
-            // 네트워크 실패시 캐시된 응답 반환
-            return cachedResponse;
+            // 네트워크 실패시 적절한 에러 응답 반환
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            // 캐시도 없고 네트워크도 실패한 경우 에러 응답 생성
+            return new Response(JSON.stringify({error: "가이드북을 불러올 수 없습니다. 오프라인 상태입니다."}), {
+              status: 503,
+              headers: { 'Content-Type': 'application/json' }
+            });
           });
           
           // 캐시된 응답이 있으면 즉시 반환하고 백그라운드에서 업데이트
@@ -52,9 +59,9 @@ self.addEventListener('fetch', event => {
     return;
   }
   
-  // 일반 요청에 대한 기본 캐시 전략
+  // 일반 요청에 대한 기본 캐시 전략 (share.html?id=... 를 위해 쿼리 스트링 무시)
   event.respondWith(
-    caches.match(event.request)
+    caches.match(event.request, { ignoreSearch: url.pathname === '/share.html' })
       .then(response => {
         // 캐시 히트 - 응답을 반환합니다.
         if (response) {
