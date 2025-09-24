@@ -903,6 +903,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
+                // 🔥 [신규] 링크 이름을 서버에 저장
+                try {
+                    const response = await fetch(`/api/share/${guidebookId}/name`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: nameInput.value.trim() })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('링크 이름 저장 실패');
+                    }
+                    
+                    console.log('✅ 링크 이름이 서버에 저장되었습니다:', nameInput.value.trim());
+                } catch (error) {
+                    console.warn('⚠️ 링크 이름 저장 실패:', error);
+                    showToast('링크 이름 저장에 실패했지만 복사는 진행됩니다.');
+                }
+                
                 const textToCopy = `${nameInput.value}\n${linkInput.value}`;
                 try {
                     await copyToClipboard(textToCopy);
