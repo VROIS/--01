@@ -115,9 +115,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Setting up detail page event listeners...');
         // 상세페이지 이벤트 리스너 - 보관함과 100% 동일
         setupDetailPageEventListeners();
-        
-        // 🔗 사용자 요청: 하단 버튼 기능 추가
-        setupSharePageButtons(shareData, shareId);
 
     } catch (error) {
         console.error('가이드북 로딩 오류:', error);
