@@ -59,8 +59,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const locationEl = document.getElementById('guidebook-location');
         const createdDateEl = document.getElementById('guidebook-created-date');
         
-        // 링크 이름을 타이틀로 사용
-        const linkName = shareData.name || shareData.linkName || '공유된 가이드북';
+        // 링크 이름이 없을 경우 기본 값 사용
+        const linkName = shareData.name || '공유된 가이드북';
         titleEl.textContent = linkName;
         
         // 🔥 페이지 타이틀과 메타태그 동적 업데이트 (손안에 가이드)
