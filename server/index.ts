@@ -44,18 +44,40 @@ app.use((req, res, next) => {
   next();
 });
 
+// 🔧 [수정] 공유페이지 전용 헤더 컨트롤 미들웨어
+app.use('/share.html', (req, res, next) => {
+  // 모든 Replit 기본 헤더 완전 제거
+  const originalSetHeader = res.setHeader;
+  const originalRemoveHeader = res.removeHeader;
+  
+  // 헤더 설정 오버라이드
+  res.setHeader = function(name: string, value: any) {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('x-robots-tag') || lowerName.includes('robots')) {
+      return this; // X-Robots-Tag 관련 헤더 무시
+    }
+    return originalSetHeader.call(this, name, value);
+  };
+  
+  // 수동으로 안전한 헤더 설정
+  res.removeHeader('X-Robots-Tag');
+  res.removeHeader('Replit-X-Robots-Tag');
+  res.removeHeader('x-robots-tag');
+  
+  originalSetHeader.call(res, 'X-Robots-Tag', 'index, follow, noarchive');
+  originalSetHeader.call(res, 'X-Frame-Options', 'SAMEORIGIN');
+  originalSetHeader.call(res, 'Cache-Control', 'public, max-age=3600');
+  originalSetHeader.call(res, 'Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https:; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://hangeul.pstatic.net;");
+  originalSetHeader.call(res, 'X-Content-Type-Options', 'nosniff');
+  
+  next();
+});
+
 (async () => {
   // 🔧 [수정] Microsoft Defender 차단 해결: 특정 라우트를 정적 파일보다 먼저 설정
   
-  // Route for share page - Microsoft Defender 차단 문제 해결
+  // Route for share page - 미들웨어에서 헤더 처리 완료
   app.get('/share.html', (req, res) => {
-    // 🔧 [수정] Microsoft Defender 차단 해결: Replit 기본 헤더 제거 후 올바른 헤더 설정
-    res.removeHeader('X-Robots-Tag'); // Replit 기본 헤더 제거
-    res.setHeader('X-Robots-Tag', 'index, follow, noarchive');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // 1시간 캐시
-    res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https:; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://hangeul.pstatic.net;");
-    res.setHeader('X-Content-Type-Options', 'nosniff'); // 보안 강화
-    res.setHeader('X-Frame-Options', 'DENY'); // 클릭재킹 방지
     res.sendFile('share.html', { root: 'public' });
   });
   
