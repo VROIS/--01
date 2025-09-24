@@ -66,8 +66,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 🔥 페이지 타이틀과 메타태그 동적 업데이트 (손안에 가이드)
         document.title = `${linkName} - 손안에 가이드`;
         document.getElementById('page-title').textContent = `${linkName} - 손안에 가이드`;
+        document.getElementById('page-description').setAttribute('content', `${linkName}을(를) 통해 새로운 여행 경험을 시작해보세요. 여러분의 눈과 귀가 되어줄 '손안에 가이드'가 지금 바로 당신을 기다립니다.`);
         document.getElementById('og-title').setAttribute('content', `${linkName} - 손안에 가이드`);
+        document.getElementById('og-description').setAttribute('content', `${linkName}을(를) 통해 새로운 여행 경험을 시작해보세요.`);
         document.getElementById('twitter-title').setAttribute('content', `${linkName} - 손안에 가이드`);
+        document.getElementById('twitter-description').setAttribute('content', `${linkName}을(를) 통해 새로운 여행 경험을 시작해보세요.`);
         
         // GPS 위치 정보 표시 (사진촬영시만, 업로드시 제외)
         if (shareData.location && shareData.location.trim() !== '') {
