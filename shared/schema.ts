@@ -62,7 +62,7 @@ export const guides = pgTable("guides", {
 // Share links table
 export const shareLinks = pgTable("share_links", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
   name: text("name").notNull(),
   guideIds: text("guide_ids").array().notNull(),
   includeLocation: boolean("include_location").default(true),

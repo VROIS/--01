@@ -114,11 +114,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Database-based share endpoints
-  app.post('/api/share', isAuthenticated, async (req: any, res) => {
+  // Database-based share endpoints (NO AUTH REQUIRED for sharing)
+  app.post('/api/share', async (req, res) => {
     try {
       const { contents } = req.body;
-      const userId = req.user.claims.sub;
       
       if (!Array.isArray(contents) || contents.length === 0) {
         return res.status(400).json({ error: "공유할 항목이 없습니다." });
@@ -128,7 +127,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "한 번에 최대 30개까지만 공유할 수 있습니다." });
       }
 
-      // Create share link in database  
+      // Create share link in database (anonymous sharing)
+      const userId = null; // For anonymous sharing
       const guideIds = contents.map(guide => guide.id);
       const shareLinkData = {
         name: '', // 기본값은 빈 문자열, 사용자가 나중에 입력
