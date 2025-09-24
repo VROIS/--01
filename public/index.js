@@ -811,20 +811,15 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("공유할 항목을 먼저 선택해주세요.");
             return;
         }
-    
-        const originalBtnContent = archiveShareBtn.innerHTML;
-        const spinnerIcon = `<div class="w-8 h-8 rounded-full animate-spin loader-blue"></div>`;
-        archiveShareBtn.innerHTML = spinnerIcon;
-        archiveShareBtn.disabled = true;
-    
+
+        // 🎯 [1-2단계] 올바른 플로우: 먼저 모달 표시, 나중에 서버 호출
         try {
-            // 1. DB에서 모든 아이템을 가져옵니다.
+            // 1. DB에서 선택된 아이템들을 미리 준비 (서버 호출은 나중에)
             const allItems = await getAllItems(); 
-            
-            // 2. 선택된 ID를 기반으로 전체 콘텐츠 객체를 필터링합니다.
             const contentsToShare = allItems
                 .filter(item => idsToShare.includes(item.id))
-                .map(item => ({ // 3. 공유에 필요한 데이터만 추출합니다.
+                .map(item => ({
+                    id: item.id, // 🔧 ID 포함하도록 수정
                     imageDataUrl: item.imageDataUrl,
                     description: item.description
                 }));
@@ -833,47 +828,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error("일부 항목을 찾을 수 없습니다. 다시 시도해주세요.");
             }
 
-            // 4. 전체 콘텐츠 배열을 백엔드로 전송합니다.
-            const response = await fetch('/api/share', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: contentsToShare }),
-            });
-    
-            const result = await response.json();
-    
-            if (!response.ok) {
-                throw new Error(result.error || `서버 오류: ${response.status}`);
-            }
-    
-            const { guidebookId } = result;
-            // 🔧 [공유링크 수정] 기본 쿼리 파라미터 형태 사용  
-            const shareUrl = `${window.location.origin}/share.html?id=${guidebookId}`;
-    
-            // 1. 클립보드 복사 (모바일 호환성 향상)
-            try {
-                await copyToClipboard(shareUrl);
-                showToast("가이드북 링크가 클립보드에 복사되었어요!");
-            } catch (e) {
-                console.warn("클립보드 복사 실패:", e);
-                showToast("링크가 준비되었습니다. 아래 모달에서 복사해주세요.");
-            }
-            toggleSelectionMode(false); // Exit selection mode on success
-
-            // 2. 공유 모달에 링크 표시 (유튜버 공유 스타일)
-            // 공유 모달 내용 동적 생성
-            let linkName = ''; // 빈칸으로 시작 (사용자가 반드시 입력해야 함)
+            // 2. 즉시 모달 표시 (서버 호출 없이)
             shareModalContent.innerHTML =
                 '<div class="p-4 border-b border-gray-200 flex justify-between items-center">' +
                     '<h2 class="text-lg font-bold text-gray-800">공유하기</h2>' +
                     '<button id="closeShareModalBtn" class="p-2 text-gray-500 hover:text-gray-800">&times;</button>' +
                 '</div>' +
                 '<div class="p-6">' +
-                    '<p class="text-center text-gray-600 mb-4">아래 링크와 이름을 복사해서 유튜브, 인스타, 카톡 등 원하는 곳에 공유하세요!</p>' +
+                    '<p class="text-center text-gray-600 mb-4">링크 이름을 입력하고 복사 버튼을 클릭하세요!</p>' +
                     '<div class="flex flex-col items-center gap-2">' +
-                        '<input id="shareNameInput" type="text" class="w-full px-2 py-1 border rounded text-sm" value="' + linkName + '" placeholder="링크 이름" />' +
-                        '<input id="shareLinkInput" type="text" class="w-full px-2 py-1 border rounded text-sm" value="' + shareUrl + '" readonly />' +
-                        '<button id="copyShareLinkBtn" class="px-4 py-2 bg-blue-500 text-white rounded">이름(사용자가 직접 입력함)+링크 복사</button>' +
+                        '<input id="shareNameInput" type="text" class="w-full px-2 py-1 border rounded text-sm" placeholder="링크 이름을 입력해주세요" required />' +
+                        '<button id="copyShareLinkBtn" class="px-4 py-2 bg-blue-500 text-white rounded">이름+링크 생성 및 복사</button>' +
                     '</div>' +
                 '</div>';
                 
@@ -894,7 +859,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             copyBtn.addEventListener('click', async () => {
                 const nameInput = document.getElementById('shareNameInput');
-                const linkInput = document.getElementById('shareLinkInput');
                 
                 // 링크 이름 입력 검증
                 if (!nameInput.value.trim()) {
@@ -903,48 +867,78 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
-                // 🔥 [신규] 링크 이름을 서버에 저장
+                // 로딩 상태 표시
+                copyBtn.disabled = true;
+                copyBtn.textContent = '링크 생성 중...';
+                
                 try {
-                    const response = await fetch(`/api/share/${guidebookId}/name`, {
-                        method: 'PUT',
+                    // 🎯 [1-2단계] 올바른 플로우: 이제서야 서버에 링크 생성 요청
+                    const response = await fetch('/api/share', {
+                        method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: nameInput.value.trim() })
+                        body: JSON.stringify({ 
+                            contents: contentsToShare, // 🔧 클로저 변수 사용
+                            name: nameInput.value.trim() // 이름도 함께 전송
+                        }),
                     });
-                    
+            
+                    const result = await response.json();
+            
                     if (!response.ok) {
-                        throw new Error('링크 이름 저장 실패');
+                        throw new Error(result.error || `서버 오류: ${response.status}`);
+                    }
+            
+                    const { guidebookId } = result;
+                    const shareUrl = `${window.location.origin}/share.html?id=${guidebookId}`;
+                    
+                    // 클립보드에 복사
+                    const textToCopy = `${nameInput.value.trim()}\n${shareUrl}`;
+                    try {
+                        await copyToClipboard(textToCopy);
+                        showToast('이름과 링크가 복사되었어요!');
+                        copyBtn.textContent = "복사됨!";
+                        setTimeout(() => {
+                            shareModal.classList.add('hidden');
+                            toggleSelectionMode(false);
+                        }, 1500);
+                    } catch (e) {
+                        // 클립보드 복사 실패시 수동 복사 옵션 제공
+                        showToast("클립보드 복사 실패. 아래 링크를 수동으로 복사하세요.");
+                        
+                        // 링크 표시를 위해 모달 내용 업데이트
+                        const linkDisplayHtml = `
+                            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                                <h2 class="text-lg font-bold text-gray-800">공유 링크 생성 완료</h2>
+                                <button id="closeShareModalBtn2" class="p-2 text-gray-500 hover:text-gray-800">&times;</button>
+                            </div>
+                            <div class="p-6">
+                                <p class="text-center text-gray-600 mb-4">링크가 생성되었습니다! 아래 내용을 복사하세요:</p>
+                                <div class="flex flex-col gap-2">
+                                    <input type="text" class="w-full px-2 py-1 border rounded text-sm" value="${nameInput.value.trim()}" readonly />
+                                    <input type="text" class="w-full px-2 py-1 border rounded text-sm" value="${shareUrl}" readonly />
+                                    <button onclick="this.previousElementSibling.select(); document.execCommand('copy');" class="px-4 py-2 bg-green-500 text-white rounded">링크 복사</button>
+                                </div>
+                            </div>
+                        `;
+                        shareModalContent.innerHTML = linkDisplayHtml;
+                        
+                        document.getElementById('closeShareModalBtn2').addEventListener('click', () => {
+                            shareModal.classList.add('hidden');
+                            toggleSelectionMode(false);
+                        });
                     }
                     
-                    console.log('✅ 링크 이름이 서버에 저장되었습니다:', nameInput.value.trim());
                 } catch (error) {
-                    console.warn('⚠️ 링크 이름 저장 실패:', error);
-                    showToast('링크 이름 저장에 실패했지만 복사는 진행됩니다.');
-                }
-                
-                const textToCopy = `${nameInput.value}\n${linkInput.value}`;
-                try {
-                    await copyToClipboard(textToCopy);
-                    showToast('이름과 링크가 복사되었어요!');
-                    copyBtn.textContent = "복사됨!";
-                    setTimeout(() => copyBtn.textContent = "이름(사용자가 직접 입력함)+링크 복사", 2000);
-                } catch (e) {
-                    showToast("복사에 실패했습니다. 텍스트를 선택해서 수동 복사해주세요.");
-                    linkInput.select();
+                    console.error("공유 링크 생성 오류:", error);
+                    showToast('오류: ' + error.message);
+                    copyBtn.disabled = false;
+                    copyBtn.textContent = '이름+링크 생성 및 복사';
                 }
             });
             
-            // 5. 성공 시 버튼 상태 복구
-            archiveShareBtn.innerHTML = originalBtnContent;
-            archiveShareBtn.disabled = false;
-            
         } catch (error) {
-            console.error("가이드북 생성 오류:", error);
+            console.error("공유 모달 생성 오류:", error);
             showToast('오류: ' + error.message);
-            archiveShareBtn.innerHTML = originalBtnContent;
-            // 버튼 상태를 다시 활성화하고 선택 카운트를 업데이트합니다.
-            archiveShareBtn.disabled = false; 
-            updateSelectionHeader();
-            // 에러 발생 시 모달 닫기
             shareModal.classList.add('hidden');
         }
     }

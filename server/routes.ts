@@ -117,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Database-based share endpoints (NO AUTH REQUIRED for sharing)
   app.post('/api/share', async (req, res) => {
     try {
-      const { contents } = req.body;
+      const { contents, name } = req.body;
       
       if (!Array.isArray(contents) || contents.length === 0) {
         return res.status(400).json({ error: "공유할 항목이 없습니다." });
@@ -131,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = null; // For anonymous sharing
       const guideIds = contents.map(guide => guide.id);
       const shareLinkData = {
-        name: '', // 기본값은 빈 문자열, 사용자가 나중에 입력
+        name: name ? name.trim() : '', // 🎯 [1-2단계] 이름이 있으면 바로 저장
         guideIds: guideIds,
         includeLocation: true,
         includeAudio: false
