@@ -172,7 +172,8 @@
         .audio-btn:hover {
             transform: scale(1.1);
         }
-        /* 🎯 3×10 모자이크 그리드 스타일 */
+        /* 🎯 2×10 모자이크 그리드 스타일 - 사용자 요청 수정 */
+        /* 수정메모: 가독성과 파일크기 최적화를 위해 3×10 → 2×10 변경 */
         .guidebook-item {
             transition: all 0.3s ease;
         }
@@ -186,18 +187,51 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+        /* 🎯 사용자 요청: 하단 버튼 고정 + 그리드만 스크롤 레이아웃 */
+        .page-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .page-header {
+            flex-shrink: 0;
+            padding: 1rem;
+            background: #FFFEFA;
+            z-index: 10;
+        }
+        .page-main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 1rem;
+            -webkit-overflow-scrolling: touch;
+        }
+        .page-footer {
+            flex-shrink: 0;
+            padding: 1rem;
+            background: #FFFEFA;
+            border-top: 1px solid #e5e7eb;
+            z-index: 10;
+        }
+        /* 그리드 최적화 */
+        #guidebook-content {
+            max-width: 100%;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
-    <div class="container mx-auto p-4 md:p-8">
-        <header class="text-center mb-8">
-            <h1 id="guidebook-title" class="text-3xl font-bold text-gray-800">공유된 가이드북</h1>
+    <!-- 🎯 사용자 요청: 하단 버튼 고정 + 그리드 스크롤 레이아웃 -->
+    <div class="page-layout">
+        <!-- 고정 헤더 -->
+        <header class="page-header text-center">
+            <h1 id="guidebook-title" class="text-2xl font-bold text-gray-800">공유된 가이드북</h1>
             <p id="guidebook-location" class="text-gray-500 mt-1 text-sm"></p>
-            <p id="guidebook-created-date" class="text-gray-600 mt-2"></p>
+            <p id="guidebook-created-date" class="text-gray-600 mt-1 text-xs"></p>
         </header>
 
-        <!-- 🎯 3×10 모자이크 그리드 구조 -->
-        <main class="max-w-6xl mx-auto">
+        <!-- 스크롤 가능한 메인 콘텐츠 -->
+        <main class="page-main">
             <!-- Loading spinner -->
             <div id="loader" class="text-center py-10">
                 <div class="inline-block w-8 h-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
@@ -206,11 +240,10 @@
                 <p class="mt-4 text-gray-700">가이드북을 불러오는 중입니다...</p>
             </div>
             
-            <!-- 3×10 모자이크 그리드 컨테이너 -->
-            <div id="guidebook-content" class="grid grid-cols-3 gap-4 p-4">
-                <!-- Guidebook items will be inserted here in 3x10 grid -->
+            <!-- 2×10 모자이크 그리드 컨테이너 -->
+            <div id="guidebook-content" class="grid grid-cols-2 gap-3 pb-4">
+                <!-- Guidebook items will be inserted here in 2x10 grid -->
             </div>
-            
         </main>
 
         <!-- ✨ 상세페이지 - 보관함과 100% 동일한 구조 -->
@@ -254,22 +287,37 @@
             </footer>
         </div>
 
-        <footer class="text-center mt-12 text-sm text-gray-500">
-            <div id="referralBanner" class="hidden mt-6 mx-auto max-w-md">
-                <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-lg shadow-lg">
-                    <h3 class="font-bold text-lg mb-2">🎁 특별 혜택!</h3>
-                    <p class="text-sm mb-3"><span id="referrerName">추천인</span>님이 추천한 드림샷 스튜디오에서 AI로 나만의 여행 사진과 영상을 만들어보세요!</p>
-                    <div class="flex space-x-2">
-                        <button onclick="signUpWithBonus()" class="flex-1 bg-white text-blue-600 font-bold py-2 px-4 rounded hover:bg-gray-100 text-sm" data-testid="button-signup-bonus">
+        <!-- 고정 하단 버튼들 -->
+        <footer class="page-footer">
+            <!-- 🔗 링크 복사 버튼 (사용자 요청: HTML 파일 다운로드) -->
+            <div class="flex justify-center space-x-2 mb-3">
+                <button id="copyLinkBtn" class="flex-1 max-w-xs bg-blue-500 text-white py-2 px-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors text-sm" data-testid="button-copy-link">
+                    🔗 링크 복사
+                </button>
+                <button id="downloadHtmlBtn" class="flex-1 max-w-xs bg-green-500 text-white py-2 px-3 rounded-lg font-semibold hover:bg-green-600 transition-colors text-sm" data-testid="button-download-html">
+                    📥 HTML 다운로드
+                </button>
+                <button id="shareKakaoBtn" class="flex-1 max-w-xs bg-yellow-400 text-black py-2 px-3 rounded-lg font-semibold hover:bg-yellow-500 transition-colors text-sm" data-testid="button-share-kakao">
+                    💬 카톡 공유
+                </button>
+            </div>
+            
+            <!-- 성능 보고서 및 추천 배너 -->
+            <div id="referralBanner" class="hidden mt-2 mx-auto max-w-md">
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-2 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-xs mb-1">🎁 특별 혜택!</h3>
+                    <p class="text-xs mb-2"><span id="referrerName">추천인</span>님이 추천한 드림샷 스튜디오에서 AI로 나만의 여행 사진과 영상을 만들어보세요!</p>
+                    <div class="flex space-x-1">
+                        <button onclick="signUpWithBonus()" class="flex-1 bg-white text-blue-600 font-bold py-1 px-2 rounded hover:bg-gray-100 text-xs" data-testid="button-signup-bonus">
                             🆓 가입하고 2 크레딧 받기
                         </button>
-                        <button onclick="window.open('/', '_blank')" class="flex-1 bg-blue-700 text-white font-bold py-2 px-4 rounded hover:bg-blue-800 text-sm" data-testid="button-try-now">
+                        <button onclick="window.open('/', '_blank')" class="flex-1 bg-blue-700 text-white font-bold py-1 px-2 rounded hover:bg-blue-800 text-xs" data-testid="button-try-now">
                             체험하기
                         </button>
                     </div>
                 </div>
             </div>
-            <p>손안에 가이드</p>
+            <p class="text-center text-xs text-gray-500 mt-1">손안에 가이드</p>
         </footer>
     </div>
 
