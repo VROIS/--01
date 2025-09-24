@@ -163,7 +163,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Increment view count
       await storage.incrementShareLinkViews(shareId as string);
       
-      res.json(shareLink);
+      // 🎯 [1-3단계] 사용자 입력 이름을 title로 변환 (성공 로직 재활용)
+      const title = shareLink.name || "손안에 가이드";
+      
+      // 🔧 [버그 수정] guideIds에 해당하는 실제 가이드 데이터 조회
+      const guides = await storage.getGuidesByIds(shareLink.guideIds);
+      const contents = guides.map(guide => ({
+        id: guide.id,
+        title: guide.title,
+        description: guide.description || guide.aiGeneratedContent,
+        imageDataUrl: guide.imageUrl,
+        location: guide.locationName
+      }));
+      
+      res.json({ ...shareLink, title, contents });
       
     } catch (error) {
       console.error("Share 조회 오류:", error);

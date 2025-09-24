@@ -50,21 +50,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.warn('로컬스토리지 저장 실패:', e);
         }
         
-        if (!shareData || !shareData.contents || shareData.contents.length === 0) {
+        // 🔧 [버그 수정] 기본 유효성 검사
+        if (!shareData) {
             throw new Error('유효하지 않은 공유 데이터입니다.');
         }
 
-        // 🔥 새로운 헤더 시스템 적용
+        // 🔥 새로운 헤더 시스템 적용 (검증 전에 실행)
         const titleEl = document.getElementById('guidebook-title');
         const locationEl = document.getElementById('guidebook-location');
         const createdDateEl = document.getElementById('guidebook-created-date');
         
-        // 링크 이름이 없을 경우 기본 값 사용
-        const linkName = shareData.name || '공유된 가이드북';
+        // 🎯 [1-3단계] API에서 전달받은 title 사용 (성공 로직 재활용)
+        const linkName = shareData.title || shareData.name || '손안에 가이드';
         titleEl.textContent = linkName;
         
         // 🔥 페이지 타이틀과 메타태그 동적 업데이트 (손안에 가이드)
         document.title = `${linkName} - 손안에 가이드`;
+        
+        // 🔧 [버그 수정] 빈 contents 배열도 허용 (제목은 이미 설정됨)
+        if (!shareData.contents) {
+            shareData.contents = []; // contents 필드가 없으면 빈 배열로 초기화
+        }
         document.getElementById('page-title').textContent = `${linkName} - 손안에 가이드`;
         document.getElementById('page-description').setAttribute('content', `${linkName}을(를) 통해 새로운 여행 경험을 시작해보세요. 여러분의 눈과 귀가 되어줄 '손안에 가이드'가 지금 바로 당신을 기다립니다.`);
         document.getElementById('og-title').setAttribute('content', `${linkName} - 손안에 가이드`);
