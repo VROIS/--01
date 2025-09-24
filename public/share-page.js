@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const linkName = shareData.name || shareData.linkName || '공유된 가이드북';
         titleEl.textContent = linkName;
         
-        // 🔥 페이지 타이틀과 메타태그 동적 업데이트
+        // 🔥 페이지 타이틀과 메타태그 동적 업데이트 (손안에 가이드)
         document.title = `${linkName} - 손안에 가이드`;
         document.getElementById('page-title').textContent = `${linkName} - 손안에 가이드`;
         document.getElementById('og-title').setAttribute('content', `${linkName} - 손안에 가이드`);
