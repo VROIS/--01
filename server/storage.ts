@@ -307,7 +307,7 @@ export class DatabaseStorage implements IStorage {
       .set({ referredBy: referrer.id })
       .where(eq(users.id, userId));
     
-    return { bonusAwarded: true, newBalance: user.credits };
+    return { bonusAwarded: true, newBalance: user.credits || 0 };
   }
 
   async generateReferralCode(userId: string): Promise<string> {
