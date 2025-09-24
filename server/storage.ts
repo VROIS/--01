@@ -1,3 +1,20 @@
+/**
+ * 📝 수정 메모 (2025-09-24)
+ * 목적: 브라우저 URL 입력 오류 해결 - URL 길이 67% 단축
+ * 
+ * 🔧 주요 변경사항:
+ * 1. createShareLink() 함수 수정: 짧은 ID 생성 시스템 구현
+ *    - 기존: 36자 UUID (aa24911b-a7a1-479e-b7a4-22c283011915)
+ *    - 개선: 8자 짧은 ID (A1b2C3d4)
+ *    - 방법: crypto.randomBytes(6).toString('base64url').slice(0, 8)
+ * 
+ * 2. 충돌 처리: 5회 재시도 로직 추가
+ * 3. crypto import 추가
+ * 4. LSP 오류 수정: user.credits || 0 처리
+ * 
+ * 🎯 결과: 사용자가 브라우저 주소창에 URL 직접 입력 가능해짐
+ */
+
 import {
   users,
   guides,
@@ -14,7 +31,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, inArray, and, sql } from "drizzle-orm";
-import crypto from "crypto";
+import crypto from "crypto"; // 🔧 짧은 ID 생성을 위해 추가
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -131,6 +148,7 @@ export class DatabaseStorage implements IStorage {
 
   // Share link operations
   async createShareLink(userId: string, shareLink: InsertShareLink): Promise<ShareLink> {
+    // 🔧 [수정] 짧은 ID 생성 시스템 (브라우저 URL 입력 문제 해결)
     // Generate short, URL-friendly ID (8 characters)
     const generateShortId = () => crypto.randomBytes(6).toString('base64url').slice(0, 8);
     
@@ -143,7 +161,7 @@ export class DatabaseStorage implements IStorage {
         
         const [newShareLink] = await db
           .insert(shareLinks)
-          .values({ ...shareLink, id: shortId, userId })
+          .values({ ...shareLink, id: shortId, userId }) // 🔧 [수정] 명시적으로 짧은 ID 설정
           .returning();
         
         // 🎁 공유링크 생성 보상: 1 크레딧 지급
