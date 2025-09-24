@@ -14,6 +14,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, inArray, and, sql } from "drizzle-orm";
+import crypto from "crypto";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -130,20 +131,42 @@ export class DatabaseStorage implements IStorage {
 
   // Share link operations
   async createShareLink(userId: string, shareLink: InsertShareLink): Promise<ShareLink> {
-    const [newShareLink] = await db
-      .insert(shareLinks)
-      .values({ ...shareLink, userId })
-      .returning();
+    // Generate short, URL-friendly ID (8 characters)
+    const generateShortId = () => crypto.randomBytes(6).toString('base64url').slice(0, 8);
     
-    // 🎁 공유링크 생성 보상: 1 크레딧 지급
-    await this.addCredits(
-      userId, 
-      1, 
-      'share_link_bonus', 
-      `공유링크 생성 보상: ${shareLink.name}`
-    );
+    let attempts = 0;
+    const maxAttempts = 5;
     
-    return newShareLink;
+    while (attempts < maxAttempts) {
+      try {
+        const shortId = generateShortId();
+        
+        const [newShareLink] = await db
+          .insert(shareLinks)
+          .values({ ...shareLink, id: shortId, userId })
+          .returning();
+        
+        // 🎁 공유링크 생성 보상: 1 크레딧 지급
+        await this.addCredits(
+          userId, 
+          1, 
+          'share_link_bonus', 
+          `공유링크 생성 보상: ${shareLink.name}`
+        );
+        
+        return newShareLink;
+      } catch (error: any) {
+        attempts++;
+        if (error?.code === '23505' && attempts < maxAttempts) {
+          // Unique constraint violation - try again with new ID
+          console.log(`🔄 ID 충돌 발생 (시도 ${attempts}/${maxAttempts}), 재시도 중...`);
+          continue;
+        }
+        throw error;
+      }
+    }
+    
+    throw new Error(`💥 ${maxAttempts}회 시도 후 고유 ID 생성 실패. 다시 시도해주세요.`);
   }
 
   async getUserShareLinks(userId: string): Promise<ShareLink[]> {
