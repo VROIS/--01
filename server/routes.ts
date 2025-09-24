@@ -165,6 +165,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update share name endpoint
+  app.put('/api/share/:id/name', async (req, res) => {
+    try {
+      const guidebookId = req.params.id;
+      const { name } = req.body;
+      
+      if (!name || typeof name !== 'string' || name.trim() === '') {
+        return res.status(400).json({ error: "유효한 링크 이름이 필요합니다." });
+      }
+      
+      const filePath = path.join('shared_guidebooks', `${guidebookId}.json`);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: `해당 가이드북(${guidebookId})을 찾을 수 없습니다.` });
+      }
+
+      // Read existing data
+      const guidebookData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      
+      // Update name
+      guidebookData.name = name.trim();
+      
+      // Save updated data
+      fs.writeFileSync(filePath, JSON.stringify(guidebookData, null, 2));
+      
+      res.json({ success: true, name: guidebookData.name });
+      
+    } catch (error) {
+      console.error("Share 이름 업데이트 오류:", error);
+      res.status(500).json({ error: "링크 이름 업데이트 중 오류가 발생했습니다." });
+    }
+  });
+
   // Public share page endpoint - accessible without authentication
   app.get('/share/:id', async (req, res) => {
     try {
