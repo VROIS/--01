@@ -64,10 +64,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         titleEl.textContent = linkName;
         
         // 🔥 페이지 타이틀과 메타태그 동적 업데이트
-        document.title = `${linkName} - 내손가이드`;
-        document.getElementById('page-title').textContent = `${linkName} - 내손가이드`;
-        document.getElementById('og-title').setAttribute('content', `${linkName} - 내손가이드`);
-        document.getElementById('twitter-title').setAttribute('content', `${linkName} - 내손가이드`);
+        document.title = `${linkName} - 손안에 가이드`;
+        document.getElementById('page-title').textContent = `${linkName} - 손안에 가이드`;
+        document.getElementById('og-title').setAttribute('content', `${linkName} - 손안에 가이드`);
+        document.getElementById('twitter-title').setAttribute('content', `${linkName} - 손안에 가이드`);
         
         // GPS 위치 정보 표시 (사진촬영시만, 업로드시 제외)
         if (shareData.location && shareData.location.trim() !== '') {

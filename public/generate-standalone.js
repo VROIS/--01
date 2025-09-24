@@ -9,7 +9,7 @@ function generateStandaloneHTML(shareData, shareId) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${shareData.name || '공유된 가이드북'} - 내손가이드</title>
+    <title>${shareData.name || '공유된 가이드북'} - 손안에 가이드</title>
     <style>
         :root { --gemini-blue: #4285F4; }
         body {
