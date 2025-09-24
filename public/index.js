@@ -872,6 +872,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 copyBtn.textContent = '링크 생성 중...';
                 
                 try {
+                    // 🔍 [디버깅] 데이터 확인
+                    console.log('🔍 [공유링크 생성] 시작:', {
+                        contentsToShare: contentsToShare,
+                        name: nameInput.value.trim(),
+                        contentsLength: contentsToShare?.length
+                    });
+                    
+                    if (!contentsToShare || contentsToShare.length === 0) {
+                        throw new Error('공유할 콘텐츠가 없습니다. 페이지를 새로고침하고 다시 시도해주세요.');
+                    }
+                    
                     // 🎯 [1-2단계] 올바른 플로우: 이제서야 서버에 링크 생성 요청
                     const response = await fetch('/api/share', {
                         method: 'POST',
@@ -882,14 +893,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         }),
                     });
             
+                    console.log('🔍 [서버 응답] 상태:', response.status, response.statusText);
+                    
                     const result = await response.json();
+                    console.log('🔍 [서버 응답] 결과:', result);
             
                     if (!response.ok) {
-                        throw new Error(result.error || `서버 오류: ${response.status}`);
+                        throw new Error(result.error || `서버 오류: ${response.status} - ${response.statusText}`);
                     }
             
                     const { guidebookId } = result;
+                    if (!guidebookId) {
+                        throw new Error('서버에서 유효한 가이드북 ID를 반환하지 않았습니다.');
+                    }
+                    
                     const shareUrl = `${window.location.origin}/share.html?id=${guidebookId}`;
+                    console.log('🔍 [생성된 링크]:', shareUrl);
                     
                     // 클립보드에 복사
                     const textToCopy = `${nameInput.value.trim()}\n${shareUrl}`;
@@ -902,6 +921,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             toggleSelectionMode(false);
                         }, 1500);
                     } catch (e) {
+                        console.error('🔍 [클립보드 오류]:', e);
                         // 클립보드 복사 실패시 수동 복사 옵션 제공
                         showToast("클립보드 복사 실패. 아래 링크를 수동으로 복사하세요.");
                         
@@ -929,7 +949,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                 } catch (error) {
-                    console.error("공유 링크 생성 오류:", error);
+                    console.error("🔍 [공유 링크 생성 오류]:", error);
+                    console.error("🔍 [오류 상세]:", {
+                        message: error.message,
+                        stack: error.stack,
+                        name: error.name
+                    });
                     showToast('오류: ' + error.message);
                     copyBtn.disabled = false;
                     copyBtn.textContent = '이름+링크 생성 및 복사';
