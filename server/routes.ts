@@ -111,10 +111,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Share endpoints
-  app.post('/api/share', async (req, res) => {
+  // Database-based share endpoints
+  app.post('/api/share', isAuthenticated, async (req: any, res) => {
     try {
-      const { contents, name } = req.body;
+      const { contents } = req.body;
+      const userId = req.user.claims.sub;
       
       if (!Array.isArray(contents) || contents.length === 0) {
         return res.status(400).json({ error: "공유할 항목이 없습니다." });
@@ -124,18 +125,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "한 번에 최대 30개까지만 공유할 수 있습니다." });
       }
 
-      const guidebookId = crypto.randomBytes(4).toString('base64url').slice(0, 6);
-      const guidebookData = { 
-        contents, 
-        name, 
-        createdAt: new Date().toISOString() 
+      // Create share link in database  
+      const guideIds = contents.map(guide => guide.id);
+      const shareLinkData = {
+        name: '', // 기본값은 빈 문자열, 사용자가 나중에 입력
+        guideIds: guideIds,
+        includeLocation: true,
+        includeAudio: false
       };
-
-      // Save to file system
-      const filePath = path.join('shared_guidebooks', `${guidebookId}.json`);
-      fs.writeFileSync(filePath, JSON.stringify(guidebookData, null, 2));
-
-      res.json({ guidebookId });
+      const shareLink = await storage.createShareLink(userId, shareLinkData);
+      
+      res.json({ guidebookId: shareLink.id });
     } catch (error) {
       console.error("Share 생성 오류:", error);
       res.status(500).json({ error: "가이드북 생성 중 오류가 발생했습니다." });
@@ -144,20 +144,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/share', async (req, res) => {
     try {
-      const guidebookId = req.query.id;
+      const shareId = req.query.id;
       
-      if (!guidebookId) {
+      if (!shareId) {
         return res.status(400).json({ error: "가이드북 ID가 필요합니다." });
       }
 
-      const filePath = path.join('shared_guidebooks', `${guidebookId}.json`);
+      // Get share link from database
+      const shareLink = await storage.getShareLink(shareId as string);
       
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ error: `해당 가이드북(${guidebookId})을 찾을 수 없습니다.` });
+      if (!shareLink || !shareLink.isActive) {
+        return res.status(404).json({ error: `해당 가이드북(${shareId})을 찾을 수 없습니다.` });
       }
 
-      const guidebookData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-      res.json(guidebookData);
+      // Increment view count
+      await storage.incrementShareLinkViews(shareId as string);
+      
+      res.json(shareLink);
       
     } catch (error) {
       console.error("Share 조회 오류:", error);
@@ -168,29 +171,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update share name endpoint
   app.put('/api/share/:id/name', async (req, res) => {
     try {
-      const guidebookId = req.params.id;
+      const shareId = req.params.id;
       const { name } = req.body;
       
       if (!name || typeof name !== 'string' || name.trim() === '') {
         return res.status(400).json({ error: "유효한 링크 이름이 필요합니다." });
       }
       
-      const filePath = path.join('shared_guidebooks', `${guidebookId}.json`);
+      // Update share link name in database
+      const updated = await storage.updateShareLink(shareId, { name: name.trim() });
       
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ error: `해당 가이드북(${guidebookId})을 찾을 수 없습니다.` });
+      if (!updated) {
+        return res.status(404).json({ error: `해당 가이드북(${shareId})을 찾을 수 없습니다.` });
       }
-
-      // Read existing data
-      const guidebookData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
       
-      // Update name
-      guidebookData.name = name.trim();
-      
-      // Save updated data
-      fs.writeFileSync(filePath, JSON.stringify(guidebookData, null, 2));
-      
-      res.json({ success: true, name: guidebookData.name });
+      res.json({ success: true, name: name.trim() });
       
     } catch (error) {
       console.error("Share 이름 업데이트 오류:", error);
