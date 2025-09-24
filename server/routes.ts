@@ -40,6 +40,9 @@ if (!fs.existsSync('shared_guidebooks')) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication FIRST before any routes
+  await setupAuth(app);
+
   // Vanilla JS App API Routes (No authentication required)
   
   // API health check endpoint
@@ -390,10 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Auth middleware
-  await setupAuth(app);
-
-  // Auth routes
+  // Auth routes (setupAuth already called at the top)
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
