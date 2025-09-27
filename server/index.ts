@@ -89,9 +89,17 @@ app.use('/share.html', (req, res, next) => {
   // 🔧 [공유링크 수정] 정적 파일 서빙을 특정 라우트 등록 후에 설정
   app.use(express.static('public'));
   
-  // 🔧 [공유링크 임시 비활성화] SEO 친화적 URL은 추후 구현 예정
-
   const server = await registerRoutes(app);
+  
+  // SPA fallback: serve index.html for all client-side routes
+  app.get('*', (req, res) => {
+    // Only fallback for non-API routes
+    if (!req.path.startsWith('/api')) {
+      res.sendFile('index.html', { root: 'public' });
+    } else {
+      res.status(404).json({ message: 'API endpoint not found' });
+    }
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
