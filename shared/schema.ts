@@ -62,16 +62,13 @@ export const guides = pgTable("guides", {
 // Share links table
 export const shareLinks = pgTable("share_links", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text("name").notNull(),
   guideIds: text("guide_ids").array().notNull(),
   includeLocation: boolean("include_location").default(true),
   includeAudio: boolean("include_audio").default(false),
   viewCount: integer("view_count").default(0),
   isActive: boolean("is_active").default(true),
-  isFeatured: boolean("is_featured").default(false), // 사용자 요청: 베스트 콘텐츠 승격 기능
-  featuredAt: timestamp("featured_at"), // 베스트 콘텐츠로 승격된 시점
-  featuredOrder: integer("featured_order"), // 베스트 콘텐츠 표시 순서
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -85,25 +82,6 @@ export const creditTransactions = pgTable("credit_transactions", {
   description: text("description").notNull(),
   referenceId: varchar("reference_id"), // stripe payment id, referral user id, etc.
   createdAt: timestamp("created_at").defaultNow(),
-});
-
-// 사용자 요청: 베스트 콘텐츠 DB화 시스템 - Featured content table for managing best content
-export const featuredContent = pgTable("featured_content", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  shareLinkId: varchar("share_link_id").notNull().references(() => shareLinks.id, { onDelete: 'cascade' }),
-  title: text("title").notNull(), // 베스트 콘텐츠 제목
-  description: text("description"), // 베스트 콘텐츠 설명
-  thumbnailImageUrl: text("thumbnail_image_url"), // 대표 이미지
-  category: varchar("category").default('general'), // 'travel', 'food', 'culture', 'nature', 'general'
-  tags: text("tags").array(), // 태그 목록
-  displayOrder: integer("display_order").default(0), // 표시 순서
-  isActive: boolean("is_active").default(true), // 활성 상태
-  featuredById: varchar("featured_by_id").notNull().references(() => users.id), // 승격한 관리자
-  viewCount: integer("view_count").default(0), // 조회수
-  likeCount: integer("like_count").default(0), // 좋아요 수
-  shareCount: integer("share_count").default(0), // 공유 수
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Create insert schemas
@@ -134,16 +112,6 @@ export const insertCreditTransactionSchema = createInsertSchema(creditTransactio
   createdAt: true,
 });
 
-// 사용자 요청: 베스트 콘텐츠 DB화 시스템 - Featured content insert schema
-export const insertFeaturedContentSchema = createInsertSchema(featuredContent).omit({
-  id: true,
-  viewCount: true,
-  likeCount: true,
-  shareCount: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -153,5 +121,3 @@ export type InsertShareLink = z.infer<typeof insertShareLinkSchema>;
 export type ShareLink = typeof shareLinks.$inferSelect;
 export type InsertCreditTransaction = z.infer<typeof insertCreditTransactionSchema>;
 export type CreditTransaction = typeof creditTransactions.$inferSelect;
-export type InsertFeaturedContent = z.infer<typeof insertFeaturedContentSchema>;
-export type FeaturedContent = typeof featuredContent.$inferSelect;

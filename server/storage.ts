@@ -147,7 +147,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Share link operations
-  async createShareLink(userId: string | null, shareLink: InsertShareLink): Promise<ShareLink> {
+  async createShareLink(userId: string, shareLink: InsertShareLink): Promise<ShareLink> {
     // 🔧 [수정] 짧은 ID 생성 시스템 (브라우저 URL 입력 문제 해결)
     // Generate short, URL-friendly ID (8 characters)
     const generateShortId = () => crypto.randomBytes(6).toString('base64url').slice(0, 8);
@@ -164,15 +164,13 @@ export class DatabaseStorage implements IStorage {
           .values({ ...shareLink, id: shortId, userId }) // 🔧 [수정] 명시적으로 짧은 ID 설정
           .returning();
         
-        // 🎁 공유링크 생성 보상: 1 크레딧 지급 (인증된 사용자만)
-        if (userId) {
-          await this.addCredits(
-            userId, 
-            1, 
-            'share_link_bonus', 
-            `공유링크 생성 보상: ${shareLink.name}`
-          );
-        }
+        // 🎁 공유링크 생성 보상: 1 크레딧 지급
+        await this.addCredits(
+          userId, 
+          1, 
+          'share_link_bonus', 
+          `공유링크 생성 보상: ${shareLink.name}`
+        );
         
         return newShareLink;
       } catch (error: any) {

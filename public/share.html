@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">손안에 가이드</title>
-    <meta id="page-description" name="description" content="여러분의 눈과 귀가 되어줄 '손안에 가이드'가 지금 바로 당신을 기다립니다.">
-    <meta name="keywords" content="여행가이드, 여행정보, 손안에가이드, 여행공유, 여행사진">
-    <meta name="author" content="손안에 가이드">
+    <title id="page-title">가이드북 - 내손가이드</title>
+    <meta name="description" content="직접 체험한 실제 여행 가이드북을 확인해보세요. 사진과 함께하는 생생한 여행 정보를 제공합니다.">
+    <meta name="keywords" content="여행가이드, 여행정보, 내손가이드, 여행공유, 여행사진">
+    <meta name="author" content="내손가이드">
     <meta name="robots" content="index, follow">
     
     <!-- Open Graph 태그 (카톡, 페이스북 등 소셜 공유용) -->
-    <meta id="og-title" property="og:title" content="손안에 가이드">
-    <meta id="og-description" property="og:description" content="여러분의 눈과 귀가 되어줄 '손안에 가이드'가 지금 바로 당신을 기다립니다.">
+    <meta id="og-title" property="og:title" content="가이드북 - 내손가이드">
+    <meta id="og-description" property="og:description" content="직접 체험한 실제 여행 가이드북을 확인해보세요.">
     <meta property="og:type" content="website">
-    <meta id="og-url" property="og:url" content="">
-    <meta property="og:site_name" content="손안에 가이드">
+    <meta property="og:url" content="">
+    <meta property="og:site_name" content="내손가이드">
     <meta property="og:locale" content="ko_KR">
     
     <!-- Twitter Card 태그 -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta id="twitter-title" name="twitter:title" content="손안에 가이드">
-    <meta id="twitter-description" name="twitter:description" content="여러분의 눈과 귀가 되어줄 '손안에 가이드'가 지금 바로 당신을 기다립니다.">
+    <meta id="twitter-title" name="twitter:title" content="가이드북 - 내손가이드">
+    <meta id="twitter-description" name="twitter:description" content="직접 체험한 실제 여행 가이드북을 확인해보세요.">
     
     <!-- 브라우저 호환성 개선 -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -172,8 +172,7 @@
         .audio-btn:hover {
             transform: scale(1.1);
         }
-        /* 🎯 2×10 모자이크 그리드 스타일 - 사용자 요청 수정 */
-        /* 수정메모: 가독성과 파일크기 최적화를 위해 3×10 → 2×10 변경 */
+        /* 🎯 3×10 모자이크 그리드 스타일 */
         .guidebook-item {
             transition: all 0.3s ease;
         }
@@ -187,51 +186,18 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
-        /* 🎯 사용자 요청: 하단 버튼 고정 + 그리드만 스크롤 레이아웃 */
-        .page-layout {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .page-header {
-            flex-shrink: 0;
-            padding: 1rem;
-            background: #FFFEFA;
-            z-index: 10;
-        }
-        .page-main {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 1rem;
-            -webkit-overflow-scrolling: touch;
-        }
-        .page-footer {
-            flex-shrink: 0;
-            padding: 1rem;
-            background: #FFFEFA;
-            border-top: 1px solid #e5e7eb;
-            z-index: 10;
-        }
-        /* 그리드 최적화 */
-        #guidebook-content {
-            max-width: 100%;
-            margin: 0 auto;
-        }
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- 🎯 사용자 요청: 하단 버튼 고정 + 그리드 스크롤 레이아웃 -->
-    <div class="page-layout">
-        <!-- 고정 헤더 -->
-        <header class="page-header text-center">
-            <h1 id="guidebook-title" class="text-2xl font-bold text-gray-800"></h1>
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 id="guidebook-title" class="text-3xl font-bold text-gray-800">공유된 가이드북</h1>
             <p id="guidebook-location" class="text-gray-500 mt-1 text-sm"></p>
-            <p id="guidebook-created-date" class="text-gray-600 mt-1 text-xs"></p>
+            <p id="guidebook-created-date" class="text-gray-600 mt-2"></p>
         </header>
 
-        <!-- 스크롤 가능한 메인 콘텐츠 -->
-        <main class="page-main">
+        <!-- 🎯 3×10 모자이크 그리드 구조 -->
+        <main class="max-w-6xl mx-auto">
             <!-- Loading spinner -->
             <div id="loader" class="text-center py-10">
                 <div class="inline-block w-8 h-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
@@ -240,10 +206,11 @@
                 <p class="mt-4 text-gray-700">가이드북을 불러오는 중입니다...</p>
             </div>
             
-            <!-- 2×10 모자이크 그리드 컨테이너 -->
-            <div id="guidebook-content" class="grid grid-cols-2 gap-3 pb-4">
-                <!-- Guidebook items will be inserted here in 2x10 grid -->
+            <!-- 3×10 모자이크 그리드 컨테이너 -->
+            <div id="guidebook-content" class="grid grid-cols-3 gap-4 p-4">
+                <!-- Guidebook items will be inserted here in 3x10 grid -->
             </div>
+            
         </main>
 
         <!-- ✨ 상세페이지 - 보관함과 100% 동일한 구조 -->
@@ -268,7 +235,7 @@
                     <p id="shareDescriptionText" class="readable-on-image text-xl leading-relaxed"></p>
                 </div>
             </div>
-            <footer id="shareDetailFooter" class="footer-safe-area" style="background: transparent;">
+            <footer id="shareDetailFooter" class="footer-safe-area hidden" style="background: transparent;">
                 <button id="shareAudioBtn" aria-label="오디오 재생" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl" data-testid="button-audio">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
                         <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.648c1.295.748 1.295 2.538 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
@@ -279,13 +246,31 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                 </button>
-                <button id="shareHomeBtn" aria-label="손안에 가이드 앱으로 이동" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl" data-testid="button-home">
+                <button id="shareHomeBtn" aria-label="내손가이드 앱으로 이동" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl" data-testid="button-home">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
                     </svg>
                 </button>
             </footer>
         </div>
+
+        <footer class="text-center mt-12 text-sm text-gray-500">
+            <div id="referralBanner" class="hidden mt-6 mx-auto max-w-md">
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-lg mb-2">🎁 특별 혜택!</h3>
+                    <p class="text-sm mb-3"><span id="referrerName">추천인</span>님이 추천한 드림샷 스튜디오에서 AI로 나만의 여행 사진과 영상을 만들어보세요!</p>
+                    <div class="flex space-x-2">
+                        <button onclick="signUpWithBonus()" class="flex-1 bg-white text-blue-600 font-bold py-2 px-4 rounded hover:bg-gray-100 text-sm" data-testid="button-signup-bonus">
+                            🆓 가입하고 2 크레딧 받기
+                        </button>
+                        <button onclick="window.open('/', '_blank')" class="flex-1 bg-blue-700 text-white font-bold py-2 px-4 rounded hover:bg-blue-800 text-sm" data-testid="button-try-now">
+                            체험하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <p>손안에 가이드</p>
+        </footer>
     </div>
 
     <script src="./share-page.js"></script>
