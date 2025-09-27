@@ -574,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function toggleSelectionMode(forceState) {
+    async function toggleSelectionMode(forceState) {
         if (typeof forceState === 'boolean') {
             isSelectionMode = forceState;
         } else {
@@ -592,12 +592,10 @@ document.addEventListener('DOMContentLoaded', () => {
             archiveHeader.classList.remove('hidden');
             selectionHeader.classList.add('hidden');
             selectedItemIds.clear();
-            
-            // Remove selection styling from all items
-            document.querySelectorAll('.archive-item').forEach(item => {
-                item.classList.remove('selected');
-            });
         }
+        
+        // Re-render archive to update selectable classes
+        await renderArchive();
     }
 
     function updateSelectionUI() {
@@ -712,7 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
             archiveGrid.classList.remove('hidden');
             
             archiveGrid.innerHTML = items.map(item => `
-                <div class="archive-item glass p-4 relative ${selectedItemIds.has(item.id) ? 'selected' : ''}" 
+                <div class="archive-item glass p-4 relative ${isSelectionMode ? 'selectable' : ''} ${selectedItemIds.has(item.id) ? 'selected' : ''}" 
                      data-id="${item.id}" tabindex="0">
                     <div class="selection-checkbox">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

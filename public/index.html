@@ -219,8 +219,11 @@
         #archiveGrid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(10, minmax(80px, 1fr));
             gap: 4px;
             padding: 4px;
+            max-height: 85vh;
+            overflow-y: auto;
         }
         .archive-item img {
             width: 100%;
