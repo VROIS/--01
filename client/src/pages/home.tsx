@@ -172,6 +172,7 @@ export default function Home() {
       {showSharePanel && (
         <SharePanel
           selectedGuideIds={selectedGuides}
+          guides={guides}
           onClose={() => {
             setShowSharePanel(false);
             setSelectedGuides([]);
