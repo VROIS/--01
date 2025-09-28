@@ -869,7 +869,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // HTML 공유 페이지 생성
-  app.post('/api/generate-share-html', isAuthenticated, async (req: any, res) => {
+  app.post('/api/create-shared-html-file', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { name, guideIds, includeLocation, includeAudio } = req.body;
