@@ -35,13 +35,13 @@ export function optimizeImage(dataUrl, maxWidth = 1024, maxHeight = 1024) {
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
-            
+
             if (!ctx) {
                 return reject(new Error('Canvas context를 가져올 수 없습니다.'));
             }
 
             ctx.drawImage(img, 0, 0, width, height);
-            
+
             // 리사이즈된 이미지를 JPEG 데이터 URL로 가져옵니다.
             resolve(canvas.toDataURL('image/jpeg', 0.9)); // 0.9는 품질 설정입니다.
         };

@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('capture-canvas');
     const uploadInput = document.getElementById('upload-input');
     const toastContainer = document.getElementById('toastContainer');
-    
+
     // Share Modal Elements (Now used for loading state)
     const shareModal = document.getElementById('shareModal');
     const shareModalContent = document.getElementById('shareModalContent');
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let stream = null;
     let isCameraActive = false; // To prevent camera re-initialization
-    
+
     // TTS State
     const synth = window.speechSynthesis;
     let utteranceQueue = [];
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isSelectionMode = false;
     let selectedItemIds = new Set();
     let cameFromArchive = false;
-    
+
     // --- IndexedDB Setup ---
     const DB_NAME = 'TravelGuideDB';
     const DB_VERSION = 1;
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function addItem(item) {
         return new Promise(async (resolve, reject) => {
             if (!db) return reject("DB not open");
-            
+
             // Generate a unique ID for both IndexedDB and server usage.
             const uniqueId = item.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const itemWithId = { ...item, id: uniqueId };
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const transaction = db.transaction([STORE_NAME], 'readwrite');
             const store = transaction.objectStore(STORE_NAME);
             const request = store.add(itemWithId);
-            
+
             request.onsuccess = () => resolve(request.result);
             request.onerror = (event) => reject("Error adding item: " + event.target.error);
         });
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             request.onerror = (event) => reject("Error getting items: " + event.target.error);
         });
     }
-    
+
     function deleteItems(ids) {
         return new Promise((resolve, reject) => {
             if (!db) return reject("DB not open");
@@ -186,14 +186,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }, duration);
     }
-    
+
     // --- Page Control ---
     function showPage(pageToShow) {
         [featuresPage, mainPage, detailPage, archivePage, settingsPage].forEach(page => {
             if (page) page.classList.toggle('visible', page === pageToShow);
         });
     }
-    
+
     function showMainPage() {
         cameFromArchive = false; // Reset navigation state
         synth.cancel();
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function showArchivePage() {
         pauseCamera();
-        if (isSelectionMode) { 
+        if (isSelectionMode) {
             toggleSelectionMode(false);
         }
         await renderArchive();
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         populatePromptTextareas(); // Load saved or default prompts
         showPage(settingsPage);
     }
-    
+
     function resetSpeechState() {
         utteranceQueue = [];
         isSpeaking = false;
@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Failed to open database", e);
             showToast("데이터베이스를 열 수 없습니다. 앱이 정상적으로 작동하지 않을 수 있습니다.");
         }
-        
+
         // The landing page animation will handle showing the features page initially.
         if (recognition) {
             recognition.continuous = false;
@@ -261,19 +261,19 @@ document.addEventListener('DOMContentLoaded', () => {
             recognition.maxAlternatives = 1;
         }
     }
-    
+
     async function handleStartFeaturesClick() {
         showPage(mainPage);
         cameraStartOverlay.classList.add('hidden');
-    
+
         if (synth && !synth.speaking) {
             const unlockUtterance = new SpeechSynthesisUtterance('');
             synth.speak(unlockUtterance);
             synth.cancel();
         }
-    
+
         mainLoader.classList.remove('hidden');
-    
+
         try {
             if (!stream) {
                 await startCamera();
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return reject(fallbackErr);
                 }
             }
-            
+
             stream = cameraStream;
             video.srcObject = stream;
             video.play().catch(e => console.error("Video play failed:", e));
@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
             processImage(canvas.toDataURL('image/jpeg'), shootBtn);
         }
     }
-    
+
     function handleFileSelect(event) {
         const file = event.target.files?.[0];
         if (file) {
@@ -372,9 +372,9 @@ document.addEventListener('DOMContentLoaded', () => {
         resetSpeechState();
 
         showDetailPage();
-        
+
         currentContent = { imageDataUrl: dataUrl, description: '' };
-        
+
         resultImage.src = dataUrl;
         resultImage.classList.remove('hidden');
         loader.classList.remove('hidden');
@@ -400,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentContent.imageDataUrl = optimizedDataUrl;
 
             const responseStream = gemini.generateDescriptionStream(base64Image);
-            
+
             clearInterval(loadingInterval);
             loader.classList.add('hidden');
             textOverlay.classList.remove('hidden');
@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            
+
             if (sentenceBuffer.trim()) {
                 const sentence = sentenceBuffer.trim();
                 const span = document.createElement('span');
@@ -451,11 +451,11 @@ document.addEventListener('DOMContentLoaded', () => {
              sourceButton.disabled = false;
         }
     }
-    
+
     function handleMicButtonClick() {
         if (!recognition) return showToast("음성 인식이 지원되지 않는 브라우저입니다.");
         if (isRecognizing) return recognition.stop();
-        
+
         isRecognizing = true;
         micBtn.classList.add('mic-listening');
         recognition.start();
@@ -473,20 +473,20 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             showToast(messages[event.error] || '음성 인식 중 오류가 발생했습니다.');
         };
-        
+
         recognition.onend = () => {
             isRecognizing = false;
             micBtn.classList.remove('mic-listening');
         };
     }
-    
+
     async function processTextQuery(prompt) {
         cameFromArchive = false;
         if (synth.speaking || synth.pending) synth.cancel();
         resetSpeechState();
-        
+
         showDetailPage();
-        
+
         detailPage.classList.add('bg-friendly');
         saveBtn.disabled = true;
 
@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const responseStream = gemini.generateTextStream(prompt);
-            
+
             clearInterval(loadingInterval);
             loader.classList.add('hidden');
             textOverlay.classList.remove('hidden');
@@ -550,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 descriptionText.appendChild(span);
                 queueForSpeech(sentence, span);
             }
-            
+
         } catch (err) {
             console.error("답변 오류:", err);
             clearInterval(loadingInterval);
@@ -573,7 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
             saveBtn.disabled = false;
         }
     }
-    
+
     function toggleSelectionMode(forceState) {
         if (typeof forceState === 'boolean') {
             isSelectionMode = forceState;
@@ -592,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
             archiveHeader.classList.remove('hidden');
             selectionHeader.classList.add('hidden');
             selectedItemIds.clear();
-            
+
             // Remove selection styling from all items
             document.querySelectorAll('.archive-item').forEach(item => {
                 item.classList.remove('selected');
@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) throw new Error('Failed to create guidebook');
-            
+
             const { guidebookId } = await response.json();
             const shareUrl = `${window.location.origin}/share.html?guidebook_id=${guidebookId}`;
 
@@ -668,11 +668,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p class="text-sm font-mono break-all">${shareUrl}</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="navigator.clipboard.writeText('${shareUrl}').then(() => {showToast('링크가 복사되었습니다!'); document.getElementById('shareModal').classList.add('hidden');})" 
+                        <button onclick="navigator.clipboard.writeText('${shareUrl}').then(() => {showToast('링크가 복사되었습니다!'); document.getElementById('shareModal').classList.add('hidden');})"
                             class="flex-1 bg-blue-500 text-white px-4 py-2 rounded font-semibold">
                             링크 복사
                         </button>
-                        <button onclick="document.getElementById('shareModal').classList.add('hidden')" 
+                        <button onclick="document.getElementById('shareModal').classList.add('hidden')"
                             class="flex-1 bg-gray-500 text-white px-4 py-2 rounded font-semibold">
                             닫기
                         </button>
@@ -689,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="text-4xl mb-4">😥</div>
                     <p class="text-lg font-semibold mb-2">공유 중 오류가 발생했습니다</p>
                     <p class="text-sm text-gray-600 mb-4">잠시 후 다시 시도해주세요.</p>
-                    <button onclick="document.getElementById('shareModal').classList.add('hidden')" 
+                    <button onclick="document.getElementById('shareModal').classList.add('hidden')"
                         class="bg-gray-500 text-white px-6 py-2 rounded font-semibold">
                         닫기
                     </button>
@@ -701,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function renderArchive() {
         try {
             const items = await getAllItems();
-            
+
             if (items.length === 0) {
                 archiveGrid.classList.add('hidden');
                 emptyArchiveMessage.classList.remove('hidden');
@@ -710,9 +710,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             emptyArchiveMessage.classList.add('hidden');
             archiveGrid.classList.remove('hidden');
-            
+
             archiveGrid.innerHTML = items.map(item => `
-                <div class="archive-item glass p-4 relative ${selectedItemIds.has(item.id) ? 'selected' : ''}" 
+                <div class="archive-item glass p-4 relative ${selectedItemIds.has(item.id) ? 'selected' : ''}"
                      data-id="${item.id}" tabindex="0">
                     <div class="selection-checkbox">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -819,25 +819,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const { text, element } = utteranceQueue.shift();
         isSpeaking = true;
-        
+
         if (currentlySpeakingElement) {
             currentlySpeakingElement.classList.remove('speaking');
         }
         element.classList.add('speaking');
         currentlySpeakingElement = element;
-        
+
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'ko-KR';
         utterance.rate = 0.9;
         utterance.pitch = 1.0;
-        
+
         utterance.onend = () => {
             element.classList.remove('speaking');
             if (!isPaused) {
                 speakNext();
             }
         };
-        
+
         utterance.onerror = () => {
             element.classList.remove('speaking');
             if (!isPaused) {
@@ -880,7 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetSpeechState();
         const sentences = currentContent.description.split(/[.?!]/).filter(s => s.trim());
         const spans = descriptionText.querySelectorAll('span');
-        
+
         sentences.forEach((sentence, index) => {
             if (sentence.trim() && spans[index]) {
                 queueForSpeech(sentence.trim(), spans[index]);
@@ -933,7 +933,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function populatePromptTextareas() {
         const savedImagePrompt = localStorage.getItem('customImagePrompt') || gemini.DEFAULT_IMAGE_PROMPT;
         const savedTextPrompt = localStorage.getItem('customTextPrompt') || gemini.DEFAULT_TEXT_PROMPT;
-        
+
         if (imagePromptTextarea) imagePromptTextarea.value = savedImagePrompt;
         if (textPromptTextarea) textPromptTextarea.value = savedTextPrompt;
     }
@@ -941,7 +941,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleAuth(event) {
         event.preventDefault();
         const password = authPassword.value;
-        
+
         // Simple password check - in production, this should be more secure
         if (password === 'admin123') {
             authSection.classList.add('hidden');
@@ -956,12 +956,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function savePrompts() {
         const imagePrompt = imagePromptTextarea.value.trim();
         const textPrompt = textPromptTextarea.value.trim();
-        
+
         if (!imagePrompt || !textPrompt) {
             showToast('모든 프롬프트를 입력해주세요.');
             return;
         }
-        
+
         localStorage.setItem('customImagePrompt', imagePrompt);
         localStorage.setItem('customTextPrompt', textPrompt);
         showToast('프롬프트가 저장되었습니다.');
@@ -1004,11 +1004,11 @@ document.addEventListener('DOMContentLoaded', () => {
     micBtn?.addEventListener('click', handleMicButtonClick);
     archiveBtn?.addEventListener('click', showArchivePage);
     uploadInput?.addEventListener('change', handleFileSelect);
-    
+
     backBtn?.addEventListener('click', () => cameFromArchive ? showArchivePage() : showMainPage());
     archiveBackBtn?.addEventListener('click', showMainPage);
     settingsBackBtn?.addEventListener('click', showArchivePage);
-    
+
     audioBtn?.addEventListener('click', onAudioBtnClick);
     saveBtn?.addEventListener('click', handleSaveClick);
     textToggleBtn?.addEventListener('click', () => textOverlay.classList.toggle('hidden'));
@@ -1019,10 +1019,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cancelSelectionBtn?.addEventListener('click', () => toggleSelectionMode(false));
     deleteSelectedBtn?.addEventListener('click', handleDeleteSelected);
-    
+
     archiveGrid?.addEventListener('click', handleArchiveGridClick);
     archiveGrid?.addEventListener('keydown', handleArchiveGridKeydown);
-    
+
     authForm?.addEventListener('submit', handleAuth);
     savePromptsBtn?.addEventListener('click', savePrompts);
     resetPromptsBtn?.addEventListener('click', resetPrompts);

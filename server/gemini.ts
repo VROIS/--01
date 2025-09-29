@@ -40,8 +40,8 @@ export async function generateLocationBasedContent(
     };
 
     const targetLanguage = languageMap[language] || languageMap.ko;
-    
-    const systemPrompt = `You are a professional travel guide content creator. 
+
+    const systemPrompt = `You are a professional travel guide content creator.
 Analyze the provided image and location information to create detailed, accurate guide content.
 Location: ${locationInfo.locationName || `${locationInfo.latitude}, ${locationInfo.longitude}`}
 Respond in ${targetLanguage} with JSON format:
@@ -61,7 +61,7 @@ Respond in ${targetLanguage} with JSON format:
           mimeType: "image/jpeg",
         },
       },
-      `Create a comprehensive travel guide for this location. 
+      `Create a comprehensive travel guide for this location.
 Location coordinates: ${locationInfo.latitude}, ${locationInfo.longitude}
 ${locationInfo.locationName ? `Location name: ${locationInfo.locationName}` : ''}
 
@@ -78,7 +78,7 @@ Please provide accurate, helpful information that would be valuable for traveler
           properties: {
             title: { type: "string" },
             description: { type: "string" },
-            tips: { 
+            tips: {
               type: "array",
               items: { type: "string" }
             },
@@ -93,7 +93,7 @@ Please provide accurate, helpful information that would be valuable for traveler
     });
 
     const rawJson = response.text;
-    
+
     if (rawJson) {
       const data: GuideContent = JSON.parse(rawJson);
       return data;
@@ -112,14 +112,14 @@ export async function getLocationName(latitude: number, longitude: number): Prom
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${process.env.GOOGLE_MAPS_API_KEY}&language=ko`
     );
-    
+
     const data = await response.json();
-    
+
     if (data.results && data.results.length > 0) {
       const result = data.results[0];
       return result.formatted_address || `${latitude}, ${longitude}`;
     }
-    
+
     return `${latitude}, ${longitude}`;
   } catch (error) {
     console.error("Geocoding error:", error);
@@ -135,14 +135,14 @@ export async function generateShareLinkDescription(
   try {
     const languageMap: Record<string, string> = {
       ko: '한국어',
-      en: 'English', 
+      en: 'English',
       ja: '日本語',
       zh: '中文'
     };
 
     const targetLanguage = languageMap[language] || languageMap.ko;
-    
-    const guideDescriptions = guides.map(guide => 
+
+    const guideDescriptions = guides.map(guide =>
       `${guide.title}: ${guide.description} (위치: ${guide.locationName || `${guide.latitude}, ${guide.longitude}`})`
     ).join('\n');
 
@@ -165,7 +165,7 @@ Create a compelling description that would entice people to explore these locati
   }
 }
 
-// 🎬 드림샷 스튜디오: 영화급 이미지 생성 프롬프트 
+// 🎬 드림샷 스튜디오: 영화급 이미지 생성 프롬프트
 export async function generateCinematicPrompt(
   originalGuide: any,
   userPreferences: {
@@ -192,7 +192,7 @@ export async function generateCinematicPrompt(
   "imagePrompt": "상세한 이미지 생성 프롬프트 (영문, 200자 이상)",
   "audioScript": "감정적이고 매력적인 한국어 내레이션 스크립트 (50-100자)",
   "mood": "cinematic/commercial/documentary/artistic 중 하나",
-  "lighting": "golden-hour/natural/studio/dramatic 중 하나", 
+  "lighting": "golden-hour/natural/studio/dramatic 중 하나",
   "angle": "close-up/medium-shot/wide-shot/aerial 중 하나"
 }
 
@@ -273,7 +273,7 @@ export async function optimizeAudioScript(
       model: "gemini-2.5-flash",
       contents: prompt
     });
-    
+
     return response.text?.trim() || originalScript;
   } catch (error) {
     console.error('스크립트 최적화 실패:', error);

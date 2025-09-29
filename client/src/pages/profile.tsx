@@ -69,7 +69,7 @@ export default function Profile() {
               </Avatar>
               <div className="flex-1">
                 <h2 className="text-xl font-semibold" data-testid="text-user-name">
-                  {user?.firstName && user?.lastName 
+                  {user?.firstName && user?.lastName
                     ? `${user.firstName} ${user.lastName}`
                     : user?.email || 'User'
                   }

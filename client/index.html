@@ -16,15 +16,15 @@
         :root {
             --gemini-blue: #4285F4;
         }
-        html, body { 
-            touch-action: manipulation; 
-            -webkit-tap-highlight-color: transparent; 
+        html, body {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
             height: 100vh;
             overflow: hidden;
             background-color: #FFFEFA;
             font-family: 'MaruBuri', sans-serif;
         }
-        
+
         /* --- New Landing Page Styles (Surgically Transplanted) --- */
         #curtain-layer {
             position: fixed;
@@ -44,7 +44,7 @@
         }
         #curtain-left { left: 0; }
         #curtain-right { right: 0; }
-        
+
         #curtain-left.open { transform: translateX(-100%); }
         #curtain-right.open { transform: translateX(100%); }
 
@@ -73,24 +73,24 @@
             color: #FBBF24; /* Yellow dot color from example */
         }
 
-        .full-screen-bg { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100vw; 
-            height: 100vh; 
-            object-fit: cover; 
-            z-index: 1; 
+        .full-screen-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 1;
         }
-        .ui-layer { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            z-index: 10; 
-            display: flex; 
-            flex-direction: column; 
+        .ui-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
             opacity: 0;
             transition: opacity 0.15s ease-out;
             visibility: hidden;
@@ -99,52 +99,52 @@
             opacity: 1;
             visibility: visible;
         }
-        .header-safe-area { 
-            width: 100%; 
-            height: 80px; 
-            flex-shrink: 0; 
-            z-index: 30; 
+        .header-safe-area {
+            width: 100%;
+            height: 80px;
+            flex-shrink: 0;
+            z-index: 30;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 0 1rem;
             position: relative;
         }
-        .content-safe-area { 
-            flex: 1; 
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch; 
+        .content-safe-area {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             background: transparent;
             z-index: 20;
         }
-        .footer-safe-area { 
-            width: 100%; 
-            height: 100px; 
-            flex-shrink: 0; 
-            z-index: 30; 
-            display: flex; 
-            justify-content: space-around; 
-            align-items: center; 
+        .footer-safe-area {
+            width: 100%;
+            height: 100px;
+            flex-shrink: 0;
+            z-index: 30;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
             padding: 0 1rem;
         }
-        .loader-container { 
-            height: 100%; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
+        .loader-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
-        .loader { 
-            border: 6px solid rgba(0,0,0,0.2); 
-            border-radius: 50%; 
-            border-top: 6px solid #1f2937; 
-            width: 60px; 
-            height: 60px; 
-            animation: spin 1s linear infinite; 
+        .loader {
+            border: 6px solid rgba(0,0,0,0.2);
+            border-radius: 50%;
+            border-top: 6px solid #1f2937;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
         }
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         .text-content {
             padding: 2rem 1.5rem;
@@ -156,16 +156,16 @@
             transition: transform 0.1s ease, background-color 0.2s ease;
             position: relative; /* For spinner positioning */
         }
-        .interactive-btn:active { 
-            transform: scale(0.95); 
+        .interactive-btn:active {
+            transform: scale(0.95);
         }
         .interactive-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: scale(1) !important;
         }
-        .hidden { 
-            display: none !important; 
+        .hidden {
+            display: none !important;
         }
         .readable-on-image {
             color: white;
@@ -173,12 +173,12 @@
         }
 
         .text-gemini-blue { color: var(--gemini-blue); }
-        
+
         .readable-on-image.gemini-blue {
             color: var(--gemini-blue);
             text-shadow: none;
         }
-        
+
         #textOverlay.animate-in {
             animation: fade-in-up 0.6s ease-out forwards;
         }
@@ -279,12 +279,12 @@
         .toast.show {
             opacity: 1;
         }
-        
+
         /* Settings Page */
         .settings-section {
             margin-bottom: 2rem;
         }
-        
+
         .settings-header {
             font-size: 1.25rem;
             font-weight: 700;
@@ -293,7 +293,7 @@
             padding-bottom: 0.5rem;
             border-bottom: 2px solid #e5e7eb;
         }
-        
+
         .settings-item {
             background: rgba(255, 255, 255, 0.7);
             border-radius: 12px;
@@ -301,14 +301,14 @@
             margin-bottom: 1rem;
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        
+
         .settings-label {
             display: block;
             font-weight: 600;
             color: #374151;
             margin-bottom: 0.5rem;
         }
-        
+
         .settings-textarea {
             width: 100%;
             min-height: 120px;
@@ -320,13 +320,13 @@
             font-size: 14px;
             line-height: 1.5;
         }
-        
+
         .settings-textarea:focus {
             outline: none;
             border-color: var(--gemini-blue);
             box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
         }
-        
+
         .settings-input {
             width: 100%;
             padding: 0.75rem;
@@ -334,19 +334,19 @@
             border-radius: 8px;
             font-family: inherit;
         }
-        
+
         .settings-input:focus {
             outline: none;
             border-color: var(--gemini-blue);
             box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
         }
-        
+
         .btn-group {
             display: flex;
             gap: 0.75rem;
             margin-top: 1rem;
         }
-        
+
         .btn-primary {
             background: var(--gemini-blue);
             color: white;
@@ -357,11 +357,11 @@
             cursor: pointer;
             transition: background-color 0.2s ease;
         }
-        
+
         .btn-primary:hover {
             background: #3367d6;
         }
-        
+
         .btn-secondary {
             background: #6b7280;
             color: white;
@@ -372,11 +372,11 @@
             cursor: pointer;
             transition: background-color 0.2s ease;
         }
-        
+
         .btn-secondary:hover {
             background: #4b5563;
         }
-        
+
         .btn-danger {
             background: #ef4444;
             color: white;
@@ -387,18 +387,18 @@
             cursor: pointer;
             transition: background-color 0.2s ease;
         }
-        
+
         .btn-danger:hover {
             background: #dc2626;
         }
-        
+
         .demo-section {
             background: rgba(248, 250, 252, 0.8);
             border-radius: 12px;
             padding: 1rem;
             border: 1px solid rgba(229, 231, 235, 0.5);
         }
-        
+
         .demo-label {
             display: block;
             font-weight: 600;
@@ -486,35 +486,35 @@
 
     <!-- Main Content -->
     <video id="camera-feed" class="full-screen-bg" autoplay muted playsinline></video>
-    
+
     <div class="header-safe-area">
         <h1 class="text-2xl font-bold readable-on-image">손안에 가이드</h1>
     </div>
-    
+
     <div class="content-safe-area">
         <div id="mainLoader" class="loader-container">
             <div class="loader"></div>
             <p class="text-white mt-4">카메라를 준비하는 중...</p>
         </div>
     </div>
-    
+
     <div class="footer-safe-area">
         <button id="uploadBtn" class="interactive-btn glass p-4 rounded-full" title="갤러리에서 사진 선택">
             <svg class="w-6 h-6" fill="white" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
             </svg>
         </button>
-        
+
         <button id="shootBtn" class="interactive-btn bg-white p-6 rounded-full shadow-2xl" title="사진 촬영">
             <div class="w-4 h-4 bg-gray-800 rounded-full"></div>
         </button>
-        
+
         <button id="micBtn" class="interactive-btn glass p-4 rounded-full" title="음성으로 질문하기">
             <svg class="w-6 h-6" fill="white" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd" />
             </svg>
         </button>
-        
+
         <button id="archiveBtn" class="interactive-btn glass p-4 rounded-full" title="보관함 보기">
             <svg class="w-6 h-6" fill="white" viewBox="0 0 20 20">
                 <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
@@ -527,32 +527,32 @@
 <!-- Detail Page -->
 <div id="detailPage" class="ui-layer hidden">
     <img id="resultImage" class="full-screen-bg" alt="촬영된 이미지" />
-    
+
     <div class="header-safe-area">
         <button id="backBtn" class="interactive-btn glass p-3 rounded-full absolute left-4" title="뒤로가기">
             <svg class="w-5 h-5" fill="white" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
             </svg>
         </button>
-        
+
         <div id="loadingHeader" class="text-center">
             <h1 class="text-xl font-bold readable-on-image">분석 중...</h1>
         </div>
     </div>
-    
+
     <div class="content-safe-area">
         <div id="loader" class="loader-container">
             <div class="loader"></div>
             <p id="loadingText" class="text-white mt-4 text-center px-4">AI가 이미지를 분석하고 있습니다...</p>
         </div>
-        
+
         <div id="textOverlay" class="text-content hidden">
             <div class="glass-dark p-6">
                 <p id="descriptionText" class="text-white text-lg leading-relaxed"></p>
             </div>
         </div>
     </div>
-    
+
     <div id="detailFooter" class="footer-safe-area hidden">
         <button id="audioBtn" class="interactive-btn glass p-4 rounded-full" title="음성으로 듣기">
             <svg class="w-6 h-6" fill="white" viewBox="0 0 20 20">
@@ -561,13 +561,13 @@
                 <path d="M12.611 6.466a1 1 0 011.414 0c1.166 1.167 1.166 3.063 0 4.23a1 1 0 01-1.414-1.414c.39-.39.39-1.022 0-1.412a1 1 0 010-1.414z" />
             </svg>
         </button>
-        
+
         <button id="textToggleBtn" class="interactive-btn glass p-4 rounded-full" title="텍스트 표시/숨기기">
             <svg class="w-6 h-6" fill="white" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2v10h8V6H6z" clip-rule="evenodd" />
             </svg>
         </button>
-        
+
         <button id="saveBtn" class="interactive-btn glass p-4 rounded-full" title="보관함에 저장">
             <svg class="w-6 h-6" fill="white" viewBox="0 0 20 20">
                 <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2v-8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
@@ -612,7 +612,7 @@
             <button id="deleteSelectedBtn" class="interactive-btn text-red-600 font-semibold">삭제</button>
         </div>
     </div>
-    
+
     <div class="content-safe-area bg-gray-50">
         <div id="emptyArchiveMessage" class="flex flex-col items-center justify-center h-full text-gray-500 hidden">
             <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -621,7 +621,7 @@
             <p class="text-xl font-semibold mb-2">보관함이 비어있습니다</p>
             <p class="text-sm">사진을 촬영하고 저장하면 여기에 표시됩니다.</p>
         </div>
-        
+
         <div id="archiveGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
             <!-- 보관함 항목들이 동적으로 추가됩니다 -->
         </div>
@@ -641,10 +641,10 @@
             <div class="w-11"></div> <!-- Spacer for centering -->
         </div>
     </div>
-    
+
     <div class="content-safe-area bg-gray-50">
         <div class="max-w-2xl mx-auto p-4">
-            
+
             <!-- Auth Section -->
             <div id="authSection" class="settings-section">
                 <div class="settings-header">🔐 관리자 인증</div>
@@ -656,33 +656,33 @@
                     </form>
                 </div>
             </div>
-            
+
             <!-- Prompt Settings Section (Hidden until authenticated) -->
             <div id="promptSettingsSection" class="settings-section hidden">
                 <div class="settings-header">🤖 AI 프롬프트 설정</div>
-                
+
                 <!-- Image Analysis Prompt -->
                 <div class="settings-item">
                     <label class="settings-label" for="imagePromptTextarea">이미지 분석 프롬프트</label>
                     <textarea id="imagePromptTextarea" class="settings-textarea" placeholder="이미지 분석 시 사용할 프롬프트를 입력하세요..."></textarea>
                 </div>
-                
+
                 <!-- Text Response Prompt -->
                 <div class="settings-item">
                     <label class="settings-label" for="textPromptTextarea">텍스트 응답 프롬프트</label>
                     <textarea id="textPromptTextarea" class="settings-textarea" placeholder="음성 질문 응답 시 사용할 프롬프트를 입력하세요..."></textarea>
                 </div>
-                
+
                 <div class="btn-group">
                     <button id="savePromptsBtn" class="btn-primary">저장</button>
                     <button id="resetPromptsBtn" class="btn-secondary">기본값으로 리셋</button>
                 </div>
             </div>
-            
+
             <!-- Demo Section -->
             <div class="settings-section">
                 <div class="settings-header">🎨 데모 기능</div>
-                
+
                 <!-- Image Synthesis Demo -->
                 <div class="demo-section mb-4">
                     <label class="demo-label" for="imageSynthesisPromptTextarea">이미지 생성 (데모)</label>
@@ -690,7 +690,7 @@
                     <button id="generateImageBtn" class="btn-danger mt-3">이미지 생성 (준비중)</button>
                     <p class="text-xs text-gray-500 mt-2">*현재 준비중인 기능입니다.</p>
                 </div>
-                
+
                 <!-- Video Generation Demo -->
                 <div class="demo-section">
                     <label class="demo-label" for="videoGenerationPromptTextarea">동영상 생성 (데모)</label>

@@ -10,12 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Camera, 
-  Video, 
-  Wand2, 
-  Upload, 
-  Coins, 
+import {
+  Camera,
+  Video,
+  Wand2,
+  Upload,
+  Coins,
   Download,
   Play,
   Pause,
@@ -63,7 +63,7 @@ export default function DreamStudio() {
     mutationFn: async (formData: FormData): Promise<GenerationResult> => {
       setIsGenerating(true);
       setGenerationProgress(0);
-      
+
       // 진행률 시뮬레이션
       const interval = setInterval(() => {
         setGenerationProgress(prev => {
@@ -74,7 +74,7 @@ export default function DreamStudio() {
           return prev + Math.random() * 10;
         });
       }, 500);
-      
+
       try {
         const response = await fetch('/api/dream-studio/generate-image', {
           method: 'POST',
@@ -112,7 +112,7 @@ export default function DreamStudio() {
     mutationFn: async (formData: FormData): Promise<GenerationResult> => {
       setIsGenerating(true);
       setGenerationProgress(0);
-      
+
       // 진행률 시뮬레이션 (영상은 더 오래 걸림)
       const interval = setInterval(() => {
         setGenerationProgress(prev => {
@@ -123,7 +123,7 @@ export default function DreamStudio() {
           return prev + Math.random() * 5;
         });
       }, 800);
-      
+
       try {
         const response = await fetch('/api/dream-studio/generate-video', {
           method: 'POST',
@@ -335,7 +335,7 @@ export default function DreamStudio() {
                       </div>
                     </div>
 
-                    <Button 
+                    <Button
                       onClick={handleImageGeneration}
                       disabled={isGenerating || !selectedGuideId || !userPhoto}
                       className="w-full bg-purple-600 hover:bg-purple-700"
@@ -375,7 +375,7 @@ export default function DreamStudio() {
                         <p>먼저 드림샷 이미지를 생성해주세요</p>
                       </div>
                     )}
-                    
+
                     {result?.imageUrl && (
                       <>
                         <div>
@@ -404,7 +404,7 @@ export default function DreamStudio() {
                           />
                         </div>
 
-                        <Button 
+                        <Button
                           onClick={handleVideoGeneration}
                           disabled={isGenerating || (!audioFile && !customScript)}
                           className="w-full bg-pink-600 hover:bg-pink-700"
@@ -469,9 +469,9 @@ export default function DreamStudio() {
                       <div className="space-y-2">
                         <Label>생성된 이미지</Label>
                         <div className="border rounded-lg overflow-hidden">
-                          <img 
-                            src={result.imageUrl} 
-                            alt="Generated image" 
+                          <img
+                            src={result.imageUrl}
+                            alt="Generated image"
                             className="w-full h-64 object-cover"
                             data-testid="img-generated"
                           />
@@ -483,14 +483,14 @@ export default function DreamStudio() {
                         )}
                       </div>
                     )}
-                    
+
                     {result.videoUrl && (
                       <div className="space-y-2">
                         <Label>생성된 영상</Label>
                         <div className="border rounded-lg overflow-hidden">
-                          <video 
-                            controls 
-                            className="w-full" 
+                          <video
+                            controls
+                            className="w-full"
                             data-testid="video-generated"
                           >
                             <source src={result.videoUrl} type="video/mp4" />
@@ -502,12 +502,12 @@ export default function DreamStudio() {
                         </div>
                       </div>
                     )}
-                    
+
                     <div className="flex gap-2">
                       {result.imageUrl && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           className="flex-1"
                           data-testid="button-download-image"
                         >
@@ -516,9 +516,9 @@ export default function DreamStudio() {
                         </Button>
                       )}
                       {result.videoUrl && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           className="flex-1"
                           data-testid="button-download-video"
                         >

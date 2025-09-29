@@ -32,16 +32,16 @@ export default function SharePanel({ selectedGuideIds, onClose }: SharePanelProp
     },
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/guides"] });
-      
+
       // Open share URL in new tab
       const { shareUrl, itemCount } = response;
       window.open(shareUrl, '_blank');
-      
+
       toast({
         title: "성공",
         description: `공유 링크가 생성되었습니다! (${itemCount}개 항목) 새 창에서 열렸습니다.`,
       });
-      
+
       onClose();
     },
     onError: (error: any) => {

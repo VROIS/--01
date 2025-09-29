@@ -3,7 +3,7 @@ import { getQueryFn } from "@/lib/queryClient";
 
 export function useAuth() {
   console.log("useAuth hook called");
-  
+
   const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),

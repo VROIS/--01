@@ -16,10 +16,10 @@ interface SharePageData {
 
 export function generateShareHtml(data: SharePageData): string {
   const { title, items, createdAt, location, includeAudio } = data;
-  
+
   // 최대 20개 아이템으로 제한 (2*10 그리드)
   const limitedItems = items.slice(0, 20);
-  
+
   // 갤러리 아이템 생성
   const galleryItemsHtml = limitedItems.map((item, index) => `
     <div class="gallery-item" data-id="${item.id}">
@@ -44,7 +44,7 @@ export function generateShareHtml(data: SharePageData): string {
   <meta property="og:type" content="website">
   <meta name="created-at" content="${createdAt}">
   ${location ? `<meta name="location" content="${location}">` : ''}
-  
+
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -52,9 +52,9 @@ export function generateShareHtml(data: SharePageData): string {
       background-color: #f0f2f5;
       padding-bottom: 100px; /* 하단 고정 버튼 공간 확보 */
     }
-    
+
     .hidden { display: none !important; }
-    
+
     .header {
       padding: 20px;
       background-color: #343a40;
@@ -64,37 +64,37 @@ export function generateShareHtml(data: SharePageData): string {
       top: 0;
       z-index: 10;
     }
-    
+
     .header h1 {
       margin: 0;
       font-size: 28px;
     }
-    
+
     .meta-info {
       margin-top: 10px;
       font-size: 14px;
       opacity: 0.8;
     }
-    
+
     .voice-selector {
       margin-top: 15px;
     }
-    
+
     .voice-selector label {
       margin-right: 10px;
     }
-    
+
     .voice-selector select {
       padding: 5px;
       border-radius: 5px;
     }
-    
+
     #gallery-view {
       padding: 15px;
       max-height: calc(100vh - 200px);
       overflow-y: auto;
     }
-    
+
     /* 2*10 그리드 최적화 */
     .gallery-grid {
       display: grid;
@@ -103,17 +103,17 @@ export function generateShareHtml(data: SharePageData): string {
       max-width: 500px;
       margin: 0 auto;
     }
-    
+
     .gallery-item {
       cursor: pointer;
       text-align: center;
       transition: transform 0.2s;
     }
-    
+
     .gallery-item:hover {
       transform: scale(1.02);
     }
-    
+
     .gallery-item img {
       width: 100%;
       height: 150px;
@@ -122,7 +122,7 @@ export function generateShareHtml(data: SharePageData): string {
       box-shadow: 0 4px 10px rgba(0,0,0,.1);
       background-color: #e9e9e9;
     }
-    
+
     .gallery-item p {
       margin: 8px 0 0;
       font-weight: 700;
@@ -130,7 +130,7 @@ export function generateShareHtml(data: SharePageData): string {
       font-size: 14px;
       line-height: 1.3;
     }
-    
+
     /* 상세뷰 */
     #detail-view {
       padding: 20px;
@@ -141,7 +141,7 @@ export function generateShareHtml(data: SharePageData): string {
       min-height: calc(100vh - 100px);
       box-sizing: border-box;
     }
-    
+
     .detail-header {
       display: flex;
       justify-content: space-between;
@@ -149,7 +149,7 @@ export function generateShareHtml(data: SharePageData): string {
       margin-bottom: 20px;
       flex-shrink: 0;
     }
-    
+
     .back-button {
       padding: 10px 15px;
       background-color: #6c757d;
@@ -159,7 +159,7 @@ export function generateShareHtml(data: SharePageData): string {
       cursor: pointer;
       font-size: 16px;
     }
-    
+
     #detail-title {
       font-size: 24px;
       font-weight: 700;
@@ -168,7 +168,7 @@ export function generateShareHtml(data: SharePageData): string {
       text-align: right;
       flex-grow: 1;
     }
-    
+
     .detail-image-container {
       flex-grow: 1;
       display: flex;
@@ -176,7 +176,7 @@ export function generateShareHtml(data: SharePageData): string {
       justify-content: center;
       margin-bottom: 20px;
     }
-    
+
     .detail-image {
       width: 100%;
       max-width: 500px;
@@ -186,13 +186,13 @@ export function generateShareHtml(data: SharePageData): string {
       border-radius: 12px;
       box-shadow: 0 5px 20px rgba(0,0,0,.15);
     }
-    
+
     .controls {
       text-align: center;
       margin-bottom: 20px;
       flex-shrink: 0;
     }
-    
+
     .audio-button, .text-toggle-button {
       padding: 12px 25px;
       border: none;
@@ -202,22 +202,22 @@ export function generateShareHtml(data: SharePageData): string {
       font-weight: 700;
       margin: 0 10px;
     }
-    
+
     .audio-button {
       background-color: #007bff;
       color: #fff;
     }
-    
+
     .audio-button.playing {
       background-color: #dc3545;
     }
-    
+
     .text-toggle-button {
       background-color: #f0f2f5;
       color: #333;
       border: 1px solid #ccc;
     }
-    
+
     #detail-text {
       background-color: #fff;
       padding: 20px;
@@ -227,7 +227,7 @@ export function generateShareHtml(data: SharePageData): string {
       max-height: 40vh;
       overflow-y: auto;
     }
-    
+
     /* 하단 고정 네비게이션 */
     .fixed-bottom-nav {
       position: fixed;
@@ -243,7 +243,7 @@ export function generateShareHtml(data: SharePageData): string {
       box-shadow: 0 -2px 10px rgba(0,0,0,.1);
       z-index: 50;
     }
-    
+
     .nav-button {
       display: flex;
       flex-direction: column;
@@ -256,35 +256,35 @@ export function generateShareHtml(data: SharePageData): string {
       color: #666;
       transition: color 0.2s;
     }
-    
+
     .nav-button:hover {
       color: #007bff;
     }
-    
+
     .nav-icon {
       font-size: 24px;
       margin-bottom: 4px;
     }
-    
+
     /* 모바일 최적화 */
     @media (max-width: 480px) {
       .gallery-grid {
         gap: 10px;
         padding: 0 10px;
       }
-      
+
       .gallery-item img {
         height: 120px;
       }
-      
+
       .gallery-item p {
         font-size: 12px;
       }
-      
+
       .header h1 {
         font-size: 24px;
       }
-      
+
       #detail-title {
         font-size: 20px;
       }
@@ -382,14 +382,14 @@ export function generateShareHtml(data: SharePageData): string {
       voices = synth.getVoices().filter(voice => voice.lang.startsWith("ko"));
       const selectedVoice = voiceSelect.value;
       voiceSelect.innerHTML = "";
-      
+
       voices.forEach(voice => {
         const option = document.createElement("option");
         option.textContent = voice.name + " (" + voice.lang + ")";
         option.value = voice.name;
         voiceSelect.appendChild(option);
       });
-      
+
       voiceSelect.value = selectedVoice;
     }
 
@@ -401,26 +401,26 @@ export function generateShareHtml(data: SharePageData): string {
 
     function playAudio(text) {
       stopAudio();
-      
+
       const utterance = new SpeechSynthesisUtterance(text.replace(/<br\\s*\\/?>/gi, " "));
       const selectedVoice = voices.find(voice => voice.name === voiceSelect.value);
-      
+
       utterance.voice = selectedVoice;
       utterance.lang = "ko-KR";
       utterance.rate = 1.0;
-      
+
       const audioButton = document.getElementById("detail-audio-button");
-      
+
       utterance.onstart = () => {
         audioButton.textContent = "❚❚ 일시정지";
         audioButton.classList.add("playing");
       };
-      
+
       utterance.onend = () => {
         audioButton.textContent = "▶ 다시듣기";
         audioButton.classList.remove("playing");
       };
-      
+
       synth.speak(utterance);
     }
 
@@ -435,17 +435,17 @@ export function generateShareHtml(data: SharePageData): string {
     document.querySelectorAll(".gallery-item").forEach(item => {
       item.addEventListener("click", () => {
         const work = works.find(w => w.id === item.dataset.id);
-        
+
         document.getElementById("detail-title").textContent = work.title;
         document.getElementById("detail-image").src = work.imgSrc;
         document.getElementById("detail-text").innerHTML = work.text;
         document.getElementById("detail-text").classList.add("hidden");
         document.getElementById("detail-text-toggle").textContent = "해설 보기";
-        
+
         galleryView.classList.add("hidden");
         header.classList.add("hidden");
         detailView.classList.remove("hidden");
-        
+
         ${includeAudio ? 'playAudio(work.text);' : ''}
       });
     });
@@ -476,7 +476,7 @@ export function generateShareHtml(data: SharePageData): string {
     document.getElementById("detail-text-toggle").addEventListener("click", () => {
       const textDiv = document.getElementById("detail-text");
       const toggleButton = document.getElementById("detail-text-toggle");
-      
+
       if (textDiv.classList.contains("hidden")) {
         textDiv.classList.remove("hidden");
         toggleButton.textContent = "해설 숨기기";

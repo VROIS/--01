@@ -36,12 +36,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const shareData = response.json ? await response.json() : response;
-        
+
         console.log('🔍 Received shareData:', shareData);
         console.log('🔍 shareData.name:', shareData.name);
         console.log('🔍 shareData.linkName:', shareData.linkName);
         console.log('🔍 shareData keys:', Object.keys(shareData));
-        
+
         // 🔄 오프라인 지원: 로컬스토리지에 데이터 저장
         try {
             localStorage.setItem(`share-${shareId}`, JSON.stringify(shareData));
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {
             console.warn('로컬스토리지 저장 실패:', e);
         }
-        
+
         if (!shareData || !shareData.contents || shareData.contents.length === 0) {
             throw new Error('유효하지 않은 공유 데이터입니다.');
         }
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const titleEl = document.getElementById('guidebook-title');
         const locationEl = document.getElementById('guidebook-location');
         const createdDateEl = document.getElementById('guidebook-created-date');
-        
+
         // 링크 이름을 타이틀로 사용
         const linkName = shareData.name || shareData.linkName || '공유된 가이드북';
         titleEl.textContent = linkName;
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('page-title').textContent = `${linkName} - 내손가이드`;
         document.getElementById('og-title').setAttribute('content', `${linkName} - 내손가이드`);
         document.getElementById('twitter-title').setAttribute('content', `${linkName} - 내손가이드`);
-        
+
         // GPS 위치 정보 표시 (사진촬영시만, 업로드시 제외)
         if (shareData.location && shareData.location.trim() !== '') {
             locationEl.textContent = `📍 ${shareData.location}`;
@@ -118,23 +118,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (error) {
         console.error('가이드북 로딩 오류:', error);
-        
+
         // 🔄 오프라인 지원: 로컬스토리지에서 데이터 복구 시도
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const shareId = urlParams.get('id');
             const cachedData = localStorage.getItem(`share-${shareId}`);
-            
+
             if (cachedData) {
                 const shareData = JSON.parse(cachedData);
                 console.log('📦 오프라인 모드: 로컬스토리지에서 데이터 복구:', shareId);
-                
+
                 // 타이틀과 설명 설정
                 descriptionEl.textContent = shareData.name || '공유된 가이드북 (오프라인)';
-                
+
                 // 로더 숨기고 그리드 생성
                 loader.style.display = 'none';
-                
+
                 shareData.contents.forEach((content, index) => {
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'archive-item cursor-pointer';
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (localError) {
             console.warn('로컬스토리지 복구 실패:', localError);
         }
-        
+
         // 로컬스토리지에서도 복구 실패
         showError(`가이드북을 불러오는 중 오류가 발생했습니다: ${error.message}`);
     }
@@ -176,7 +176,7 @@ function resetSpeechState() {
         currentlySpeakingElement.classList.remove('speaking');
     }
     currentlySpeakingElement = null;
-    
+
     // 모든 speaking 클래스 제거 (중복 방지)
     const allSpeakingElements = document.querySelectorAll('.speaking');
     allSpeakingElements.forEach(el => el.classList.remove('speaking'));
@@ -214,16 +214,16 @@ function playNextInQueue() {
         }
         return;
     }
-    
+
     isSpeaking = true;
     const { utterance, element } = utteranceQueue.shift();
-    
+
     if (currentlySpeakingElement) {
         currentlySpeakingElement.classList.remove('speaking');
     }
     element.classList.add('speaking');
     currentlySpeakingElement = element;
-    
+
     utterance.onend = () => {
         playNextInQueue();
     };
@@ -233,7 +233,7 @@ function playNextInQueue() {
 
 function restartAudio() {
     stopSpeech();
-    
+
     const descriptionText = document.getElementById('shareDescriptionText');
     if (!descriptionText) return;
 
@@ -274,13 +274,13 @@ function onShareAudioBtnClick() {
 function updateAudioButton(state) {
     const audioBtn = document.getElementById('shareAudioBtn');
     if (!audioBtn) return;
-    
+
     const playIcon = '<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.648c1.295.748 1.295 2.538 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" /></svg>';
     const pauseIcon = '<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M6.75 5.25a.75 .75 0 01.75-.75H9a.75 .75 0 01.75.75v13.5a.75 .75 0 01-.75.75H7.5a.75 .75 0 01-.75-.75V5.25zm7.5 0a.75 .75 0 01.75-.75h1.5a.75 .75 0 01.75.75v13.5a.75 .75 0 01-.75.75h-1.5a.75 .75 0 01-.75-.75V5.25z" clip-rule="evenodd" /></svg>';
     const loadingIcon = '<div class="w-8 h-8 rounded-full animate-spin loader-blue"></div>';
 
     audioBtn.disabled = state === 'loading' || state === 'disabled';
-    
+
     switch (state) {
         case 'play':
         case 'resume':
@@ -305,10 +305,10 @@ function updateAudioButton(state) {
 // === 보관함의 populateDetailPageFromArchive를 그대로 복사 ===
 function populateShareDetailPage(item) {
     console.log('populateShareDetailPage called:', item);
-    
+
     // 보관함과 100% 동일한 음성 중지 로직
     stopSpeech();
-    
+
     const shareDetailPage = document.getElementById('shareDetailPage');
     const shareResultImage = document.getElementById('shareResultImage');
     const shareDescriptionText = document.getElementById('shareDescriptionText');
@@ -316,12 +316,12 @@ function populateShareDetailPage(item) {
     const shareLoader = document.getElementById('shareLoader');
     const shareLoadingHeader = document.getElementById('shareLoadingHeader');
     const shareDetailFooter = document.getElementById('shareDetailFooter');
-    
+
     if (!shareDetailPage || !shareResultImage || !shareDescriptionText) {
         console.error('Required share page elements not found');
         return;
     }
-    
+
     // 이미지 설정
     shareResultImage.src = item.imageDataUrl || '';
     shareResultImage.classList.toggle('hidden', !item.imageDataUrl);
@@ -331,16 +331,16 @@ function populateShareDetailPage(item) {
 
     // 텍스트 초기화
     shareDescriptionText.innerHTML = '';
-    
+
     // 보관함과 100% 동일한 요소 표시/숨김 순서
     shareLoader.classList.add('hidden');
     shareTextOverlay.classList.remove('hidden');
     shareTextOverlay.classList.remove('animate-in');
     shareLoadingHeader.classList.add('hidden');
     shareDetailFooter.classList.remove('hidden');
-    
+
     const description = item.description || '';
-    
+
     // 보관함과 100% 동일한 문장 분할 및 TTS 큐 설정
     const sentences = description.match(/[^.?!]+[.?!]+/g) || [description];
     sentences.forEach(sentence => {
@@ -352,7 +352,7 @@ function populateShareDetailPage(item) {
     });
 
     updateAudioButton('play');
-    
+
     // 상세페이지 표시 (보관함과 동일)
     shareDetailPage.classList.add('visible');
 }
@@ -360,7 +360,7 @@ function populateShareDetailPage(item) {
 function hideShareDetailPage() {
     console.log('hideShareDetailPage called');
     stopSpeech(); // 보관함과 동일한 음성 중지
-    
+
     const shareDetailPage = document.getElementById('shareDetailPage');
     if (shareDetailPage) {
         shareDetailPage.classList.remove('visible');
@@ -373,26 +373,26 @@ function setupDetailPageEventListeners() {
     const shareAudioBtn = document.getElementById('shareAudioBtn');
     const shareTextToggleBtn = document.getElementById('shareTextToggleBtn');
     const shareHomeBtn = document.getElementById('shareHomeBtn');
-    
+
     console.log('Found shareBackBtn:', !!shareBackBtn);
     console.log('Found shareAudioBtn:', !!shareAudioBtn);
     console.log('Found shareTextToggleBtn:', !!shareTextToggleBtn);
     console.log('Found shareHomeBtn:', !!shareHomeBtn);
-    
+
     if (shareBackBtn) {
         shareBackBtn.addEventListener('click', () => {
             console.log('Back button clicked');
             hideShareDetailPage();
         });
     }
-    
+
     if (shareAudioBtn) {
         shareAudioBtn.addEventListener('click', () => {
             console.log('Audio button clicked');
             onShareAudioBtnClick();
         });
     }
-    
+
     if (shareTextToggleBtn) {
         shareTextToggleBtn.addEventListener('click', () => {
             console.log('Text toggle button clicked');
@@ -405,7 +405,7 @@ function setupDetailPageEventListeners() {
             }
         });
     }
-    
+
     if (shareHomeBtn) {
         shareHomeBtn.addEventListener('click', () => {
             console.log('Home button clicked');
@@ -424,7 +424,7 @@ window.onShareAudioBtnClick = onShareAudioBtnClick;
 window.showReferralBanner = function(refCode) {
     const banner = document.getElementById('referralBanner');
     const referrerName = document.getElementById('referrerName');
-    
+
     if (banner && referrerName) {
         referrerName.textContent = `${refCode}`;
         banner.classList.remove('hidden');

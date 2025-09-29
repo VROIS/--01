@@ -14,13 +14,13 @@ const resources = {
       "auth.phone": "휴대폰 번호",
       "auth.getVerification": "인증번호 받기",
       "auth.terms": "가입과 동시에 서비스 약관 및 개인정보처리방침에 동의합니다",
-      
+
       // Navigation
       "nav.home": "홈",
       "nav.explore": "둘러보기",
       "nav.shareLinks": "공유링크",
       "nav.profile": "프로필",
-      
+
       // Main App
       "main.storage": "보관함",
       "main.newGuide": "새 가이드 촬영",
@@ -30,7 +30,7 @@ const resources = {
       "main.myGuides": "내 가이드",
       "main.total": "총 {{count}}개",
       "main.views": "조회 {{count}}",
-      
+
       // Share Panel
       "share.title": "공유링크 생성",
       "share.linkName": "공유링크 이름",
@@ -40,7 +40,7 @@ const resources = {
       "share.create": "공유링크 생성",
       "share.preview": "미리보기",
       "share.selected": "{{count}}/30",
-      
+
       // Settings
       "settings.title": "설정",
       "settings.account": "계정 설정",
@@ -59,7 +59,7 @@ const resources = {
       "settings.version": "앱 버전",
       "settings.lastUpdate": "마지막 업데이트",
       "settings.checkUpdate": "업데이트 확인",
-      
+
       // Common
       "common.loading": "로딩 중...",
       "common.error": "오류가 발생했습니다",
@@ -82,12 +82,12 @@ const resources = {
       "auth.phone": "Phone number",
       "auth.getVerification": "Get verification code",
       "auth.terms": "By signing up, you agree to our Terms of Service and Privacy Policy",
-      
+
       "nav.home": "Home",
       "nav.explore": "Explore",
       "nav.shareLinks": "Share Links",
       "nav.profile": "Profile",
-      
+
       "main.storage": "Storage",
       "main.newGuide": "Capture New Guide",
       "main.newGuideDesc": "Create guides with location information",
@@ -96,7 +96,7 @@ const resources = {
       "main.myGuides": "My Guides",
       "main.total": "Total {{count}}",
       "main.views": "{{count}} views",
-      
+
       "share.title": "Create Share Link",
       "share.linkName": "Share link name",
       "share.linkNamePlaceholder": "e.g., Seoul Food Tour",
@@ -105,7 +105,7 @@ const resources = {
       "share.create": "Create Share Link",
       "share.preview": "Preview",
       "share.selected": "{{count}}/30",
-      
+
       "settings.title": "Settings",
       "settings.account": "Account Settings",
       "settings.language": "Language Settings",
@@ -123,7 +123,7 @@ const resources = {
       "settings.version": "App Version",
       "settings.lastUpdate": "Last Update",
       "settings.checkUpdate": "Check for Updates",
-      
+
       "common.loading": "Loading...",
       "common.error": "An error occurred",
       "common.save": "Save",
@@ -145,12 +145,12 @@ const resources = {
       "auth.phone": "電話番号",
       "auth.getVerification": "認証コードを取得",
       "auth.terms": "登録により、利用規約とプライバシーポリシーに同意したものとみなされます",
-      
+
       "nav.home": "ホーム",
       "nav.explore": "探索",
       "nav.shareLinks": "共有リンク",
       "nav.profile": "プロフィール",
-      
+
       "main.storage": "保管庫",
       "main.newGuide": "新しいガイドを撮影",
       "main.newGuideDesc": "位置情報と一緒にガイドを作成しましょう",
@@ -159,7 +159,7 @@ const resources = {
       "main.myGuides": "マイガイド",
       "main.total": "合計{{count}}個",
       "main.views": "{{count}}回閲覧",
-      
+
       "share.title": "共有リンク作成",
       "share.linkName": "共有リンク名",
       "share.linkNamePlaceholder": "例：ソウルグルメツアー",
@@ -168,7 +168,7 @@ const resources = {
       "share.create": "共有リンク作成",
       "share.preview": "プレビュー",
       "share.selected": "{{count}}/30",
-      
+
       "settings.title": "設定",
       "settings.account": "アカウント設定",
       "settings.language": "言語設定",
@@ -186,7 +186,7 @@ const resources = {
       "settings.version": "アプリバージョン",
       "settings.lastUpdate": "最終更新",
       "settings.checkUpdate": "アップデートを確認",
-      
+
       "common.loading": "読み込み中...",
       "common.error": "エラーが発生しました",
       "common.save": "保存",
@@ -208,12 +208,12 @@ const resources = {
       "auth.phone": "手机号码",
       "auth.getVerification": "获取验证码",
       "auth.terms": "注册即表示同意服务条款和隐私政策",
-      
+
       "nav.home": "首页",
       "nav.explore": "探索",
       "nav.shareLinks": "分享链接",
       "nav.profile": "个人资料",
-      
+
       "main.storage": "收藏夹",
       "main.newGuide": "拍摄新指南",
       "main.newGuideDesc": "创建带有位置信息的指南",
@@ -222,7 +222,7 @@ const resources = {
       "main.myGuides": "我的指南",
       "main.total": "共{{count}}个",
       "main.views": "{{count}}次浏览",
-      
+
       "share.title": "创建分享链接",
       "share.linkName": "分享链接名称",
       "share.linkNamePlaceholder": "例如：首尔美食之旅",
@@ -231,7 +231,7 @@ const resources = {
       "share.create": "创建分享链接",
       "share.preview": "预览",
       "share.selected": "{{count}}/30",
-      
+
       "settings.title": "设置",
       "settings.account": "账户设置",
       "settings.language": "语言设置",
@@ -249,7 +249,7 @@ const resources = {
       "settings.version": "应用版本",
       "settings.lastUpdate": "最后更新",
       "settings.checkUpdate": "检查更新",
-      
+
       "common.loading": "加载中...",
       "common.error": "发生错误",
       "common.save": "保存",

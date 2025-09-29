@@ -163,8 +163,8 @@ export default function Credits() {
         {/* 크레딧 패키지 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {creditPackages.map((pkg) => (
-            <Card 
-              key={pkg.id} 
+            <Card
+              key={pkg.id}
               className={`relative border-2 transition-all duration-200 hover:shadow-lg ${
                 pkg.popular ? 'border-purple-500 shadow-purple-100' : 'border-gray-200 dark:border-gray-700'
               }`}
@@ -176,7 +176,7 @@ export default function Credits() {
                   </Badge>
                 </div>
               )}
-              
+
               <CardHeader className="text-center">
                 <CardTitle className="flex items-center justify-center gap-2">
                   <Coins className="h-5 w-5 text-yellow-500" />
@@ -187,7 +187,7 @@ export default function Credits() {
                 </CardTitle>
                 <CardDescription className="text-sm">{pkg.description}</CardDescription>
               </CardHeader>
-              
+
               <CardContent className="text-center">
                 <div className="mb-4">
                   {pkg.originalPrice && (
@@ -204,11 +204,11 @@ export default function Credits() {
                     </p>
                   )}
                 </div>
-                
-                <Button 
+
+                <Button
                   className={`w-full ${
-                    pkg.popular 
-                      ? 'bg-purple-600 hover:bg-purple-700' 
+                    pkg.popular
+                      ? 'bg-purple-600 hover:bg-purple-700'
                       : 'bg-gray-600 hover:bg-gray-700'
                   }`}
                   onClick={() => handlePurchase(pkg.id)}

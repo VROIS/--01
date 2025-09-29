@@ -50,7 +50,7 @@ export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuide
     if (target.tagName === 'INPUT' && target.getAttribute('type') === 'checkbox') {
       return;
     }
-    
+
     if (isBatchMode) {
       onGuideSelect(guide.id);
     } else {
@@ -80,7 +80,7 @@ export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuide
               />
             </div>
           )}
-          
+
           {guide.imageUrl ? (
             <img
               src={guide.imageUrl}
@@ -93,7 +93,7 @@ export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuide
               <i className="fas fa-image text-2xl text-muted-foreground"></i>
             </div>
           )}
-          
+
           <div className="p-3">
             <div className="flex items-start justify-between mb-2">
               <h3 className="font-medium text-sm" data-testid={`text-title-${guide.id}`}>
@@ -105,11 +105,11 @@ export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuide
                 </div>
               )}
             </div>
-            
+
             <p className="text-xs text-muted-foreground line-clamp-2" data-testid={`text-description-${guide.id}`}>
               {guide.description}
             </p>
-            
+
             <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
               <span data-testid={`text-date-${guide.id}`}>
                 {formatDate(guide.createdAt!)}

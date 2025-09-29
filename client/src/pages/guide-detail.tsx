@@ -54,10 +54,10 @@ export default function GuideDetail() {
         const voices = window.speechSynthesis.getVoices();
         console.log('Available TTS voices:', voices.length);
       };
-      
+
       // Load immediately if available
       loadVoices();
-      
+
       // Also load when voices change
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
@@ -164,19 +164,19 @@ export default function GuideDetail() {
       // Set voice with language preference
       const targetLang = getVoiceLang();
       console.log(`TTS: Target language: ${targetLang}`);
-      
+
       // Find the best voice for the language
       let selectedVoice = null;
-      
+
       // First, try to find exact lang match
       selectedVoice = voices.find(voice => voice.lang === targetLang);
-      
+
       // If not found, try to find language family match (ko, en, ja, zh)
       if (!selectedVoice) {
         const langPrefix = targetLang.split('-')[0];
         selectedVoice = voices.find(voice => voice.lang.startsWith(langPrefix));
       }
-      
+
       // If still not found, use default voice
       if (!selectedVoice && voices.length > 0) {
         selectedVoice = voices[0];
@@ -214,7 +214,7 @@ export default function GuideDetail() {
         setIsPlaying(false);
         setIsSpeaking(false);
         speechSynthesisRef.current = null;
-        
+
         // Show user-friendly error message
         if (event.error === 'synthesis-failed') {
           console.error('TTS: Speech synthesis failed - this may be due to browser limitations or voice availability');
@@ -242,7 +242,7 @@ export default function GuideDetail() {
       // Start speech synthesis
       console.log('TTS: Starting speech synthesis...');
       window.speechSynthesis.speak(utterance);
-      
+
     } catch (error) {
       console.error('TTS: Unexpected error:', error);
       setIsPlaying(false);
