@@ -57,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectionHeader = document.getElementById('selectionHeader');
     const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
     const selectionCount = document.getElementById('selectionCount');
-    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
     const archiveSelectBtn = document.getElementById('archiveSelectBtn');
     const archiveShareBtn = document.getElementById('archiveShareBtn');
     const archiveDeleteBtn = document.getElementById('archiveDeleteBtn');
