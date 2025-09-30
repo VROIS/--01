@@ -615,21 +615,20 @@
         </div>
     </div>
     
-    <!-- Content Area -->
-    <div class="content-safe-area bg-gray-50" style="padding-bottom: 80px;">
-        
-        <!-- Featured Gallery (3칸 고정) -->
-        <section id="featuredGallerySection" class="px-4 py-4 bg-white mb-2">
-            <div id="featuredGrid" class="grid grid-cols-3 gap-3">
-                <!-- Placeholder 3칸 (나중에 콘텐츠로 교체) -->
-                <div class="aspect-square bg-gray-100 rounded-lg"></div>
-                <div class="aspect-square bg-gray-100 rounded-lg"></div>
-                <div class="aspect-square bg-gray-100 rounded-lg"></div>
-            </div>
-        </section>
+    <!-- Featured Gallery (화면 상단 고정) -->
+    <section id="featuredGallerySection" class="fixed left-0 right-0 px-4 py-4 bg-white shadow-sm z-20" style="top: env(safe-area-inset-top, 60px);">
+        <div id="featuredGrid" class="grid grid-cols-3 gap-3">
+            <!-- Placeholder 3칸 (나중에 콘텐츠로 교체) -->
+            <div class="aspect-square bg-gray-100 rounded-lg"></div>
+            <div class="aspect-square bg-gray-100 rounded-lg"></div>
+            <div class="aspect-square bg-gray-100 rounded-lg"></div>
+        </div>
+    </section>
 
+    <!-- Content Area (스크롤 가능) -->
+    <div class="content-safe-area bg-gray-50" style="padding-bottom: 80px;">
         <!-- My Archive -->
-        <section id="myArchiveSection" class="px-4 py-4">
+        <section id="myArchiveSection" class="px-4 py-4" style="padding-top: 160px;">
             <div id="archiveGrid" class="grid grid-cols-3 gap-3"></div>
             <div id="emptyArchiveMessage" class="text-center py-12 text-gray-400 hidden">
                 <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
