@@ -1029,27 +1029,28 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBtn?.addEventListener('click', handleSaveClick);
     textToggleBtn?.addEventListener('click', () => textOverlay.classList.toggle('hidden'));
 
-    archiveSelectBtn?.addEventListener('click', () => toggleSelectionMode(true));
+    archiveSelectBtn?.addEventListener('click', () => {
+        // 선택 버튼: 선택 모드 토글
+        toggleSelectionMode(!isSelectionMode);
+    });
     archiveShareBtn?.addEventListener('click', handleCreateGuidebookClick);
     archiveDeleteBtn?.addEventListener('click', async () => {
-        // 선택 모드가 활성화되어 있으면 선택된 항목 삭제
-        if (isSelectionMode && selectedItemIds.size > 0) {
-            await handleDeleteSelected();
+        // 삭제 버튼: 선택 모드에서만 작동, 선택된 항목 삭제
+        if (!isSelectionMode) {
+            showToast('먼저 선택 버튼을 눌러주세요');
             return;
         }
         
-        // 선택 모드가 아니면 선택 모드 활성화
-        if (!isSelectionMode) {
-            toggleSelectionMode(true);
-            showToast('삭제할 항목을 선택하세요');
-        } else {
+        if (selectedItemIds.size === 0) {
             showToast('삭제할 항목을 선택해주세요');
+            return;
         }
+        
+        await handleDeleteSelected();
     });
     archiveSettingsBtn?.addEventListener('click', showSettingsPage);
 
     cancelSelectionBtn?.addEventListener('click', () => toggleSelectionMode(false));
-    deleteSelectedBtn?.addEventListener('click', handleDeleteSelected);
     
     archiveGrid?.addEventListener('click', handleArchiveGridClick);
     archiveGrid?.addEventListener('keydown', handleArchiveGridKeydown);
