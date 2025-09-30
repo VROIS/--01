@@ -1032,13 +1032,15 @@ document.addEventListener('DOMContentLoaded', () => {
     archiveSelectBtn?.addEventListener('click', () => toggleSelectionMode(true));
     archiveShareBtn?.addEventListener('click', handleCreateGuidebookClick);
     archiveDeleteBtn?.addEventListener('click', () => {
-        // 선택 모드 활성화 후 사용자가 항목을 선택하도록 유도
         if (!isSelectionMode) {
+            // 선택 모드 활성화
             toggleSelectionMode(true);
-        }
-        // 이미 선택된 항목이 있으면 삭제 확인
-        if (selectedItemIds.size > 0) {
+        } else if (selectedItemIds.size > 0) {
+            // 선택된 항목이 있으면 삭제
             handleDeleteSelected();
+        } else {
+            // 선택된 항목이 없으면 안내
+            showToast('삭제할 항목을 선택해주세요');
         }
     });
     archiveSettingsBtn?.addEventListener('click', showSettingsPage);
