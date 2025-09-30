@@ -52,6 +52,7 @@ export interface IStorage {
   createShareLink(userId: string, shareLink: InsertShareLink): Promise<ShareLink>;
   getUserShareLinks(userId: string): Promise<ShareLink[]>;
   getShareLink(id: string): Promise<ShareLink | undefined>;
+  getFeaturedShareLinks(): Promise<ShareLink[]>;
   updateShareLink(id: string, updates: Partial<InsertShareLink>): Promise<ShareLink>;
   deleteShareLink(id: string): Promise<void>;
   incrementShareLinkViews(id: string): Promise<void>;
@@ -221,6 +222,14 @@ export class DatabaseStorage implements IStorage {
       .update(shareLinks)
       .set({ viewCount: sql`view_count + 1` })
       .where(eq(shareLinks.id, id));
+  }
+
+  async getFeaturedShareLinks(): Promise<ShareLink[]> {
+    return await db
+      .select()
+      .from(shareLinks)
+      .where(and(eq(shareLinks.featured, true), eq(shareLinks.isActive, true)))
+      .orderBy(shareLinks.featuredOrder);
   }
 
   // Credit operations

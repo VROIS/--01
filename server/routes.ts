@@ -540,6 +540,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Featured share links (public access)
+  app.get('/api/featured-share-links', async (req, res) => {
+    try {
+      const featuredLinks = await storage.getFeaturedShareLinks();
+      res.json(featuredLinks);
+    } catch (error) {
+      console.error("Error fetching featured share links:", error);
+      res.status(500).json({ message: "Failed to fetch featured share links" });
+    }
+  });
+
   app.post('/api/share-links', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
