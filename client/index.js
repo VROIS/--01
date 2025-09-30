@@ -605,7 +605,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateSelectionUI() {
         selectionCount.textContent = `${selectedItemIds.size}개 선택됨`;
-        deleteSelectedBtn.disabled = selectedItemIds.size === 0;
     }
 
     async function handleDeleteSelected() {
