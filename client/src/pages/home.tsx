@@ -31,6 +31,46 @@ export default function Home() {
     retry: false,
   });
 
+  const handleDownloadFeatured = async (link: ShareLink) => {
+    try {
+      if (!link.fileName || !link.htmlContent) {
+        toast({
+          title: "오류",
+          description: "다운로드할 파일이 없습니다.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create a blob from the HTML content
+      const blob = new Blob([link.htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = link.fileName;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "다운로드 완료",
+        description: `${link.fileName}이(가) 다운로드되었습니다.`,
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "다운로드 실패",
+        description: "파일 다운로드 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -151,6 +191,10 @@ export default function Home() {
                       {link.name}
                     </h3>
                     <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownloadFeatured(link);
+                      }}
                       className="mt-2 w-full bg-primary/10 text-primary text-xs py-1 rounded flex items-center justify-center gap-1 hover:bg-primary/20 transition-colors"
                       data-testid={`button-download-${link.id}`}
                     >
