@@ -593,17 +593,25 @@
 
     <!-- Archive Page -->
 <div id="archivePage" class="ui-layer">
-    <!-- A-1. 상단 헤더 -->
-    <div class="header-safe-area bg-white shadow-sm">
+    <!-- 기본 헤더 -->
+    <div id="archiveHeader" class="header-safe-area bg-white shadow-sm">
         <div class="flex items-center justify-between w-full px-4">
             <button id="archiveBackBtn" class="interactive-btn p-3 rounded-full" title="뒤로가기" data-testid="button-archive-back">
-                <!-- Heroicon: arrow-left -->
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
             </button>
             <h1 class="text-xl font-bold text-gray-800">보관함</h1>
-            <div class="w-11"></div> <!-- Spacer for centering -->
+            <div class="w-11"></div>
+        </div>
+    </div>
+    
+    <!-- 선택 모드 헤더 -->
+    <div id="selectionHeader" class="header-safe-area bg-white shadow-sm hidden">
+        <div class="flex items-center justify-between w-full px-4">
+            <button id="cancelSelectionBtn" class="text-blue-600 font-semibold interactive-btn px-2" data-testid="button-cancel-selection">취소</button>
+            <h1 id="selectionCount" class="text-lg font-bold text-gray-800">0개 선택됨</h1>
+            <button id="deleteSelectedBtn" class="text-red-500 disabled:text-gray-400 interactive-btn px-2" disabled data-testid="button-delete-selected">삭제</button>
         </div>
     </div>
     
