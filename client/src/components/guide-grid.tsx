@@ -59,23 +59,23 @@ export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuide
   };
 
   return (
-    <div className={`grid grid-cols-2 gap-4 ${isBatchMode ? 'batch-select-mode' : ''}`}>
+    <div className={`grid grid-cols-3 gap-3 ${isBatchMode ? 'batch-select-mode' : ''}`}>
       {guides.map((guide) => (
         <div
           key={guide.id}
-          className={`guide-item bg-card rounded-xl overflow-hidden shadow-sm border border-border hover:shadow-md transition-all cursor-pointer relative ${
+          className={`guide-item bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-all cursor-pointer relative ${
             selectedGuides.includes(guide.id) ? 'selected' : ''
           }`}
           onClick={(e) => handleCardClick(guide, e)}
           data-testid={`card-guide-${guide.id}`}
         >
           {isBatchMode && (
-            <div className="batch-checkbox absolute top-2 right-2 z-10">
+            <div className="batch-checkbox absolute top-1 right-1 z-10">
               <input
                 type="checkbox"
                 checked={selectedGuides.includes(guide.id)}
                 onChange={() => onGuideSelect(guide.id)}
-                className="w-5 h-5 rounded border-2 border-white shadow-lg"
+                className="w-4 h-4 rounded border-2 border-white shadow-lg"
                 data-testid={`checkbox-guide-${guide.id}`}
               />
             </div>
@@ -85,37 +85,34 @@ export default function GuideGrid({ guides, isBatchMode, selectedGuides, onGuide
             <img
               src={guide.imageUrl}
               alt={guide.title}
-              className="w-full h-32 object-cover"
+              className="w-full aspect-square object-cover"
               data-testid={`img-guide-${guide.id}`}
             />
           ) : (
-            <div className="w-full h-32 bg-muted flex items-center justify-center">
-              <i className="fas fa-image text-2xl text-muted-foreground"></i>
+            <div className="w-full aspect-square bg-muted flex items-center justify-center">
+              <i className="fas fa-image text-xl text-muted-foreground"></i>
             </div>
           )}
           
-          <div className="p-3">
-            <div className="flex items-start justify-between mb-2">
-              <h3 className="font-medium text-sm" data-testid={`text-title-${guide.id}`}>
+          <div className="p-2">
+            <div className="flex items-start justify-between mb-1">
+              <h3 className="font-medium text-xs truncate flex-1" data-testid={`text-title-${guide.id}`}>
                 {guide.title}
               </h3>
               {guide.locationName && (
-                <div className="location-badge px-2 py-1 rounded text-xs text-white">
+                <div className="location-badge px-1 py-0.5 rounded text-xs text-white ml-1">
                   <i className="fas fa-map-marker-alt text-xs"></i>
                 </div>
               )}
             </div>
             
-            <p className="text-xs text-muted-foreground line-clamp-2" data-testid={`text-description-${guide.id}`}>
+            <p className="text-xs text-muted-foreground line-clamp-1" data-testid={`text-description-${guide.id}`}>
               {guide.description}
             </p>
             
-            <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-              <span data-testid={`text-date-${guide.id}`}>
+            <div className="flex items-center justify-between mt-1 text-xs text-muted-foreground">
+              <span data-testid={`text-date-${guide.id}`} className="text-xs">
                 {formatDate(guide.createdAt!)}
-              </span>
-              <span data-testid={`text-views-${guide.id}`}>
-                {t('main.views', { count: guide.viewCount || 0 })}
               </span>
             </div>
           </div>
