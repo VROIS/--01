@@ -33,7 +33,7 @@ export default function Home() {
 
   const handleDownloadFeatured = async (link: ShareLink) => {
     try {
-      if (!link.fileName || !link.htmlContent) {
+      if (!link.htmlFilePath) {
         toast({
           title: "오류",
           description: "다운로드할 파일이 없습니다.",
@@ -42,14 +42,18 @@ export default function Home() {
         return;
       }
 
+      // Download the HTML file from the server
+      const response = await fetch(link.htmlFilePath);
+      const htmlContent = await response.text();
+      
       // Create a blob from the HTML content
-      const blob = new Blob([link.htmlContent], { type: 'text/html;charset=utf-8' });
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       
       // Create download link
       const a = document.createElement('a');
       a.href = url;
-      a.download = link.fileName;
+      a.download = `${link.name}-손안에가이드.html`;
       document.body.appendChild(a);
       a.click();
       
@@ -59,7 +63,7 @@ export default function Home() {
 
       toast({
         title: "다운로드 완료",
-        description: `${link.fileName}이(가) 다운로드되었습니다.`,
+        description: `${link.name} 파일이 다운로드되었습니다.`,
       });
     } catch (error) {
       console.error('Download error:', error);
