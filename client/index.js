@@ -1031,15 +1031,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     archiveSelectBtn?.addEventListener('click', () => toggleSelectionMode(true));
     archiveShareBtn?.addEventListener('click', handleCreateGuidebookClick);
-    archiveDeleteBtn?.addEventListener('click', () => {
+    archiveDeleteBtn?.addEventListener('click', async () => {
+        // 선택 모드가 활성화되어 있으면 선택된 항목 삭제
+        if (isSelectionMode && selectedItemIds.size > 0) {
+            await handleDeleteSelected();
+            return;
+        }
+        
+        // 선택 모드가 아니면 선택 모드 활성화
         if (!isSelectionMode) {
-            // 선택 모드 활성화
             toggleSelectionMode(true);
-        } else if (selectedItemIds.size > 0) {
-            // 선택된 항목이 있으면 삭제
-            handleDeleteSelected();
+            showToast('삭제할 항목을 선택하세요');
         } else {
-            // 선택된 항목이 없으면 안내
             showToast('삭제할 항목을 선택해주세요');
         }
     });
