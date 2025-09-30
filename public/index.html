@@ -592,53 +592,103 @@
     </div>
 
     <!-- Archive Page -->
-    <div id="archivePage" class="ui-layer bg-white">
-        <!-- Default Header -->
-        <header id="archiveHeader" class="header-safe-area">
-             <button id="archiveBackBtn" class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 text-gray-800 interactive-btn absolute top-1/2 left-4 -translate-y-1/2" aria-label="뒤로가기">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+<div id="archivePage" class="ui-layer">
+    <!-- A-1. 상단 헤더 -->
+    <div class="header-safe-area bg-white shadow-sm">
+        <div class="flex items-center justify-between w-full px-4">
+            <button id="archiveBackBtn" class="interactive-btn p-3 rounded-full" title="뒤로가기" data-testid="button-archive-back">
+                <!-- Heroicon: arrow-left -->
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
             </button>
-            <div class="text-gray-800">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"></path>
-                </svg>
-            </div>
-        </header>
-        <!-- Selection Mode Header -->
-        <header id="selectionHeader" class="header-safe-area hidden bg-gray-50 border-b border-gray-200">
-            <button id="cancelSelectionBtn" class="absolute top-1/2 left-4 -translate-y-1/2 text-blue-600 font-semibold text-lg interactive-btn px-3 py-1 rounded-md">취소</button>
-            <h1 id="selectionCount" class="text-xl font-bold text-gray-800">0개 선택</h1>
-            <button id="deleteSelectedBtn" class="absolute top-1/2 right-4 -translate-y-1/2 text-red-500 disabled:text-gray-400 hover:text-red-600 interactive-btn p-2" disabled aria-label="선택 항목 삭제">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.124-2.033-2.124H8.033c-1.12 0-2.033.944-2.033 2.124v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                </svg>
-            </button>
-        </header>
-        <div id="archiveGridContainer" class="content-safe-area">
-            <div id="archiveGrid"></div>
-            <p id="emptyArchiveMessage" class="text-slate-500 text-center mt-10 hidden">저장된 항목이 없습니다.</p>
+            <h1 class="text-xl font-bold text-gray-800">보관함</h1>
+            <div class="w-11"></div> <!-- Spacer for centering -->
         </div>
-        <footer id="archiveFooter" class="footer-safe-area bg-white/95 backdrop-blur-sm border-t border-gray-200/80">
-             <button id="archiveSelectBtn" aria-label="항목 선택" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            </button>
-             <button id="archiveShareBtn" aria-label="선택 항목 공유" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl" disabled>
-                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.195.025.39.05.588.08m-1.186 0a2.25 2.25 0 110 2.186m0-2.186l-1.186.151m1.186 0l.588.08m0 0a2.25 2.25 0 100 2.186m0-2.186l-.588.08m.588 0l-1.186.151m2.372 0a2.25 2.25 0 100 2.186m0-2.186c-.195.025-.39.05-.588.08m1.186 0a2.25 2.25 0 110 2.186m0-2.186l1.186.151m-1.186 0l-.588.08m0 0a2.25 2.25 0 100 2.186m0-2.186l.588.08m-.588 0l1.186.151m-2.372 0h.008v.008h-.008v-.008z" />
-                </svg>
-            </button>
-             <button id="archiveSettingsBtn" aria-label="설정" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl">
-                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            </button>
-        </footer>
     </div>
+    
+    <!-- Content Area -->
+    <div class="content-safe-area bg-gray-50" style="padding-bottom: 80px;">
+        
+        <!-- A-2. 추천 갤러리 섹션 -->
+        <section id="featuredGallerySection" class="px-4 py-4 bg-white mb-2">
+            <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                추천 갤러리
+            </h2>
+            <div id="featuredGrid" class="grid grid-cols-3 gap-3">
+                <!-- 추천 갤러리 항목들이 동적으로 추가됩니다 -->
+            </div>
+            <div id="emptyFeaturedMessage" class="text-center py-8 text-gray-400 text-sm hidden">
+                추천된 갤러리가 없습니다
+            </div>
+        </section>
+
+        <!-- A-3. 내 보관함 섹션 -->
+        <section id="myArchiveSection" class="px-4 py-4">
+            <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                내 보관함
+            </h2>
+            <div id="archiveGrid" class="grid grid-cols-3 gap-3">
+                <!-- 보관함 항목들이 동적으로 추가됩니다 -->
+            </div>
+            <div id="emptyArchiveMessage" class="text-center py-12 text-gray-400 hidden">
+                <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <p class="text-lg font-semibold mb-1">보관함이 비어있습니다</p>
+                <p class="text-sm">사진을 촬영하고 저장해보세요</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- A-5. 하단 액션바 (고정) -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div class="grid grid-cols-4 h-20">
+            <!-- 선택 버튼 -->
+            <button id="archiveSelectBtn" class="flex flex-col items-center justify-center interactive-btn" data-testid="button-archive-select">
+                <!-- Heroicon: check-square -->
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-xs">선택</span>
+            </button>
+            
+            <!-- 공유 버튼 -->
+            <button id="archiveShareBtn" class="flex flex-col items-center justify-center interactive-btn" data-testid="button-archive-share">
+                <!-- Heroicon: share -->
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-5.368m0 5.368a3 3 0 105.368 0M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-xs">공유</span>
+            </button>
+            
+            <!-- 삭제 버튼 -->
+            <button id="archiveDeleteBtn" class="flex flex-col items-center justify-center interactive-btn" data-testid="button-archive-delete">
+                <!-- Heroicon: trash -->
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span class="text-xs">삭제</span>
+            </button>
+            
+            <!-- 설정 버튼 -->
+            <button id="archiveSettingsBtn" class="flex flex-col items-center justify-center interactive-btn" data-testid="button-archive-settings">
+                <!-- Heroicon: cog -->
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="text-xs">설정</span>
+            </button>
+        </div>
+    </div>
+</div>
 
     <!-- Settings Page (Prototype) -->
     <div id="settingsPage" class="ui-layer bg-gray-100">

@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const archiveBackBtn = document.getElementById('archiveBackBtn');
     const archiveGrid = document.getElementById('archiveGrid');
     const emptyArchiveMessage = document.getElementById('emptyArchiveMessage');
+    const featuredGrid = document.getElementById('featuredGrid');
+    const emptyFeaturedMessage = document.getElementById('emptyFeaturedMessage');
     const archiveHeader = document.getElementById('archiveHeader');
     const selectionHeader = document.getElementById('selectionHeader');
     const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
@@ -58,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
     const archiveSelectBtn = document.getElementById('archiveSelectBtn');
     const archiveShareBtn = document.getElementById('archiveShareBtn');
+    const archiveDeleteBtn = document.getElementById('archiveDeleteBtn');
     const archiveSettingsBtn = document.getElementById('archiveSettingsBtn');
 
     // Settings Page Elements
@@ -702,6 +705,16 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const items = await getAllItems();
             
+            // TODO: 추천 갤러리 렌더링 (featured shareLinks)
+            // 현재는 임시로 비어있음으로 표시
+            if (featuredGrid && emptyFeaturedMessage) {
+                featuredGrid.innerHTML = '';
+                featuredGrid.classList.add('hidden');
+                emptyFeaturedMessage.classList.remove('hidden');
+                console.log('[Archive] 추천 갤러리: 비어있음');
+            }
+            
+            // 내 보관함 렌더링
             if (items.length === 0) {
                 archiveGrid.classList.add('hidden');
                 emptyArchiveMessage.classList.remove('hidden');
@@ -711,29 +724,32 @@ document.addEventListener('DOMContentLoaded', () => {
             emptyArchiveMessage.classList.add('hidden');
             archiveGrid.classList.remove('hidden');
             
+            // 3열 그리드에 맞는 컴팩트한 카드 디자인
             archiveGrid.innerHTML = items.map(item => `
-                <div class="archive-item glass p-4 relative ${selectedItemIds.has(item.id) ? 'selected' : ''}" 
-                     data-id="${item.id}" tabindex="0">
+                <div class="archive-item relative ${selectedItemIds.has(item.id) ? 'selected ring-2 ring-blue-500' : ''}" 
+                     data-id="${item.id}" 
+                     data-testid="card-archive-${item.id}"
+                     tabindex="0">
                     <div class="selection-checkbox">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                         </svg>
                     </div>
                     ${item.imageDataUrl ? `
-                        <img src="${item.imageDataUrl}" alt="Archive item" class="w-full h-40 object-cover rounded mb-3">
+                        <img src="${item.imageDataUrl}" 
+                             alt="Archive item" 
+                             class="w-full aspect-square object-cover rounded-lg">
                     ` : `
-                        <div class="w-full h-40 bg-gradient-to-br from-blue-100 to-purple-100 rounded mb-3 flex items-center justify-center">
-                            <span class="text-4xl">💭</span>
+                        <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
+                            <span class="text-3xl">💭</span>
                         </div>
                     `}
-                    <p class="text-sm text-gray-700 line-clamp-3">${item.description}</p>
-                    <p class="text-xs text-gray-500 mt-2">${new Date(item.id.split('-')[0] * 1).toLocaleDateString('ko-KR')}</p>
                 </div>
             `).join('');
 
         } catch (error) {
             console.error('Archive render error:', error);
-            archiveGrid.innerHTML = '<p class="text-red-500 col-span-full text-center">보관함을 불러오는 중 오류가 발생했습니다.</p>';
+            archiveGrid.innerHTML = '<p class="text-red-500 col-span-full text-center text-sm">보관함을 불러오는 중 오류가 발생했습니다.</p>';
         }
     }
 
@@ -1015,6 +1031,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     archiveSelectBtn?.addEventListener('click', () => toggleSelectionMode(true));
     archiveShareBtn?.addEventListener('click', handleCreateGuidebookClick);
+    archiveDeleteBtn?.addEventListener('click', () => {
+        // 선택 모드 활성화 후 사용자가 항목을 선택하도록 유도
+        if (!isSelectionMode) {
+            toggleSelectionMode(true);
+        }
+        // 이미 선택된 항목이 있으면 삭제 확인
+        if (selectedItemIds.size > 0) {
+            handleDeleteSelected();
+        }
+    });
     archiveSettingsBtn?.addEventListener('click', showSettingsPage);
 
     cancelSelectionBtn?.addEventListener('click', () => toggleSelectionMode(false));
