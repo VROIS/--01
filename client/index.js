@@ -230,6 +230,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Download Functions ---
+    async function downloadShareLinkHTML(shareLinkId) {
+        try {
+            const shareLinks = await getAllShareLinks();
+            const shareLink = shareLinks.find(link => link.id === shareLinkId);
+            
+            if (!shareLink) {
+                showToast('공유 링크를 찾을 수 없습니다.');
+                return;
+            }
+            
+            // TODO: Task 6에서 HTML 생성 로직 구현 예정
+            // 지금은 임시로 알림만 표시
+            showToast('다운로드 기능은 곧 구현됩니다.');
+            console.log('[Download] ShareLink:', shareLink);
+        } catch (error) {
+            console.error('Download error:', error);
+            showToast('다운로드 중 오류가 발생했습니다.');
+        }
+    }
+    
+    // Make downloadShareLinkHTML globally accessible for inline onclick handlers
+    window.downloadShareLinkHTML = downloadShareLinkHTML;
+
     // --- UI Helpers ---
     function showToast(message, duration = 3000) {
         if (!toastContainer) return;
@@ -772,13 +796,43 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const items = await getAllItems();
             
-            // TODO: 추천 갤러리 렌더링 (featured shareLinks)
-            // 현재는 임시로 비어있음으로 표시
-            if (featuredGrid && emptyFeaturedMessage) {
-                featuredGrid.innerHTML = '';
+            // 추천 갤러리 렌더링 (featured shareLinks)
+            try {
+                const featuredLinks = await getFeaturedShareLinks();
+                
+                if (featuredLinks && featuredLinks.length > 0) {
+                    featuredGrid.classList.remove('hidden');
+                    emptyFeaturedMessage?.classList.add('hidden');
+                    
+                    featuredGrid.innerHTML = featuredLinks.map(link => `
+                        <div class="relative group" data-testid="featured-item-${link.id}">
+                            <img src="${link.guideItems[0]?.imageDataUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3C/svg%3E'}" 
+                                 alt="${link.title}" 
+                                 class="aspect-square object-cover rounded-lg">
+                            <button onclick="downloadShareLinkHTML('${link.id}')" 
+                                    class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                    data-testid="button-download-featured-${link.id}"
+                                    title="다운로드">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                            </button>
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 rounded-b-lg">
+                                <p class="text-white text-xs font-semibold truncate">${link.title}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    console.log(`[Archive] 추천 갤러리: ${featuredLinks.length}개 표시`);
+                } else {
+                    featuredGrid.classList.add('hidden');
+                    emptyFeaturedMessage?.classList.remove('hidden');
+                    console.log('[Archive] 추천 갤러리: 비어있음');
+                }
+            } catch (error) {
+                console.error('Featured gallery render error:', error);
                 featuredGrid.classList.add('hidden');
-                emptyFeaturedMessage.classList.remove('hidden');
-                console.log('[Archive] 추천 갤러리: 비어있음');
+                emptyFeaturedMessage?.classList.remove('hidden');
             }
             
             // 내 보관함 렌더링
