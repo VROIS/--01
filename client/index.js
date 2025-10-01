@@ -226,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showPage(archivePage);
     }
 
+    // 🔒 절대보전 - 설정 페이지 표시 로직 (수정 금지)
     function showSettingsPage() {
         pauseCamera();
         // Reset settings page state
@@ -235,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         populatePromptTextareas(); // Load saved or default prompts
         showPage(settingsPage);
     }
+    // 🔒 절대보전 끝
     
     function resetSpeechState() {
         utteranceQueue = [];
@@ -576,6 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // 🔒 절대보전 - 선택 모드 토글 로직 (수정 금지)
     function toggleSelectionMode(forceState) {
         if (typeof forceState === 'boolean') {
             isSelectionMode = forceState;
@@ -601,11 +604,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+    // 🔒 절대보전 끝
 
+    // 🔒 절대보전 - 선택 개수 UI 업데이트 로직 (수정 금지)
     function updateSelectionUI() {
         selectionCount.textContent = `${selectedItemIds.size}개 선택됨`;
     }
+    // 🔒 절대보전 끝
 
+    // 🔒 절대보전 - 삭제 로직 (수정 금지)
     async function handleDeleteSelected() {
         if (selectedItemIds.size === 0) return;
         if (!confirm(`선택된 ${selectedItemIds.size}개 항목을 삭제하시겠습니까?`)) return;
@@ -620,6 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('삭제 중 오류가 발생했습니다.');
         }
     }
+    // 🔒 절대보전 끝
 
     async function handleCreateGuidebookClick() {
         const items = await getAllItems();
@@ -1027,6 +1035,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBtn?.addEventListener('click', handleSaveClick);
     textToggleBtn?.addEventListener('click', () => textOverlay.classList.toggle('hidden'));
 
+    // 🔒 절대보전 - 보관함 버튼 이벤트 리스너 (수정 금지)
     archiveSelectBtn?.addEventListener('click', () => {
         // 선택 버튼: 선택 모드 토글
         toggleSelectionMode(!isSelectionMode);
@@ -1047,6 +1056,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await handleDeleteSelected();
     });
     archiveSettingsBtn?.addEventListener('click', showSettingsPage);
+    // 🔒 절대보전 끝
 
     cancelSelectionBtn?.addEventListener('click', () => toggleSelectionMode(false));
     
