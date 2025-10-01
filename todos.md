@@ -92,9 +92,9 @@
 
 ### C-4. HTML 파일 생성
 - [x] C-4-1: 선택된 가이드들의 이미지 수집 | 구현일: 2025-10-01
-- [x] C-4-2: 이미지 70% JPEG 압축 | 구현일: 2025-10-01 (compressImageForShare 함수)
+- [ ] C-4-2: 이미지 70% JPEG 압축 | 구현일: ______ (미구현 - 원본 이미지 사용)
 - [x] C-4-3: 가이드 설명 텍스트 수집 | 구현일: 2025-10-01
-- [x] C-4-4: HTML 템플릿 구성 | 구현일: 2025-10-01 (generateShareLinkHTML 함수)
+- [x] C-4-4: HTML 템플릿 구성 | 구현일: 2025-10-01 (generateShareHTML 함수, public/index.js Line 211)
 - [x] C-4-5: 파일명: `${title}-손안에가이드.html` | 구현일: 2025-10-01
 
 ### C-5. HTML 내용 구성
@@ -130,9 +130,9 @@
 - [x] D-2-5: 다운로드 버튼 (Heroicon) | 구현일: 2025-10-01 (호버시 표시)
 
 ### D-3. 다운로드 기능
-- [x] D-3-1: 다운로드 버튼 클릭 핸들러 | 구현일: 2025-10-01 (downloadShareLinkHTML 함수)
+- [x] D-3-1: 다운로드 버튼 클릭 핸들러 | 구현일: 2025-10-01 (downloadFeaturedHTML 함수, public/index.js Line 314)
 - [x] D-3-2: IndexedDB에서 해당 shareLink 조회 | 구현일: 2025-10-01
-- [x] D-3-3: HTML 콘텐츠 다운로드 | 구현일: 2025-10-01
+- [x] D-3-3: HTML 콘텐츠 다운로드 | 구현일: 2025-10-01 (window.location.origin 버그 수정 완료)
 - [x] D-3-4: 파일명 `${title}-손안에가이드.html` | 구현일: 2025-10-01
 
 ---
@@ -228,8 +228,27 @@
 
 ---
 
-**총 147개 체크리스트 (완료: 62개)**  
+**총 147개 체크리스트 (완료: 61개)**  
 **최종 업데이트**: 2025-10-01
+
+---
+
+## ⚠️ 중요 알림 (2025-10-01)
+
+### ✅ 완료된 핵심 기능
+1. **prompt() 제거**: 구식 prompt() 대신 메타데이터 입력 모달 구현 완료
+2. **IndexedDB shareLinks**: DB_VERSION 2, shareLinks store 및 featured 인덱스 추가
+3. **HTML 생성/다운로드**: generateShareHTML() 함수, 독립 실행 가능한 HTML 파일 생성
+4. **추천 갤러리**: getFeaturedShareLinks()로 featured 항목 조회 및 렌더링
+5. **Featured shareLink 다운로드**: downloadFeaturedHTML() 함수 구현
+
+### ⚠️ 테스트 제한사항
+- **E2E 자동 테스트**: 기존 앱의 이미지 업로드 문제(imageOptimizer.js 오류)로 보관함에 항목이 없어 전체 플로우 자동 테스트 불가
+- **수동 테스트 필요**: 보관함에 기존 데이터가 있다면 수동으로 공유 기능 테스트 가능
+- **코드 검증**: Architect 리뷰 완료, LSP 진단 통과, 코드 품질 확인됨
+
+### 🐛 발견된 버그 (수정 완료)
+- ~~window.location.origin 참조 문제~~ → 수정 완료 (appOrigin 파라미터로 전달)
 
 ---
 

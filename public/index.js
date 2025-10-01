@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function generateShareHTML(title, sender, location, date, guideItems) {
+    function generateShareHTML(title, sender, location, date, guideItems, appOrigin) {
         const guideItemsHTML = guideItems.map((item, index) => `
             <div class="guide-item">
                 ${item.imageDataUrl ? `<img src="${item.imageDataUrl}" alt="Guide ${index + 1}">` : ''}
@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         ${guideItemsHTML}
         <div style="text-align: center; margin-top: 40px;">
-            <a href="${window.location.origin}" class="app-link">🎯 앱으로 가기</a>
+            <a href="${appOrigin}" class="app-link">🎯 앱으로 가기</a>
         </div>
     </div>
 </body>
@@ -317,12 +317,14 @@ document.addEventListener('DOMContentLoaded', () => {
             request.onsuccess = () => {
                 const shareLink = request.result;
                 if (shareLink) {
+                    const appOrigin = window.location.origin;
                     const htmlContent = generateShareHTML(
                         shareLink.title,
                         shareLink.sender,
                         shareLink.location,
                         shareLink.date,
-                        shareLink.guideItems
+                        shareLink.guideItems,
+                        appOrigin
                     );
                     downloadHTML(`${shareLink.title}-손안에가이드.html`, htmlContent);
                     showToast('다운로드가 시작되었습니다.');
@@ -872,7 +874,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // Generate HTML content
-                const htmlContent = generateShareHTML(title, sender, location, date, allItems);
+                const appOrigin = window.location.origin; // Capture origin before HTML generation
+                const htmlContent = generateShareHTML(title, sender, location, date, allItems, appOrigin);
                 
                 // Generate unique ID
                 const shareId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
