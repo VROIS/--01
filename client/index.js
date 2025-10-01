@@ -725,71 +725,132 @@ document.addEventListener('DOMContentLoaded', () => {
         if (allItems.length === 0) return showToast('선택된 항목이 없습니다.');
         if (allItems.length > 30) return showToast('한 번에 최대 30개까지 공유할 수 있습니다. 선택을 줄여주세요.');
 
+        // 메타데이터 입력 폼 표시
+        const today = new Date().toISOString().split('T')[0];
         shareModalContent.innerHTML = `
-            <div class="text-center">
-                <div class="loader mx-auto mb-4"></div>
-                <p class="text-lg font-semibold mb-2">가이드북 생성 중...</p>
-                <p class="text-sm text-gray-600">${allItems.length}개 항목을 정리하고 있습니다.</p>
+            <div class="text-left">
+                <h3 class="text-xl font-bold mb-4 text-center">공유 가이드 정보</h3>
+                <form id="shareMetadataForm" class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">제목 *</label>
+                        <input type="text" id="shareTitle" required 
+                               class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                               placeholder="예: 루브르 박물관 투어" data-testid="input-share-title">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">발신자</label>
+                        <input type="text" id="shareSender" 
+                               class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                               placeholder="예: 김가이드" data-testid="input-share-sender">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">위치</label>
+                        <input type="text" id="shareLocation" 
+                               class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                               placeholder="예: 파리, 프랑스" data-testid="input-share-location">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">날짜</label>
+                        <input type="date" id="shareDate" value="${today}"
+                               class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                               data-testid="input-share-date">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="shareFeatured" 
+                               class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                               data-testid="checkbox-share-featured">
+                        <label for="shareFeatured" class="text-sm font-semibold">추천 갤러리에 표시</label>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button type="submit" 
+                                class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600"
+                                data-testid="button-share-submit">
+                            생성
+                        </button>
+                        <button type="button" onclick="document.getElementById('shareModal').classList.add('hidden')" 
+                                class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600"
+                                data-testid="button-share-cancel">
+                            취소
+                        </button>
+                    </div>
+                </form>
             </div>
         `;
         shareModal.classList.remove('hidden');
 
-        try {
-            const guidebookName = prompt('가이드북 이름을 입력해주세요:', '나만의 가이드북');
-            if (!guidebookName) {
-                shareModal.classList.add('hidden');
+        // 폼 제출 이벤트 리스너
+        const form = document.getElementById('shareMetadataForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('shareTitle').value.trim();
+            const sender = document.getElementById('shareSender').value.trim();
+            const location = document.getElementById('shareLocation').value.trim();
+            const date = document.getElementById('shareDate').value;
+            const featured = document.getElementById('shareFeatured').checked;
+
+            if (!title) {
+                showToast('제목을 입력해주세요.');
                 return;
             }
 
-            const guidebookData = { contents: allItems, name: guidebookName };
-
-            const response = await fetch('/api/share', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(guidebookData)
-            });
-
-            if (!response.ok) throw new Error('Failed to create guidebook');
-            
-            const { guidebookId } = await response.json();
-            const shareUrl = `${window.location.origin}/share.html?guidebook_id=${guidebookId}`;
-
+            // 로딩 표시
             shareModalContent.innerHTML = `
                 <div class="text-center">
-                    <div class="text-6xl mb-4">🎉</div>
-                    <h3 class="text-xl font-bold mb-4">가이드북이 생성되었습니다!</h3>
-                    <div class="bg-gray-100 p-3 rounded mb-4">
-                        <p class="text-sm font-mono break-all">${shareUrl}</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="navigator.clipboard.writeText('${shareUrl}').then(() => {showToast('링크가 복사되었습니다!'); document.getElementById('shareModal').classList.add('hidden');})" 
-                            class="flex-1 bg-blue-500 text-white px-4 py-2 rounded font-semibold">
-                            링크 복사
-                        </button>
+                    <div class="loader mx-auto mb-4"></div>
+                    <p class="text-lg font-semibold mb-2">가이드 생성 중...</p>
+                    <p class="text-sm text-gray-600">${allItems.length}개 항목을 정리하고 있습니다.</p>
+                </div>
+            `;
+
+            try {
+                // shareLink 객체 생성
+                const shareLink = {
+                    title,
+                    sender,
+                    location,
+                    date,
+                    guideItems: allItems,
+                    featured
+                };
+
+                // TODO: Task 6-7에서 구현 예정
+                // 1. HTML 파일 생성 (이미지 70% 압축)
+                // 2. 자동 다운로드
+                // 3. IndexedDB에 저장
+
+                console.log('[Share] ShareLink created:', shareLink);
+                
+                // 임시 성공 메시지
+                shareModalContent.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">🎉</div>
+                        <h3 class="text-xl font-bold mb-4">가이드가 생성되었습니다!</h3>
+                        <p class="text-sm text-gray-600 mb-4">HTML 다운로드 기능은 다음 단계에서 구현됩니다.</p>
                         <button onclick="document.getElementById('shareModal').classList.add('hidden')" 
-                            class="flex-1 bg-gray-500 text-white px-4 py-2 rounded font-semibold">
+                                class="bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold">
+                            확인
+                        </button>
+                    </div>
+                `;
+
+                if (isSelectionMode) toggleSelectionMode(false);
+
+            } catch (error) {
+                console.error('Share error:', error);
+                shareModalContent.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-4xl mb-4">😥</div>
+                        <p class="text-lg font-semibold mb-2">공유 중 오류가 발생했습니다</p>
+                        <p class="text-sm text-gray-600 mb-4">잠시 후 다시 시도해주세요.</p>
+                        <button onclick="document.getElementById('shareModal').classList.add('hidden')" 
+                                class="bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold">
                             닫기
                         </button>
                     </div>
-                </div>
-            `;
-
-            if (isSelectionMode) toggleSelectionMode(false);
-
-        } catch (error) {
-            console.error('Share error:', error);
-            shareModalContent.innerHTML = `
-                <div class="text-center">
-                    <div class="text-4xl mb-4">😥</div>
-                    <p class="text-lg font-semibold mb-2">공유 중 오류가 발생했습니다</p>
-                    <p class="text-sm text-gray-600 mb-4">잠시 후 다시 시도해주세요.</p>
-                    <button onclick="document.getElementById('shareModal').classList.add('hidden')" 
-                        class="bg-gray-500 text-white px-6 py-2 rounded font-semibold">
-                        닫기
-                    </button>
-                </div>
-            `;
-        }
+                `;
+            }
+        });
     }
 
     async function renderArchive() {
