@@ -38,6 +38,9 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").default(false),
   referredBy: varchar("referred_by"),
   referralCode: varchar("referral_code").unique(),
+  subscriptionStatus: varchar("subscription_status").default('active'),
+  subscriptionCanceledAt: timestamp("subscription_canceled_at"),
+  accountStatus: varchar("account_status").default('active'),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
