@@ -946,7 +946,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Render featured gallery
             if (featuredGrid && emptyFeaturedMessage) {
-                const featuredLinks = await getFeaturedShareLinks();
+                let featuredLinks = [];
+                try {
+                    featuredLinks = await getFeaturedShareLinks();
+                } catch (error) {
+                    console.warn('Featured gallery not available yet:', error);
+                    featuredLinks = [];
+                }
                 
                 if (featuredLinks.length > 0) {
                     emptyFeaturedMessage.classList.add('hidden');
