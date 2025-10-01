@@ -391,6 +391,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Subscription management
+  app.post('/api/subscription/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.cancelSubscription(userId);
+      res.json({ 
+        message: "구독이 취소되었습니다. 계정과 모든 데이터는 보존됩니다.",
+        user 
+      });
+    } catch (error) {
+      console.error("Error canceling subscription:", error);
+      res.status(500).json({ message: "구독 취소 중 오류가 발생했습니다." });
+    }
+  });
+
+  app.post('/api/subscription/reactivate', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.reactivateSubscription(userId);
+      res.json({ 
+        message: "구독이 복원되었습니다. 이전 데이터가 모두 복원되었습니다!",
+        user 
+      });
+    } catch (error) {
+      console.error("Error reactivating subscription:", error);
+      res.status(500).json({ message: "구독 복원 중 오류가 발생했습니다." });
+    }
+  });
+
   // Guide routes
   app.get('/api/guides', isAuthenticated, async (req: any, res) => {
     try {
