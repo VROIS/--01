@@ -38,6 +38,8 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserPreferences(userId: string, preferences: Partial<User>): Promise<User>;
+  cancelSubscription(userId: string): Promise<User>;
+  reactivateSubscription(userId: string): Promise<User>;
   
   // Guide operations
   createGuide(userId: string, guide: InsertGuide): Promise<Guide>;
@@ -95,6 +97,34 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({ ...preferences, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async cancelSubscription(userId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        subscriptionStatus: 'canceled',
+        subscriptionCanceledAt: new Date(),
+        accountStatus: 'suspended',
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async reactivateSubscription(userId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        subscriptionStatus: 'active',
+        subscriptionCanceledAt: null,
+        accountStatus: 'active',
+        updatedAt: new Date() 
+      })
       .where(eq(users.id, userId))
       .returning();
     return user;
