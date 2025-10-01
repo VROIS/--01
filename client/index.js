@@ -230,6 +230,103 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Image Compression for Sharing ---
+    function compressImageForShare(dataUrl, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                
+                if (!ctx) {
+                    return reject(new Error('Canvas context를 가져올 수 없습니다.'));
+                }
+                
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = (error) => {
+                console.error("이미지 로딩 오류:", error);
+                reject(new Error("압축을 위해 이미지를 로드하는 데 실패했습니다."));
+            };
+            img.src = dataUrl;
+        });
+    }
+    
+    // --- HTML Generation ---
+    async function generateShareLinkHTML(shareLink) {
+        try {
+            // 이미지 압축 (70% 품질)
+            const compressedItems = await Promise.all(
+                shareLink.guideItems.map(async (item) => {
+                    if (item.imageDataUrl) {
+                        const compressed = await compressImageForShare(item.imageDataUrl, 0.7);
+                        return { ...item, imageDataUrl: compressed };
+                    }
+                    return item;
+                })
+            );
+
+            // HTML 생성
+            const html = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${shareLink.title} - 손안에가이드</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; margin-bottom: 20px; border-radius: 12px; }
+        .header h1 { font-size: 28px; margin-bottom: 12px; }
+        .metadata { opacity: 0.95; font-size: 14px; }
+        .metadata div { margin: 4px 0; }
+        .guide-item { background: white; margin-bottom: 20px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .guide-item img { width: 100%; display: block; }
+        .guide-item .description { padding: 20px; white-space: pre-wrap; }
+        .shortcut-btn { display: block; width: 100%; max-width: 400px; margin: 30px auto; padding: 16px; background: #4285F4; color: white; text-align: center; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; }
+        .shortcut-btn:hover { background: #3367D6; }
+        .footer { text-align: center; color: #666; margin-top: 40px; padding: 20px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>${shareLink.title}</h1>
+            <div class="metadata">
+                ${shareLink.sender ? `<div>📤 ${shareLink.sender}</div>` : ''}
+                ${shareLink.location ? `<div>📍 ${shareLink.location}</div>` : ''}
+                ${shareLink.date ? `<div>📅 ${shareLink.date}</div>` : ''}
+            </div>
+        </div>
+        
+        ${compressedItems.map((item, index) => `
+            <div class="guide-item">
+                ${item.imageDataUrl ? `<img src="${item.imageDataUrl}" alt="Guide image ${index + 1}">` : ''}
+                <div class="description">${item.description || ''}</div>
+            </div>
+        `).join('')}
+        
+        <a href="${window.location.origin}" class="shortcut-btn">🏠 내손가이드로 돌아가기</a>
+        
+        <div class="footer">
+            손안에가이드로 제작되었습니다<br>
+            ${new Date().toLocaleDateString('ko-KR')}
+        </div>
+    </div>
+</body>
+</html>`;
+            
+            return html;
+        } catch (error) {
+            console.error('HTML generation error:', error);
+            throw error;
+        }
+    }
+
     // --- Download Functions ---
     async function downloadShareLinkHTML(shareLinkId) {
         try {
@@ -241,10 +338,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            // TODO: Task 6에서 HTML 생성 로직 구현 예정
-            // 지금은 임시로 알림만 표시
-            showToast('다운로드 기능은 곧 구현됩니다.');
-            console.log('[Download] ShareLink:', shareLink);
+            // HTML 생성
+            const html = await generateShareLinkHTML(shareLink);
+            
+            // Blob 생성 및 다운로드
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${shareLink.title}-손안에가이드.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('HTML 파일이 다운로드되었습니다.');
         } catch (error) {
             console.error('Download error:', error);
             showToast('다운로드 중 오류가 발생했습니다.');
@@ -814,27 +922,43 @@ document.addEventListener('DOMContentLoaded', () => {
                     featured
                 };
 
-                // TODO: Task 6-7에서 구현 예정
                 // 1. HTML 파일 생성 (이미지 70% 압축)
-                // 2. 자동 다운로드
-                // 3. IndexedDB에 저장
-
-                console.log('[Share] ShareLink created:', shareLink);
+                const html = await generateShareLinkHTML(shareLink);
                 
-                // 임시 성공 메시지
+                // 2. 자동 다운로드
+                const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${title}-손안에가이드.html`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // 3. IndexedDB에 저장
+                await addShareLink(shareLink);
+                
+                // 성공 메시지
                 shareModalContent.innerHTML = `
                     <div class="text-center">
                         <div class="text-6xl mb-4">🎉</div>
                         <h3 class="text-xl font-bold mb-4">가이드가 생성되었습니다!</h3>
-                        <p class="text-sm text-gray-600 mb-4">HTML 다운로드 기능은 다음 단계에서 구현됩니다.</p>
+                        <p class="text-sm text-gray-600 mb-4">HTML 파일이 다운로드되었습니다${featured ? ' (추천 갤러리에 표시됩니다)' : ''}.</p>
                         <button onclick="document.getElementById('shareModal').classList.add('hidden')" 
-                                class="bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold">
+                                class="bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold"
+                                data-testid="button-share-complete">
                             확인
                         </button>
                     </div>
                 `;
 
                 if (isSelectionMode) toggleSelectionMode(false);
+                
+                // Featured인 경우 보관함 새로고침하여 갤러리 업데이트
+                if (featured) {
+                    await renderArchive();
+                }
 
             } catch (error) {
                 console.error('Share error:', error);
