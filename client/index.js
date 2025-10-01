@@ -103,8 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- IndexedDB Setup ---
     const DB_NAME = 'TravelGuideDB';
-    const DB_VERSION = 1;
+    const DB_VERSION = 2;  // Upgraded to v2 for shareLinks store
     const STORE_NAME = 'archive';
+    const SHARE_LINKS_STORE = 'shareLinks';
     let db;
 
     function openDB() {
@@ -117,8 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
+                
+                // Create archive store if not exists (v1)
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
                     db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+                
+                // Create shareLinks store if not exists (v2)
+                if (!db.objectStoreNames.contains(SHARE_LINKS_STORE)) {
+                    const shareLinksStore = db.createObjectStore(SHARE_LINKS_STORE, { keyPath: 'id' });
+                    // Add index for featured items
+                    shareLinksStore.createIndex('featured', 'featured', { unique: false });
                 }
             };
         });
@@ -166,6 +176,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 }));
             });
             Promise.all(deletePromises).then(resolve).catch(reject);
+        });
+    }
+
+    // --- ShareLinks CRUD Functions ---
+    function addShareLink(shareLink) {
+        return new Promise((resolve, reject) => {
+            if (!db) return reject("DB not open");
+            
+            const uniqueId = shareLink.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const shareLinkWithId = { ...shareLink, id: uniqueId };
+
+            const transaction = db.transaction([SHARE_LINKS_STORE], 'readwrite');
+            const store = transaction.objectStore(SHARE_LINKS_STORE);
+            const request = store.add(shareLinkWithId);
+            
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = (event) => reject("Error adding share link: " + event.target.error);
+        });
+    }
+
+    function getAllShareLinks() {
+        return new Promise((resolve, reject) => {
+            if (!db) return reject("DB not open");
+            const transaction = db.transaction([SHARE_LINKS_STORE], 'readonly');
+            const store = transaction.objectStore(SHARE_LINKS_STORE);
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result.reverse()); // Show newest first
+            request.onerror = (event) => reject("Error getting share links: " + event.target.error);
+        });
+    }
+
+    function getFeaturedShareLinks() {
+        return new Promise((resolve, reject) => {
+            if (!db) return reject("DB not open");
+            const transaction = db.transaction([SHARE_LINKS_STORE], 'readonly');
+            const store = transaction.objectStore(SHARE_LINKS_STORE);
+            const index = store.index('featured');
+            const request = index.getAll(true); // Get all items where featured = true
+            request.onsuccess = () => resolve(request.result.slice(0, 3)); // Return max 3 featured items
+            request.onerror = (event) => reject("Error getting featured share links: " + event.target.error);
+        });
+    }
+
+    function deleteShareLink(id) {
+        return new Promise((resolve, reject) => {
+            if (!db) return reject("DB not open");
+            const transaction = db.transaction([SHARE_LINKS_STORE], 'readwrite');
+            const store = transaction.objectStore(SHARE_LINKS_STORE);
+            const request = store.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = (event) => reject("Error deleting share link: " + event.target.error);
         });
     }
 
