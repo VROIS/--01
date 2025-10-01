@@ -2,7 +2,18 @@
 
 This is a location-based travel guide application called "내손가이드" (My Hand Guide) that allows users to create, manage, and share travel guides with photos and location information. The app features AI-powered content generation using Google's Gemini AI to automatically create guide descriptions, tips, and cultural information based on uploaded images and GPS coordinates. Users can capture photos with location data, organize guides, create shareable links, and manage their travel content through a mobile-optimized interface.
 
-## 📝 Recent Critical Fix (2025-09-24)
+## 📝 Recent Changes
+
+### Critical Fix (2025-10-01) - Subscription Data Restoration
+**Issue:** Users lost all data (guides, share links) when canceling and resubscribing
+**Solution:** Implemented soft-delete subscription system with data preservation
+**Changes:**
+- Added `subscriptionStatus`, `subscriptionCanceledAt`, `accountStatus` fields to user schema
+- Created subscription management endpoints: `/api/subscription/cancel` and `/api/subscription/reactivate`
+- Account suspension instead of deletion - all user data preserved during subscription gaps
+**Impact:** Users can now cancel and resubscribe without losing any data
+
+### URL Optimization (2025-09-24)
 **Issue:** Users reported browser URL input errors due to excessively long share URLs (36 characters)
 **Solution:** Implemented short URL system reducing URL length by 67% (36 → 12 characters)
 **Impact:** Users can now easily type share URLs directly into browser address bar
