@@ -103,8 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- IndexedDB Setup ---
     const DB_NAME = 'TravelGuideDB';
-    const DB_VERSION = 1;
+    const DB_VERSION = 2; // Updated for shareLinks store
     const STORE_NAME = 'archive';
+    const SHARE_LINKS_STORE = 'shareLinks';
     let db;
 
     function openDB() {
@@ -117,8 +118,16 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
+                
+                // Create archive store if not exists
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
                     db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+                
+                // Create shareLinks store for version 2
+                if (!db.objectStoreNames.contains(SHARE_LINKS_STORE)) {
+                    const shareStore = db.createObjectStore(SHARE_LINKS_STORE, { keyPath: 'id' });
+                    shareStore.createIndex('featured', 'featured', { unique: false });
                 }
             };
         });
@@ -168,6 +177,162 @@ document.addEventListener('DOMContentLoaded', () => {
             Promise.all(deletePromises).then(resolve).catch(reject);
         });
     }
+
+    // --- ShareLinks Functions ---
+    function addShareLink(shareLink) {
+        return new Promise((resolve, reject) => {
+            if (!db) return reject("DB not open");
+            const transaction = db.transaction([SHARE_LINKS_STORE], 'readwrite');
+            const store = transaction.objectStore(SHARE_LINKS_STORE);
+            const request = store.add(shareLink);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = (event) => reject("Error adding shareLink: " + event.target.error);
+        });
+    }
+
+    function getFeaturedShareLinks() {
+        return new Promise((resolve, reject) => {
+            if (!db) return reject("DB not open");
+            const transaction = db.transaction([SHARE_LINKS_STORE], 'readonly');
+            const store = transaction.objectStore(SHARE_LINKS_STORE);
+            const index = store.index('featured');
+            const request = index.getAll(true); // Get featured=true items
+            request.onsuccess = () => {
+                const items = request.result.sort((a, b) => b.timestamp - a.timestamp).slice(0, 3);
+                resolve(items);
+            };
+            request.onerror = (event) => reject("Error getting featured shareLinks: " + event.target.error);
+        });
+    }
+
+    function generateShareHTML(title, sender, location, date, guideItems) {
+        const guideItemsHTML = guideItems.map((item, index) => `
+            <div class="guide-item">
+                ${item.imageDataUrl ? `<img src="${item.imageDataUrl}" alt="Guide ${index + 1}">` : ''}
+                <p class="description">${item.description || ''}</p>
+            </div>
+        `).join('');
+
+        return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title} - 손안에 가이드</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: #FFFEFA;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2rem; margin-bottom: 10px; }
+        .metadata { 
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .metadata p { margin: 8px 0; color: #666; }
+        .guide-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .guide-item img {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .description {
+            font-size: 1rem;
+            color: #333;
+            white-space: pre-wrap;
+        }
+        .app-link {
+            display: inline-block;
+            background: #4285F4;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+        .app-link:hover { background: #3367D6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📍 ${title}</h1>
+        </div>
+        <div class="metadata">
+            <p><strong>👤 발신자:</strong> ${sender} 님이 보냄</p>
+            <p><strong>📍 위치:</strong> ${location}</p>
+            <p><strong>📅 생성일:</strong> ${date}</p>
+        </div>
+        ${guideItemsHTML}
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="${window.location.origin}" class="app-link">🎯 앱으로 가기</a>
+        </div>
+    </div>
+</body>
+</html>`;
+    }
+
+    function downloadHTML(filename, content) {
+        const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // Download featured shareLink HTML
+    window.downloadFeaturedHTML = async function(shareLinkId) {
+        try {
+            const transaction = db.transaction([SHARE_LINKS_STORE], 'readonly');
+            const store = transaction.objectStore(SHARE_LINKS_STORE);
+            const request = store.get(shareLinkId);
+            
+            request.onsuccess = () => {
+                const shareLink = request.result;
+                if (shareLink) {
+                    const htmlContent = generateShareHTML(
+                        shareLink.title,
+                        shareLink.sender,
+                        shareLink.location,
+                        shareLink.date,
+                        shareLink.guideItems
+                    );
+                    downloadHTML(`${shareLink.title}-손안에가이드.html`, htmlContent);
+                    showToast('다운로드가 시작되었습니다.');
+                }
+            };
+        } catch (error) {
+            console.error('Download error:', error);
+            showToast('다운로드 중 오류가 발생했습니다.');
+        }
+    };
 
     // --- UI Helpers ---
     function showToast(message, duration = 3000) {
@@ -632,84 +797,192 @@ document.addEventListener('DOMContentLoaded', () => {
         if (allItems.length === 0) return showToast('선택된 항목이 없습니다.');
         if (allItems.length > 30) return showToast('한 번에 최대 30개까지 공유할 수 있습니다. 선택을 줄여주세요.');
 
+        // Show metadata input modal
+        const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
         shareModalContent.innerHTML = `
-            <div class="text-center">
-                <div class="loader mx-auto mb-4"></div>
-                <p class="text-lg font-semibold mb-2">가이드북 생성 중...</p>
-                <p class="text-sm text-gray-600">${allItems.length}개 항목을 정리하고 있습니다.</p>
+            <div class="p-6">
+                <h3 class="text-xl font-bold mb-4">가이드북 정보 입력</h3>
+                <form id="metadataForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">📝 제목</label>
+                        <input type="text" id="titleInput" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            placeholder="나만의 가이드북" value="나만의 가이드북">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">👤 발신자</label>
+                        <input type="text" id="senderInput" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            placeholder="홍길동">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">📍 위치</label>
+                        <input type="text" id="locationInput"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            placeholder="서울, 대한민국">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">📅 생성일</label>
+                        <input type="text" id="dateInput" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            value="${today}">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="featuredInput" 
+                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="featuredInput" class="text-sm font-semibold">⭐ 추천 갤러리에 표시</label>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" data-testid="button-create-guidebook"
+                            class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                            생성하기
+                        </button>
+                        <button type="button" id="cancelMetadata" data-testid="button-cancel-metadata"
+                            class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600">
+                            취소
+                        </button>
+                    </div>
+                </form>
             </div>
         `;
         shareModal.classList.remove('hidden');
 
-        try {
-            const guidebookName = prompt('가이드북 이름을 입력해주세요:', '나만의 가이드북');
-            if (!guidebookName) {
-                shareModal.classList.add('hidden');
-                return;
+        // Handle form submission
+        document.getElementById('metadataForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('titleInput').value.trim();
+            const sender = document.getElementById('senderInput').value.trim();
+            const location = document.getElementById('locationInput').value.trim() || '위치 미정';
+            const date = document.getElementById('dateInput').value.trim();
+            const featured = document.getElementById('featuredInput').checked;
+
+            if (!title || !sender) {
+                return showToast('제목과 발신자는 필수 입력 항목입니다.');
             }
 
-            const guidebookData = { contents: allItems, name: guidebookName };
-
-            const response = await fetch('/api/share', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(guidebookData)
-            });
-
-            if (!response.ok) throw new Error('Failed to create guidebook');
-            
-            const { guidebookId } = await response.json();
-            const shareUrl = `${window.location.origin}/share.html?guidebook_id=${guidebookId}`;
-
+            // Show loading state
             shareModalContent.innerHTML = `
-                <div class="text-center">
-                    <div class="text-6xl mb-4">🎉</div>
-                    <h3 class="text-xl font-bold mb-4">가이드북이 생성되었습니다!</h3>
-                    <div class="bg-gray-100 p-3 rounded mb-4">
-                        <p class="text-sm font-mono break-all">${shareUrl}</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="navigator.clipboard.writeText('${shareUrl}').then(() => {showToast('링크가 복사되었습니다!'); document.getElementById('shareModal').classList.add('hidden');})" 
-                            class="flex-1 bg-blue-500 text-white px-4 py-2 rounded font-semibold">
-                            링크 복사
+                <div class="text-center p-6">
+                    <div class="loader mx-auto mb-4"></div>
+                    <p class="text-lg font-semibold mb-2">가이드북 생성 중...</p>
+                    <p class="text-sm text-gray-600">${allItems.length}개 항목을 정리하고 있습니다.</p>
+                </div>
+            `;
+
+            try {
+                // Generate HTML content
+                const htmlContent = generateShareHTML(title, sender, location, date, allItems);
+                
+                // Generate unique ID
+                const shareId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+                
+                // Save to IndexedDB
+                const shareLink = {
+                    id: shareId,
+                    title,
+                    sender,
+                    location,
+                    date,
+                    guideItems: allItems,
+                    featured,
+                    timestamp: Date.now()
+                };
+                
+                await addShareLink(shareLink);
+                
+                // Download HTML file
+                const filename = `${title}-손안에가이드.html`;
+                downloadHTML(filename, htmlContent);
+                
+                // Show success message
+                shareModalContent.innerHTML = `
+                    <div class="text-center p-6">
+                        <div class="text-6xl mb-4">🎉</div>
+                        <h3 class="text-xl font-bold mb-4">가이드북이 생성되었습니다!</h3>
+                        <p class="text-sm text-gray-600 mb-4">
+                            HTML 파일이 다운로드되었습니다.<br>
+                            ${featured ? '추천 갤러리에 표시됩니다.' : ''}
+                        </p>
+                        <button onclick="document.getElementById('shareModal').classList.add('hidden'); location.reload();" 
+                            data-testid="button-close-success"
+                            class="bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                            확인
                         </button>
+                    </div>
+                `;
+                
+                if (isSelectionMode) toggleSelectionMode(false);
+                
+            } catch (error) {
+                console.error('Share error:', error);
+                shareModalContent.innerHTML = `
+                    <div class="text-center p-6">
+                        <div class="text-4xl mb-4">😥</div>
+                        <p class="text-lg font-semibold mb-2">공유 중 오류가 발생했습니다</p>
+                        <p class="text-sm text-gray-600 mb-4">${error.message}</p>
                         <button onclick="document.getElementById('shareModal').classList.add('hidden')" 
-                            class="flex-1 bg-gray-500 text-white px-4 py-2 rounded font-semibold">
+                            data-testid="button-close-error"
+                            class="bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600">
                             닫기
                         </button>
                     </div>
-                </div>
-            `;
+                `;
+            }
+        });
 
-            if (isSelectionMode) toggleSelectionMode(false);
-
-        } catch (error) {
-            console.error('Share error:', error);
-            shareModalContent.innerHTML = `
-                <div class="text-center">
-                    <div class="text-4xl mb-4">😥</div>
-                    <p class="text-lg font-semibold mb-2">공유 중 오류가 발생했습니다</p>
-                    <p class="text-sm text-gray-600 mb-4">잠시 후 다시 시도해주세요.</p>
-                    <button onclick="document.getElementById('shareModal').classList.add('hidden')" 
-                        class="bg-gray-500 text-white px-6 py-2 rounded font-semibold">
-                        닫기
-                    </button>
-                </div>
-            `;
-        }
+        // Handle cancel button
+        document.getElementById('cancelMetadata').addEventListener('click', () => {
+            shareModal.classList.add('hidden');
+        });
     }
 
     async function renderArchive() {
         try {
             const items = await getAllItems();
             
-            // TODO: 추천 갤러리 렌더링 (featured shareLinks)
-            // 현재는 임시로 비어있음으로 표시
+            // Render featured gallery
             if (featuredGrid && emptyFeaturedMessage) {
-                featuredGrid.innerHTML = '';
-                featuredGrid.classList.add('hidden');
-                emptyFeaturedMessage.classList.remove('hidden');
-                console.log('[Archive] 추천 갤러리: 비어있음');
+                const featuredLinks = await getFeaturedShareLinks();
+                
+                if (featuredLinks.length > 0) {
+                    emptyFeaturedMessage.classList.add('hidden');
+                    featuredGrid.classList.remove('hidden');
+                    
+                    featuredGrid.innerHTML = featuredLinks.map(link => {
+                        const thumbnail = link.guideItems[0]?.imageDataUrl || '';
+                        return `
+                            <div class="relative bg-white rounded-lg overflow-hidden shadow-sm group cursor-pointer"
+                                 data-testid="featured-${link.id}">
+                                ${thumbnail ? `
+                                    <img src="${thumbnail}" alt="${link.title}" 
+                                         class="w-full aspect-square object-cover">
+                                ` : `
+                                    <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                                        <span class="text-4xl">📍</span>
+                                    </div>
+                                `}
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <button onclick='downloadFeaturedHTML("${link.id}")' 
+                                            data-testid="download-featured-${link.id}"
+                                            class="bg-white text-gray-800 px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-gray-100">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        다운로드
+                                    </button>
+                                </div>
+                                <div class="p-3">
+                                    <h4 class="font-semibold text-sm truncate">${link.title}</h4>
+                                    <p class="text-xs text-gray-600">${link.sender} 님</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    featuredGrid.classList.add('hidden');
+                    emptyFeaturedMessage.classList.remove('hidden');
+                }
             }
             
             // 내 보관함 렌더링
