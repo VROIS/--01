@@ -366,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function showMainPage() {
         cameFromArchive = false; // Reset navigation state
+        // ✅ 페이지 이동 시 음성 즉시 정지 - 2025.10.02 확보됨
         synth.cancel();
         resetSpeechState();
         showPage(mainPage);
@@ -971,7 +972,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const items = await getAllItems();
             
-            // Render featured gallery (사진만, 타이틀/다운로드 버튼 제거)
+            // ✅ Featured Gallery (추천 갤러리) 로직 - 2025.10.02 확보됨
+            // 핵심: 최신 3개 공유링크를 상단 고정 영역에 표시 (사진만, 타이틀/다운로드 버튼 제거)
             if (featuredGallery && featuredGrid) {
                 let featuredLinks = [];
                 try {
@@ -1112,6 +1114,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingHeader.classList.add('hidden');
             detailFooter.classList.remove('hidden');
             
+            // ✅ 음성 자동재생 로직 - 2025.10.02 확보됨
+            // 핵심: 문장 분할 → span 생성 → queueForSpeech 호출 순서
             synth.cancel();
             resetSpeechState();
             descriptionText.innerHTML = '';
