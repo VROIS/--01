@@ -207,40 +207,113 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * 🌐 공유 HTML 생성 함수 (독립적인 작은 홈페이지)
+     * 🌐 공유 HTML 생성 함수 (독립적인 PWA 홈페이지)
      * 
-     * 구조: 갤러리 뷰 + 상세 뷰 + Web Speech API
-     * - 갤러리: 2열 그리드 썸네일
-     * - 상세: 큰 이미지 + 자동 음성 재생 + 해설 토글
-     * - 홈 버튼: 상세뷰 + 갤러리 하단
+     * 구조: 앱과 동일한 UX/UI
+     * - 갤러리: 2열 그리드 썸네일 (모바일 최적화)
+     * - 상세: 전체 화면 배경 이미지 + 텍스트 오버레이
+     * - 오프라인: Service Worker로 캐싱
+     * - 반응형: 모바일/노트북 지원
      */
     function generateShareHTML(title, sender, location, date, guideItems, appOrigin) {
         // 갤러리 그리드 아이템 생성
         const galleryItemsHTML = guideItems.map((item, index) => `
             <div class="gallery-item" data-id="${index}">
-                <img src="${item.imageDataUrl || ''}" alt="가이드 ${index + 1}">
+                <img src="${item.imageDataUrl || ''}" alt="가이드 ${index + 1}" loading="lazy">
                 <p>가이드 ${index + 1}</p>
             </div>
         `).join('');
 
-        // 데이터 저장소 (숨김) - 해설 텍스트 보관
-        const dataStorageHTML = guideItems.map((item, index) => `
-            <div data-id="${index}">${item.description || ''}</div>
-        `).join('');
+        // 데이터 저장소 (숨김) - 이미지 + 텍스트
+        const dataJSON = JSON.stringify(guideItems.map((item, index) => ({
+            id: index,
+            imageDataUrl: item.imageDataUrl || '',
+            description: item.description || ''
+        })));
 
         return `<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>${title} - 손안에 가이드</title>
+    <link rel="manifest" href="data:application/json;base64,${btoa(JSON.stringify({
+        name: title,
+        short_name: title,
+        start_url: '.',
+        display: 'standalone',
+        theme_color: '#4285F4'
+    }))}">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             background-color: #f0f2f5;
+            overflow-x: hidden;
         }
         .hidden { display: none !important; }
+        
+        /* 전체 화면 배경 이미지 (앱과 동일) */
+        .full-screen-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 1;
+        }
+        
+        /* UI 오버레이 레이어 */
+        .ui-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 안전 영역 */
+        .header-safe-area {
+            width: 100%;
+            height: 80px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            position: relative;
+        }
+        .content-safe-area {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            background: transparent;
+        }
+        .footer-safe-area {
+            width: 100%;
+            height: 100px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 1rem;
+        }
+        
+        /* 텍스트 오버레이 */
+        .text-content {
+            padding: 2rem 1.5rem;
+            line-height: 1.8;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+        .readable-on-image {
+            color: white;
+            text-shadow: 0px 2px 8px rgba(0, 0, 0, 0.95);
+        }
         
         /* 헤더 (메타데이터) */
         .header {
