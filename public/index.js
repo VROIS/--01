@@ -765,6 +765,9 @@ document.addEventListener('DOMContentLoaded', () => {
             selectionHeader.classList.remove('hidden');
             selectedItemIds.clear();
             updateSelectionUI();
+            // 선택 모드: 공유/삭제 버튼 밝게 표시
+            if (archiveShareBtn) archiveShareBtn.classList.remove('opacity-50');
+            if (archiveDeleteBtn) archiveDeleteBtn.classList.remove('opacity-50');
         } else {
             archiveGrid.classList.remove('selection-mode');
             archiveHeader.classList.remove('hidden');
@@ -776,29 +779,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.classList.remove('selected');
             });
             
-            // Disable share/delete buttons
-            if (archiveShareBtn) archiveShareBtn.disabled = true;
-            if (archiveDeleteBtn) archiveDeleteBtn.disabled = true;
+            // 일반 모드: 공유/삭제 버튼 흐리게 표시
+            if (archiveShareBtn) archiveShareBtn.classList.add('opacity-50');
+            if (archiveDeleteBtn) archiveDeleteBtn.classList.add('opacity-50');
         }
     }
 
     function updateSelectionUI() {
         selectionCount.textContent = `${selectedItemIds.size}개 선택`;
-        
-        // Update delete button in header
-        if (deleteSelectedBtn) {
-            deleteSelectedBtn.disabled = selectedItemIds.size === 0;
-        }
-        
-        // Update share button in footer (활성화 시 선택 항목 있어야 함)
-        if (archiveShareBtn) {
-            archiveShareBtn.disabled = selectedItemIds.size === 0;
-        }
-        
-        // Update delete button in footer
-        if (archiveDeleteBtn) {
-            archiveDeleteBtn.disabled = selectedItemIds.size === 0;
-        }
     }
 
     async function handleDeleteSelected() {
@@ -1357,23 +1345,38 @@ document.addEventListener('DOMContentLoaded', () => {
         // 선택 버튼: 선택 모드 토글
         toggleSelectionMode(!isSelectionMode);
     });
-    archiveShareBtn?.addEventListener('click', handleCreateGuidebookClick);
-    archiveDeleteBtn?.addEventListener('click', async () => {
-        // 삭제 버튼: 선택 모드에서만 작동, 선택된 항목 삭제
+    archiveShareBtn?.addEventListener('click', async () => {
+        // 공유 버튼: 선택 모드 OFF → 활성화 / 선택 항목 있음 → 공유 모달
         if (!isSelectionMode) {
-            showToast('먼저 선택 버튼을 눌러주세요');
+            showToast('이미지를 선택해주세요');
+            toggleSelectionMode(true);
             return;
         }
         
         if (selectedItemIds.size === 0) {
-            showToast('삭제할 항목을 선택해주세요');
+            showToast('이미지를 선택해주세요');
+            return;
+        }
+        
+        await handleCreateGuidebookClick();
+    });
+    
+    archiveDeleteBtn?.addEventListener('click', async () => {
+        // 삭제 버튼: 선택 모드 OFF → 활성화 / 선택 항목 있음 → 삭제
+        if (!isSelectionMode) {
+            showToast('이미지를 선택해주세요');
+            toggleSelectionMode(true);
+            return;
+        }
+        
+        if (selectedItemIds.size === 0) {
+            showToast('이미지를 선택해주세요');
             return;
         }
         
         await handleDeleteSelected();
     });
     
-    deleteSelectedBtn?.addEventListener('click', handleDeleteSelected);
     archiveSettingsBtn?.addEventListener('click', showSettingsPage);
 
     cancelSelectionBtn?.addEventListener('click', () => toggleSelectionMode(false));
