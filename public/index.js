@@ -797,7 +797,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ✅ 공유 링크 생성 로직 - 2025.10.02 소셜 아이콘 클릭 방식
+    // ✅ 공유 링크 생성 로직 - 2025.10.02 간단한 복사 방식
+    let currentShareItems = []; // 현재 공유할 아이템들을 저장
+    
     async function handleCreateGuidebookClick() {
         const items = await getAllItems();
         if (items.length === 0) return showToast('공유할 항목이 없습니다.');
@@ -809,31 +811,75 @@ document.addEventListener('DOMContentLoaded', () => {
         if (allItems.length === 0) return showToast('선택된 항목이 없습니다.');
         if (allItems.length > 20) return showToast('한 번에 최대 20개까지 공유할 수 있습니다. 선택을 줄여주세요.');
 
-        // 모달 열기 (HTML에 이미 정의됨)
+        // 현재 공유할 아이템 저장
+        currentShareItems = allItems;
+        
+        // 모달 초기화 및 열기
+        resetShareModal();
         shareModal.classList.remove('hidden');
-        
-        // 입력 필드 초기화 (setTimeout으로 DOM 준비 대기)
-        setTimeout(() => {
-            const nameInput = document.getElementById('shareLinkName');
-            if (nameInput) nameInput.value = '';
-        }, 0);
-        
-        // 소셜 아이콘 클릭 이벤트 등록
-        document.querySelectorAll('[data-share-platform]').forEach(icon => {
-            icon.onclick = async () => {
-                const platform = icon.getAttribute('data-share-platform');
-                await createAndShareLink(platform, allItems);
-            };
-        });
     }
 
-    // 모달 닫기 버튼
-    closeShareModalBtn?.addEventListener('click', () => {
-        shareModal.classList.add('hidden');
-    });
+    // 모달 초기화 함수
+    function resetShareModal() {
+        shareModalContent.innerHTML = `
+            <!-- 헤더 -->
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">공유 링크 생성</h2>
+                <button id="closeShareModalBtn" data-testid="button-close-share-modal" class="p-2 text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+            </div>
+            
+            <!-- 폼 -->
+            <div class="p-6 space-y-6">
+                <!-- 링크 이름 입력 (필수) -->
+                <div>
+                    <label for="shareLinkName" class="block text-sm font-medium text-gray-700 mb-2">
+                        링크 이름 <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="shareLinkName" 
+                        data-testid="input-share-link-name"
+                        placeholder="예: 내가 맛본 파리 최악의 음식들"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        maxlength="50"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">사용자의 창의력을 발휘해보세요!</p>
+                </div>
+                
+                <!-- 링크 복사 버튼 -->
+                <div>
+                    <button 
+                        id="copyShareLinkBtn" 
+                        data-testid="button-copy-share-link"
+                        class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold py-4 px-6 rounded-xl hover:from-blue-600 hover:to-blue-700 transition duration-300 shadow-lg flex items-center justify-center gap-3"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <span>링크 복사하기</span>
+                    </button>
+                    <p class="text-xs text-gray-500 mt-2 text-center">링크를 복사해서 원하는 곳에 공유하세요</p>
+                </div>
+            </div>
+        `;
+        
+        // 이벤트 리스너 다시 등록
+        const closeBtn = document.getElementById('closeShareModalBtn');
+        const copyBtn = document.getElementById('copyShareLinkBtn');
+        
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                shareModal.classList.add('hidden');
+            };
+        }
+        
+        if (copyBtn) {
+            copyBtn.onclick = () => createAndCopyShareLink();
+        }
+    }
 
-    // 링크 생성 및 공유 함수
-    async function createAndShareLink(platform, selectedItems) {
+    // 링크 생성 및 복사 함수
+    async function createAndCopyShareLink() {
         const linkName = document.getElementById('shareLinkName').value.trim();
 
         // 입력 검증
@@ -864,18 +910,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 '여행자', // 임시 발신자
                 '파리, 프랑스', // 임시 위치
                 today,
-                selectedItems,
+                currentShareItems,
                 appOrigin
             );
 
-            // 서버로 보낼 데이터 (스키마 형식에 맞춤)
+            // 서버로 보낼 데이터
             const requestData = {
-                name: linkName, // title → name 으로 변경
+                name: linkName,
                 htmlContent: htmlContent,
-                guideIds: selectedItems.map(item => item.id), // 필수 필드
-                thumbnail: selectedItems[0]?.imageDataUrl || null, // 첫 이미지
-                sender: '여행자', // 임시값
-                location: '파리, 프랑스', // 임시값
+                guideIds: currentShareItems.map(item => item.id),
+                thumbnail: currentShareItems[0]?.imageDataUrl || null,
+                sender: '여행자',
+                location: '파리, 프랑스',
                 featured: false
             };
 
@@ -894,6 +940,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             const shareUrl = `${window.location.origin}/s/${result.id}`;
 
+            // 클립보드에 복사
+            await navigator.clipboard.writeText(shareUrl);
+
             // 선택 모드 해제
             if (isSelectionMode) toggleSelectionMode(false);
             
@@ -903,31 +952,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // 모달 닫기
             shareModal.classList.add('hidden');
             
-            // 플랫폼별 공유
-            const shareText = `${linkName} - ${shareUrl}`;
-            
-            switch(platform) {
-                case 'kakao':
-                    window.open('https://sharer.kakao.com/talk/friends/picker/link', '_blank');
-                    // 클립보드에 링크 복사
-                    navigator.clipboard.writeText(shareUrl);
-                    showToast('링크가 복사되었습니다! 카카오톡에서 붙여넣기 해주세요.');
-                    break;
-                    
-                case 'instagram':
-                    window.open('https://www.instagram.com/', '_blank');
-                    navigator.clipboard.writeText(shareUrl);
-                    showToast('링크가 복사되었습니다! 인스타그램에서 붙여넣기 해주세요.');
-                    break;
-                    
-                case 'facebook':
-                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
-                    break;
-                    
-                case 'whatsapp':
-                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
-                    break;
-            }
+            // 성공 메시지
+            showToast('✅ 링크가 복사되었습니다! 원하는 곳에 붙여넣기 하세요.');
 
         } catch (error) {
             console.error('Share error:', error);
