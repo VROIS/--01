@@ -1068,14 +1068,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 🔗 Shared HTML Page API Routes
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 🔗 공유 HTML 페이지 API 라우트들 (Shared HTML Page API Routes)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 최근 변경: 2025-10-02 - 공유 기능 완전 구현
+  // ⚠️ 중요: 이 라우트들은 공유 링크 시스템의 핵심입니다!
+  // ═══════════════════════════════════════════════════════════════════════════════
   
-  // Create shared HTML page (공유 페이지 생성)
+  /**
+   * 🆕 POST /api/share/create - 공유 페이지 생성
+   * 
+   * 목적: 사용자가 선택한 가이드들을 하나의 HTML로 만들어 공유 링크 생성
+   * 
+   * 작동 흐름:
+   * 1. 프론트엔드에서 POST 요청 (name, htmlContent, guideIds 등)
+   * 2. Zod 스키마로 데이터 검증
+   * 3. storage.createSharedHtmlPage() 호출 → 짧은 ID 생성 (8자)
+   * 4. 짧은 URL 생성: https://yourdomain.com/s/abc12345
+   * 5. 클라이언트에 반환 → 클립보드 복사
+   * 
+   * Request Body:
+   * {
+   *   name: "파리 여행 가이드",
+   *   htmlContent: "<!DOCTYPE html>...",
+   *   guideIds: ["guide1", "guide2"],
+   *   thumbnail: "data:image/jpeg...",
+   *   sender: "여행자",
+   *   location: "파리, 프랑스",
+   *   featured: false
+   * }
+   * 
+   * Response:
+   * {
+   *   success: true,
+   *   id: "abc12345",
+   *   shareUrl: "https://yourdomain.com/s/abc12345",
+   *   name: "파리 여행 가이드",
+   *   featured: false,
+   *   createdAt: "2025-10-02T..."
+   * }
+   * 
+   * ⚠️ 주의사항:
+   * - userId는 현재 임시값 (나중에 세션에서 가져오기)
+   * - Zod 검증 실패 시 400 에러
+   * - ID 생성 실패 시 500 에러
+   */
   app.post('/api/share/create', async (req, res) => {
     try {
+      // 🔑 사용자 ID (현재 임시, 나중에 req.user.id로 변경 필요)
       const userId = 'temp-user-id'; // TODO: Get from session when auth is ready
       
-      // Validate request body
+      // ✅ 요청 데이터 검증 (Zod 스키마)
       const validation = insertSharedHtmlPageSchema.safeParse(req.body);
       if (!validation.success) {
         return res.status(400).json({ 
@@ -1086,16 +1129,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const pageData = validation.data;
       
-      // Create shared HTML page
+      // 🆕 공유 HTML 페이지 생성 (짧은 ID 자동 생성)
       const sharedPage = await storage.createSharedHtmlPage(userId, pageData);
       
-      // Generate short URL
+      // 🔗 짧은 URL 생성
+      // 예: https://yourdomain.replit.dev/s/abc12345
       const shareUrl = `${req.protocol}://${req.get('host')}/s/${sharedPage.id}`;
       
+      // ✅ 성공 응답
       res.json({
         success: true,
-        id: sharedPage.id,
-        shareUrl,
+        id: sharedPage.id, // 8자 짧은 ID
+        shareUrl, // 완전한 공유 URL
         name: sharedPage.name,
         featured: sharedPage.featured,
         createdAt: sharedPage.createdAt,
@@ -1107,13 +1152,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Short URL route - Serve HTML content directly (짧은 URL 공유 페이지)
+  /**
+   * 📄 GET /s/:id - 짧은 URL로 HTML 페이지 직접 서빙
+   * 
+   * 목적: 공유된 링크를 브라우저/카톡에서 열면 HTML 페이지를 직접 표시
+   * 
+   * 작동 흐름:
+   * 1. 사용자가 https://yourdomain.com/s/abc12345 접속
+   * 2. DB에서 페이지 조회
+   * 3. 존재 확인 (404) → 활성화 확인 (410) → 조회수 +1
+   * 4. HTML 콘텐츠 직접 반환 (Content-Type: text/html)
+   * 
+   * 에러 처리:
+   * - 404: 페이지 없음 (잘못된 ID)
+   * - 410: 링크 만료됨 (isActive=false)
+   * - 500: 서버 오류
+   * 
+   * ⚠️ 중요:
+   * - 이 라우트는 반드시 app.use(vite) 이전에 정의되어야 함!
+   * - Vite가 모든 요청을 가로채기 전에 처리해야 함
+   * - HTML을 직접 반환하므로 JSON 아님
+   * - 매 접속마다 downloadCount 증가
+   */
   app.get('/s/:id', async (req, res) => {
     try {
       const { id } = req.params;
       
+      // 🔍 DB에서 공유 페이지 조회
       const page = await storage.getSharedHtmlPage(id);
       
+      // 🔴 페이지 없음 (404)
       if (!page) {
         return res.status(404).send(`
           <!DOCTYPE html>
@@ -1141,6 +1209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `);
       }
       
+      // 🔴 링크 만료됨 (410)
       if (!page.isActive) {
         return res.status(410).send(`
           <!DOCTYPE html>
@@ -1168,15 +1237,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `);
       }
       
-      // Increment download count
+      // 📊 조회수 증가 (매 접속마다)
       await storage.incrementDownloadCount(id);
       
-      // Serve the HTML content directly
+      // ✅ HTML 콘텐츠 직접 반환
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.send(page.htmlContent);
       
     } catch (error) {
       console.error('공유 페이지 조회 오류:', error);
+      // 🔴 서버 오류 (500)
       res.status(500).send(`
         <!DOCTYPE html>
         <html lang="ko">

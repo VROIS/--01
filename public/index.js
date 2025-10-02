@@ -797,29 +797,84 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ✅ 공유 링크 생성 로직 - 2025.10.02 간단한 복사 방식
-    let currentShareItems = []; // 현재 공유할 아이템들을 저장
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // 🔗 공유 링크 생성 시스템 (Share Link Creation System)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // 최근 변경: 2025-10-02 - 소셜 공유 제거, 간단한 링크 복사 방식으로 변경
+    // 
+    // 작동 흐름:
+    // 1. 사용자가 보관함에서 가이드 선택 → "공유" 버튼 클릭
+    // 2. 공유 모달 열림 → 링크 이름 입력
+    // 3. "링크 복사하기" 버튼 클릭
+    // 4. 프론트에서 HTML 생성 → 서버로 POST /api/share/create
+    // 5. 서버가 짧은 ID 생성 (8자) → DB 저장
+    // 6. 짧은 URL 반환 → 클립보드 복사
+    // 7. 성공 토스트 → 모달 닫기
+    // 
+    // ⚠️ 주의사항:
+    // - 소셜 공유 아이콘 제거됨 (카톡/인스타/페북/왓츠앱)
+    // - 모달 재사용 가능하도록 resetShareModal() 함수 사용
+    // - currentShareItems에 선택된 아이템 저장 (모달 재사용 시 필요)
+    // 
+    // 버그 수정:
+    // - "다시하니 안됨" 버그: 모달 초기화 로직 개선으로 해결
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    let currentShareItems = []; // 현재 공유할 아이템들 (모달 재사용 시 필요)
     
+    /**
+     * 🎯 공유 기능 시작 함수
+     * 
+     * 목적: "공유" 버튼 클릭 시 모달 열고 선택된 아이템 준비
+     * 
+     * 작동:
+     * 1. 보관함 아이템 가져오기
+     * 2. 선택 모드인 경우 선택된 아이템만 필터링
+     * 3. 검증 (빈 배열, 20개 제한)
+     * 4. currentShareItems에 저장
+     * 5. 모달 초기화 후 열기
+     * 
+     * ⚠️ 주의: 모달을 매번 초기화해야 "다시하니 안됨" 버그 방지
+     */
     async function handleCreateGuidebookClick() {
         const items = await getAllItems();
         if (items.length === 0) return showToast('공유할 항목이 없습니다.');
 
+        // 선택 모드: 선택된 아이템만, 일반 모드: 전체
         const allItems = isSelectionMode && selectedItemIds.size > 0
             ? items.filter(item => selectedItemIds.has(item.id))
             : items;
 
+        // 검증
         if (allItems.length === 0) return showToast('선택된 항목이 없습니다.');
         if (allItems.length > 20) return showToast('한 번에 최대 20개까지 공유할 수 있습니다. 선택을 줄여주세요.');
 
-        // 현재 공유할 아이템 저장
+        // ✅ 현재 공유할 아이템 저장 (모달에서 사용)
         currentShareItems = allItems;
         
-        // 모달 초기화 및 열기
+        // 🔄 모달 초기화 및 열기 (중요: 매번 초기화!)
         resetShareModal();
         shareModal.classList.remove('hidden');
     }
 
-    // 모달 초기화 함수
+    /**
+     * 🔄 모달 초기화 함수
+     * 
+     * 목적: 모달 HTML을 처음 상태로 리셋 (재사용 가능하게)
+     * 
+     * 작동:
+     * 1. shareModalContent.innerHTML을 완전히 교체
+     * 2. 헤더, 입력 필드, 복사 버튼 재생성
+     * 3. 이벤트 리스너 다시 등록 (중요!)
+     * 
+     * ⚠️ 왜 필요?
+     * - 이전 방식: 로딩 스피너로 innerHTML 교체 → 버튼 사라짐
+     * - 새 방식: 매번 처음부터 생성 → 버튼 항상 존재
+     * 
+     * ⚠️ 주의:
+     * - 이벤트 리스너를 다시 등록해야 함!
+     * - getElementById로 새 요소 참조 가져오기
+     */
     function resetShareModal() {
         shareModalContent.innerHTML = `
             <!-- 헤더 -->
@@ -878,16 +933,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 링크 생성 및 복사 함수
+    /**
+     * 🔗 링크 생성 및 복사 함수 (핵심!)
+     * 
+     * 목적: 서버에 공유 페이지 생성 요청 → 짧은 URL 받아서 클립보드 복사
+     * 
+     * 작동 흐름:
+     * 1. 입력 검증 (링크 이름 필수)
+     * 2. 로딩 스피너 표시
+     * 3. HTML 콘텐츠 생성 (generateShareHTML 함수 사용)
+     * 4. 서버 API 호출 (POST /api/share/create)
+     * 5. 서버가 짧은 ID 생성 (8자) + DB 저장
+     * 6. 짧은 URL 받기 (예: yourdomain.com/s/abc12345)
+     * 7. 클립보드 복사 (navigator.clipboard.writeText)
+     * 8. 선택 모드 해제 + 보관함 새로고침
+     * 9. 모달 닫기 + 성공 토스트
+     * 
+     * Request Data:
+     * - name: 사용자 입력 링크 이름
+     * - htmlContent: 완전한 HTML 문서 (독립 실행 가능)
+     * - guideIds: 선택된 가이드 ID 배열
+     * - thumbnail: 첫 번째 이미지 (썸네일용)
+     * - sender: 발신자 (임시: "여행자")
+     * - location: 위치 (임시: "파리, 프랑스")
+     * - featured: false (추천 갤러리 미사용)
+     * 
+     * ⚠️ 주의사항:
+     * - sender/location은 임시값 (나중에 실제 데이터로 변경)
+     * - 에러 시 모달 닫고 토스트로 에러 표시
+     * - 로딩 중에는 모달 내용 교체 (스피너)
+     */
     async function createAndCopyShareLink() {
         const linkName = document.getElementById('shareLinkName').value.trim();
 
-        // 입력 검증
+        // ✅ 입력 검증
         if (!linkName) {
             return showToast('링크 이름을 먼저 입력해주세요!');
         }
 
-        // 로딩 표시
+        // ⏳ 로딩 스피너 표시
         shareModalContent.innerHTML = `
             <div class="p-6 text-center">
                 <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -896,36 +980,36 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         try {
-            // 메타데이터 자동 생성 (임시값)
+            // 📅 메타데이터 자동 생성 (임시값)
             const today = new Date().toLocaleDateString('ko-KR', { 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric' 
             });
             
-            // HTML 콘텐츠 생성
+            // 📄 HTML 콘텐츠 생성 (완전한 독립 HTML 문서)
             const appOrigin = window.location.origin;
             const htmlContent = generateShareHTML(
                 linkName,
-                '여행자', // 임시 발신자
-                '파리, 프랑스', // 임시 위치
+                '여행자', // 임시 발신자 (나중에 실제 사용자 이름으로)
+                '파리, 프랑스', // 임시 위치 (나중에 실제 위치로)
                 today,
-                currentShareItems,
+                currentShareItems, // 선택된 가이드들
                 appOrigin
             );
 
-            // 서버로 보낼 데이터
+            // 📦 서버로 보낼 데이터 준비
             const requestData = {
                 name: linkName,
                 htmlContent: htmlContent,
                 guideIds: currentShareItems.map(item => item.id),
                 thumbnail: currentShareItems[0]?.imageDataUrl || null,
-                sender: '여행자',
-                location: '파리, 프랑스',
+                sender: '여행자', // TODO: 실제 사용자 이름
+                location: '파리, 프랑스', // TODO: 실제 위치 정보
                 featured: false
             };
 
-            // 서버 API 호출
+            // 🚀 서버 API 호출 (공유 페이지 생성)
             const response = await fetch('/api/share/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -938,21 +1022,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const result = await response.json();
+            // 📌 짧은 URL 생성 (8자 ID)
             const shareUrl = `${window.location.origin}/s/${result.id}`;
 
-            // 클립보드에 복사
+            // 📋 클립보드에 복사
             await navigator.clipboard.writeText(shareUrl);
 
-            // 선택 모드 해제
+            // 🔄 선택 모드 해제
             if (isSelectionMode) toggleSelectionMode(false);
             
-            // 보관함 새로고침
+            // 🔄 보관함 새로고침 (새 공유 링크 반영)
             await renderArchive();
             
-            // 모달 닫기
+            // ❌ 모달 닫기
             shareModal.classList.add('hidden');
             
-            // 성공 메시지
+            // ✅ 성공 메시지
             showToast('✅ 링크가 복사되었습니다! 원하는 곳에 붙여넣기 하세요.');
 
         } catch (error) {

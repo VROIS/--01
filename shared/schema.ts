@@ -90,21 +90,45 @@ export const creditTransactions = pgTable("credit_transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Shared HTML pages table for downloadable guidebooks
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔗 공유 HTML 페이지 테이블 (Shared HTML Pages Table)
+// ═══════════════════════════════════════════════════════════════════════════════
+// 
+// 목적: 사용자가 선택한 여행 가이드를 독립적인 HTML 파일로 생성하여 공유
+// 
+// 핵심 기능:
+// 1. 짧은 URL 생성 (8자): /s/abc12345 형식
+// 2. 완전한 HTML 콘텐츠 저장 (이미지 포함)
+// 3. 조회수 추적 및 활성화 상태 관리
+// 
+// 사용 시나리오:
+// - 사용자가 보관함에서 여러 가이드를 선택
+// - "공유" 버튼 클릭 → 링크 이름 입력
+// - 서버가 HTML 생성 및 짧은 ID 생성
+// - 링크를 카톡/브라우저/SNS로 공유
+// - 다른 사람이 /s/:id 접속 시 HTML 페이지 표시
+//
+// ⚠️ 주의사항:
+// - id는 수동 생성 (nanoid 8자) - 짧고 입력하기 쉬움
+// - htmlContent는 완전한 HTML 문서 (스타일 포함)
+// - isActive=false 시 접근 불가 (만료된 링크)
+// 
+// 최근 변경: 2025-10-02 - 공유 기능 구현 완료
+// ═══════════════════════════════════════════════════════════════════════════════
 export const sharedHtmlPages = pgTable("shared_html_pages", {
-  id: varchar("id").primaryKey(), // Short ID generated manually (8 chars)
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  name: text("name").notNull(), // User-provided link name
-  htmlContent: text("html_content").notNull(), // Complete HTML file content
-  guideIds: text("guide_ids").array().notNull(), // Selected guide IDs
-  thumbnail: text("thumbnail"), // First guide image
-  sender: text("sender"), // Sender name (temporary: 홍길동)
-  location: text("location"), // Location info (temporary: 파리 에펠탑 근처)
-  featured: boolean("featured").default(false),
-  downloadCount: integer("download_count").default(0),
-  isActive: boolean("is_active").default(true), // For one-time download links
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  id: varchar("id").primaryKey(), // 짧은 ID (8자, nanoid 생성) - 예: abc12345
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }), // 생성자 ID
+  name: text("name").notNull(), // 사용자가 입력한 링크 이름 (예: "파리 여행 가이드")
+  htmlContent: text("html_content").notNull(), // 완전한 HTML 파일 내용 (독립 실행 가능)
+  guideIds: text("guide_ids").array().notNull(), // 포함된 가이드 ID 배열 (추적용)
+  thumbnail: text("thumbnail"), // 첫 번째 가이드 이미지 (썸네일용)
+  sender: text("sender"), // 발신자 이름 (임시: "여행자")
+  location: text("location"), // 위치 정보 (임시: "파리, 프랑스")
+  featured: boolean("featured").default(false), // 추천 갤러리 표시 여부
+  downloadCount: integer("download_count").default(0), // 조회수 (매 접속마다 +1)
+  isActive: boolean("is_active").default(true), // 활성화 상태 (false=만료됨)
+  createdAt: timestamp("created_at").defaultNow(), // 생성 시간
+  updatedAt: timestamp("updated_at").defaultNow(), // 수정 시간
 });
 
 // Create insert schemas

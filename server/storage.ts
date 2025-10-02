@@ -453,14 +453,46 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  // Shared HTML page operations
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 🔗 공유 HTML 페이지 관련 함수들 (Shared HTML Page Operations)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 최근 변경: 2025-10-02 - 공유 기능 완전 구현
+  // ⚠️ 중요: 이 함수들은 공유 링크 기능의 핵심입니다. 수정 시 신중하게!
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /**
+   * 🆕 공유 HTML 페이지 생성
+   * 
+   * 목적: 사용자가 선택한 가이드들을 하나의 HTML 파일로 생성하여 공유
+   * 
+   * 작동 방식:
+   * 1. 짧은 ID 생성 (8자, base64url) - 예: "abc12345"
+   * 2. ID 충돌 시 최대 5회 재시도
+   * 3. DB에 저장 후 반환
+   * 
+   * URL 형식: yourdomain.com/s/abc12345
+   * 
+   * @param userId - 생성자 사용자 ID
+   * @param page - 페이지 데이터 (name, htmlContent, guideIds 등)
+   * @returns 생성된 SharedHtmlPage 객체
+   * @throws 5회 시도 후에도 고유 ID 생성 실패 시 에러
+   * 
+   * ⚠️ 주의사항:
+   * - ID는 짧아야 함 (사용자가 직접 입력 가능)
+   * - htmlContent는 완전한 HTML 문서여야 함
+   * - 충돌 재시도 로직 제거 금지!
+   */
   async createSharedHtmlPage(userId: string, page: InsertSharedHtmlPage): Promise<SharedHtmlPage> {
-    // Generate short, URL-friendly ID (8 characters)
+    // 🔑 짧은 ID 생성 함수 (8자, URL 안전)
+    // crypto.randomBytes(6) → 6바이트 생성
+    // .toString('base64url') → URL 안전한 base64 변환 (-, _ 사용)
+    // .slice(0, 8) → 첫 8자만 사용
     const generateShortId = () => crypto.randomBytes(6).toString('base64url').slice(0, 8);
     
     let attempts = 0;
     const maxAttempts = 5;
     
+    // 🔄 ID 충돌 시 재시도 로직
     while (attempts < maxAttempts) {
       try {
         const shortId = generateShortId();
@@ -470,21 +502,33 @@ export class DatabaseStorage implements IStorage {
           .values({ ...page, id: shortId, userId })
           .returning();
         
-        return newPage;
+        return newPage; // ✅ 성공!
       } catch (error: any) {
         attempts++;
+        // 🔴 에러 코드 23505 = PostgreSQL 고유 제약 조건 위반 (ID 중복)
         if (error?.code === '23505' && attempts < maxAttempts) {
-          // Unique constraint violation - try again with new ID
           console.log(`🔄 ID 충돌 발생 (시도 ${attempts}/${maxAttempts}), 재시도 중...`);
-          continue;
+          continue; // 다시 시도
         }
-        throw error;
+        throw error; // 다른 에러는 즉시 throw
       }
     }
     
     throw new Error(`💥 ${maxAttempts}회 시도 후 고유 ID 생성 실패. 다시 시도해주세요.`);
   }
 
+  /**
+   * 🔍 공유 HTML 페이지 조회
+   * 
+   * 목적: ID로 공유 페이지를 조회 (공개 링크 접속 시 사용)
+   * 
+   * @param id - 공유 페이지 ID (8자)
+   * @returns SharedHtmlPage 또는 undefined (없으면)
+   * 
+   * 사용 예:
+   * - GET /s/:id 라우트에서 호출
+   * - 페이지 존재 확인 → isActive 확인 → HTML 반환
+   */
   async getSharedHtmlPage(id: string): Promise<SharedHtmlPage | undefined> {
     const [page] = await db
       .select()
@@ -493,6 +537,21 @@ export class DatabaseStorage implements IStorage {
     return page;
   }
 
+  /**
+   * ⭐ 추천 HTML 페이지 목록 조회
+   * 
+   * 목적: Featured Gallery에 표시할 페이지들 가져오기
+   * 
+   * 조건:
+   * - featured = true
+   * - isActive = true (만료되지 않음)
+   * - 최신순 정렬
+   * - 최대 3개
+   * 
+   * @returns 추천 페이지 배열 (최대 3개)
+   * 
+   * ⚠️ 현재 미사용 (기능 보류 중)
+   */
   async getFeaturedHtmlPages(): Promise<SharedHtmlPage[]> {
     return await db
       .select()
@@ -502,6 +561,19 @@ export class DatabaseStorage implements IStorage {
       .limit(3);
   }
 
+  /**
+   * 📊 다운로드(조회) 횟수 증가
+   * 
+   * 목적: 공유 페이지가 조회될 때마다 카운트 증가
+   * 
+   * @param id - 공유 페이지 ID
+   * 
+   * 사용 예:
+   * - GET /s/:id 라우트에서 HTML 반환 전 호출
+   * - SQL: UPDATE shared_html_pages SET download_count = download_count + 1
+   * 
+   * ⚠️ 주의: 매 접속마다 호출되므로 성능 중요!
+   */
   async incrementDownloadCount(id: string): Promise<void> {
     await db
       .update(sharedHtmlPages)
@@ -509,6 +581,19 @@ export class DatabaseStorage implements IStorage {
       .where(eq(sharedHtmlPages.id, id));
   }
 
+  /**
+   * 🚫 HTML 페이지 비활성화
+   * 
+   * 목적: 공유 링크를 만료시킴 (삭제 대신 비활성화)
+   * 
+   * @param id - 공유 페이지 ID
+   * 
+   * 효과:
+   * - isActive = false 설정
+   * - GET /s/:id 접속 시 "링크가 만료되었습니다" 표시
+   * 
+   * ⚠️ 주의: 물리적 삭제가 아님 (데이터 보존)
+   */
   async deactivateHtmlPage(id: string): Promise<void> {
     await db
       .update(sharedHtmlPages)
