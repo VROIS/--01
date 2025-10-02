@@ -90,6 +90,23 @@ export const creditTransactions = pgTable("credit_transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Shared HTML pages table for downloadable guidebooks
+export const sharedHtmlPages = pgTable("shared_html_pages", {
+  id: varchar("id").primaryKey(), // Short ID generated manually (8 chars)
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text("name").notNull(), // User-provided link name
+  htmlContent: text("html_content").notNull(), // Complete HTML file content
+  guideIds: text("guide_ids").array().notNull(), // Selected guide IDs
+  thumbnail: text("thumbnail"), // First guide image
+  sender: text("sender"), // Sender name (temporary: 홍길동)
+  location: text("location"), // Location info (temporary: 파리 에펠탑 근처)
+  featured: boolean("featured").default(false),
+  downloadCount: integer("download_count").default(0),
+  isActive: boolean("is_active").default(true), // For one-time download links
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Create insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -118,6 +135,14 @@ export const insertCreditTransactionSchema = createInsertSchema(creditTransactio
   createdAt: true,
 });
 
+export const insertSharedHtmlPageSchema = createInsertSchema(sharedHtmlPages).omit({
+  id: true,
+  userId: true,
+  downloadCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -127,3 +152,5 @@ export type InsertShareLink = z.infer<typeof insertShareLinkSchema>;
 export type ShareLink = typeof shareLinks.$inferSelect;
 export type InsertCreditTransaction = z.infer<typeof insertCreditTransactionSchema>;
 export type CreditTransaction = typeof creditTransactions.$inferSelect;
+export type InsertSharedHtmlPage = z.infer<typeof insertSharedHtmlPageSchema>;
+export type SharedHtmlPage = typeof sharedHtmlPages.$inferSelect;
