@@ -218,8 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // 갤러리 그리드 아이템 생성
         const galleryItemsHTML = guideItems.map((item, index) => `
             <div class="gallery-item" data-id="${index}">
-                <img src="${item.imageDataUrl || ''}" alt="${item.title || `가이드 ${index + 1}`}">
-                <p>${item.title || `가이드 ${index + 1}`}</p>
+                <img src="${item.imageDataUrl || ''}" alt="가이드 ${index + 1}">
+                <p>가이드 ${index + 1}</p>
             </div>
         `).join('');
 
