@@ -51,12 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const archiveBackBtn = document.getElementById('archiveBackBtn');
     const archiveGrid = document.getElementById('archiveGrid');
     const emptyArchiveMessage = document.getElementById('emptyArchiveMessage');
+    const featuredGallery = document.getElementById('featuredGallery');
     const featuredGrid = document.getElementById('featuredGrid');
-    const emptyFeaturedMessage = document.getElementById('emptyFeaturedMessage');
     const archiveHeader = document.getElementById('archiveHeader');
     const selectionHeader = document.getElementById('selectionHeader');
     const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
     const selectionCount = document.getElementById('selectionCount');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
     const archiveSelectBtn = document.getElementById('archiveSelectBtn');
     const archiveShareBtn = document.getElementById('archiveShareBtn');
     const archiveDeleteBtn = document.getElementById('archiveDeleteBtn');
@@ -766,11 +767,30 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.archive-item').forEach(item => {
                 item.classList.remove('selected');
             });
+            
+            // Disable share/delete buttons
+            if (archiveShareBtn) archiveShareBtn.disabled = true;
+            if (archiveDeleteBtn) archiveDeleteBtn.disabled = true;
         }
     }
 
     function updateSelectionUI() {
-        selectionCount.textContent = `${selectedItemIds.size}개 선택됨`;
+        selectionCount.textContent = `${selectedItemIds.size}개 선택`;
+        
+        // Update delete button in header
+        if (deleteSelectedBtn) {
+            deleteSelectedBtn.disabled = selectedItemIds.size === 0;
+        }
+        
+        // Update share button in footer (활성화 시 선택 항목 있어야 함)
+        if (archiveShareBtn) {
+            archiveShareBtn.disabled = selectedItemIds.size === 0;
+        }
+        
+        // Update delete button in footer
+        if (archiveDeleteBtn) {
+            archiveDeleteBtn.disabled = selectedItemIds.size === 0;
+        }
     }
 
     async function handleDeleteSelected() {
@@ -944,8 +964,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const items = await getAllItems();
             
-            // Render featured gallery
-            if (featuredGrid && emptyFeaturedMessage) {
+            // Render featured gallery (사진만, 타이틀/다운로드 버튼 제거)
+            if (featuredGallery && featuredGrid) {
                 let featuredLinks = [];
                 try {
                     featuredLinks = await getFeaturedShareLinks();
@@ -955,13 +975,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 if (featuredLinks.length > 0) {
-                    emptyFeaturedMessage.classList.add('hidden');
-                    featuredGrid.classList.remove('hidden');
-                    
+                    featuredGallery.classList.remove('hidden');
                     featuredGrid.innerHTML = featuredLinks.map(link => {
                         const thumbnail = link.guideItems[0]?.imageDataUrl || '';
                         return `
-                            <div class="relative bg-white rounded-lg overflow-hidden shadow-sm group cursor-pointer"
+                            <div class="relative bg-white rounded-lg overflow-hidden shadow-sm"
                                  data-testid="featured-${link.id}">
                                 ${thumbnail ? `
                                     <img src="${thumbnail}" alt="${link.title}" 
@@ -971,26 +989,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <span class="text-4xl">📍</span>
                                     </div>
                                 `}
-                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <button onclick='downloadFeaturedHTML("${link.id}")' 
-                                            data-testid="download-featured-${link.id}"
-                                            class="bg-white text-gray-800 px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-gray-100">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                        다운로드
-                                    </button>
-                                </div>
-                                <div class="p-3">
-                                    <h4 class="font-semibold text-sm truncate">${link.title}</h4>
-                                    <p class="text-xs text-gray-600">${link.sender} 님</p>
-                                </div>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    featuredGrid.classList.add('hidden');
-                    emptyFeaturedMessage.classList.remove('hidden');
+                    featuredGallery.classList.add('hidden');
                 }
             }
             
@@ -1328,6 +1331,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         await handleDeleteSelected();
     });
+    
+    deleteSelectedBtn?.addEventListener('click', handleDeleteSelected);
     archiveSettingsBtn?.addEventListener('click', showSettingsPage);
 
     cancelSelectionBtn?.addEventListener('click', () => toggleSelectionMode(false));
