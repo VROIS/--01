@@ -1299,8 +1299,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // 📌 짧은 URL 생성 (8자 ID)
             const shareUrl = `${window.location.origin}/s/${result.id}`;
 
-            // 📋 클립보드에 복사
-            await navigator.clipboard.writeText(shareUrl);
+            // 📋 클립보드에 복사 (실패해도 계속 진행)
+            let copySuccess = false;
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                copySuccess = true;
+            } catch (clipboardError) {
+                console.warn('클립보드 복사 실패 (권한 없음):', clipboardError);
+                // 클립보드 복사 실패해도 계속 진행
+            }
 
             // 🔄 선택 모드 해제
             if (isSelectionMode) toggleSelectionMode(false);
@@ -1311,8 +1318,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // ❌ 모달 닫기
             shareModal.classList.add('hidden');
             
-            // ✅ 성공 메시지
-            showToast('✅ 링크가 복사되었습니다! 원하는 곳에 붙여넣기 하세요.');
+            // ✅ 성공 메시지 (클립보드 성공 여부에 따라 다른 메시지)
+            if (copySuccess) {
+                showToast('✅ 링크가 복사되었습니다! 원하는 곳에 붙여넣기 하세요.');
+            } else {
+                // 클립보드 실패 시 URL 직접 표시
+                showToast(`✅ 링크 생성 완료!\n${shareUrl}\n\n위 링크를 복사해서 공유하세요!`, 10000);
+            }
 
         } catch (error) {
             console.error('Share error:', error);
