@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateLocationBasedContent, getLocationName, generateShareLinkDescription, generateCinematicPrompt, optimizeAudioScript, type GuideContent, type DreamShotPrompt } from "./gemini";
-import { insertGuideSchema, insertShareLinkSchema } from "@shared/schema";
+import { insertGuideSchema, insertShareLinkSchema, insertSharedHtmlPageSchema } from "@shared/schema";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
 import path from "path";
@@ -1065,6 +1065,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("AI 동영상 생성 오류:", error);
       res.status(500).json({ message: "동영상 생성에 실패했습니다." });
+    }
+  });
+
+  // 🔗 Shared HTML Page API Routes
+  
+  // Create shared HTML page (공유 페이지 생성)
+  app.post('/api/share/create', async (req, res) => {
+    try {
+      const userId = 'temp-user-id'; // TODO: Get from session when auth is ready
+      
+      // Validate request body
+      const validation = insertSharedHtmlPageSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: '잘못된 요청 데이터입니다.', 
+          details: validation.error.errors 
+        });
+      }
+      
+      const pageData = validation.data;
+      
+      // Create shared HTML page
+      const sharedPage = await storage.createSharedHtmlPage(userId, pageData);
+      
+      // Generate short URL
+      const shareUrl = `${req.protocol}://${req.get('host')}/s/${sharedPage.id}`;
+      
+      res.json({
+        success: true,
+        id: sharedPage.id,
+        shareUrl,
+        name: sharedPage.name,
+        featured: sharedPage.featured,
+        createdAt: sharedPage.createdAt,
+      });
+      
+    } catch (error) {
+      console.error('공유 페이지 생성 오류:', error);
+      res.status(500).json({ error: '공유 페이지 생성에 실패했습니다.' });
+    }
+  });
+  
+  // Get shared HTML page (공유 페이지 조회 및 다운로드)
+  app.get('/api/share/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const page = await storage.getSharedHtmlPage(id);
+      
+      if (!page) {
+        return res.status(404).json({ error: '공유 페이지를 찾을 수 없습니다.' });
+      }
+      
+      if (!page.isActive) {
+        return res.status(410).json({ error: '이 링크는 만료되었습니다.' });
+      }
+      
+      // Increment download count
+      await storage.incrementDownloadCount(id);
+      
+      res.json({
+        success: true,
+        id: page.id,
+        name: page.name,
+        htmlContent: page.htmlContent,
+        sender: page.sender,
+        location: page.location,
+        featured: page.featured,
+        downloadCount: page.downloadCount + 1,
+        createdAt: page.createdAt,
+      });
+      
+    } catch (error) {
+      console.error('공유 페이지 조회 오류:', error);
+      res.status(500).json({ error: '공유 페이지 조회에 실패했습니다.' });
+    }
+  });
+  
+  // Get featured HTML pages (추천 갤러리)
+  app.get('/api/share/featured/list', async (req, res) => {
+    try {
+      const featuredPages = await storage.getFeaturedHtmlPages();
+      
+      res.json({
+        success: true,
+        pages: featuredPages.map(page => ({
+          id: page.id,
+          name: page.name,
+          thumbnail: page.thumbnail,
+          sender: page.sender,
+          location: page.location,
+          downloadCount: page.downloadCount,
+          createdAt: page.createdAt,
+        })),
+      });
+      
+    } catch (error) {
+      console.error('추천 페이지 조회 오류:', error);
+      res.status(500).json({ error: '추천 페이지 조회에 실패했습니다.' });
     }
   });
 
