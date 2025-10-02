@@ -797,6 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ✅ 공유 링크 생성 로직 - 2025.10.02 간소화 (링크 이름 + Featured만)
     async function handleCreateGuidebookClick() {
         const items = await getAllItems();
         if (items.length === 0) return showToast('공유할 항목이 없습니다.');
@@ -806,148 +807,115 @@ document.addEventListener('DOMContentLoaded', () => {
             : items;
 
         if (allItems.length === 0) return showToast('선택된 항목이 없습니다.');
-        if (allItems.length > 30) return showToast('한 번에 최대 30개까지 공유할 수 있습니다. 선택을 줄여주세요.');
+        if (allItems.length > 20) return showToast('한 번에 최대 20개까지 공유할 수 있습니다. 선택을 줄여주세요.');
 
-        // Show metadata input modal
-        const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-        shareModalContent.innerHTML = `
-            <div class="p-6">
-                <h3 class="text-xl font-bold mb-4">가이드북 정보 입력</h3>
-                <form id="metadataForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">📝 제목</label>
-                        <input type="text" id="titleInput" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                            placeholder="나만의 가이드북" value="나만의 가이드북">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">👤 발신자</label>
-                        <input type="text" id="senderInput" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                            placeholder="홍길동">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">📍 위치</label>
-                        <input type="text" id="locationInput"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                            placeholder="서울, 대한민국">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">📅 생성일</label>
-                        <input type="text" id="dateInput" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                            value="${today}">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="featuredInput" 
-                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <label for="featuredInput" class="text-sm font-semibold">⭐ 추천 갤러리에 표시</label>
-                    </div>
-                    <div class="flex gap-2 pt-2">
-                        <button type="submit" data-testid="button-create-guidebook"
-                            class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
-                            생성하기
-                        </button>
-                        <button type="button" id="cancelMetadata" data-testid="button-cancel-metadata"
-                            class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600">
-                            취소
-                        </button>
-                    </div>
-                </form>
-            </div>
-        `;
+        // 모달 열기 (HTML에 이미 정의됨)
         shareModal.classList.remove('hidden');
-
-        // Handle form submission
-        document.getElementById('metadataForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const title = document.getElementById('titleInput').value.trim();
-            const sender = document.getElementById('senderInput').value.trim();
-            const location = document.getElementById('locationInput').value.trim() || '위치 미정';
-            const date = document.getElementById('dateInput').value.trim();
-            const featured = document.getElementById('featuredInput').checked;
-
-            if (!title || !sender) {
-                return showToast('제목과 발신자는 필수 입력 항목입니다.');
-            }
-
-            // Show loading state
-            shareModalContent.innerHTML = `
-                <div class="text-center p-6">
-                    <div class="loader mx-auto mb-4"></div>
-                    <p class="text-lg font-semibold mb-2">가이드북 생성 중...</p>
-                    <p class="text-sm text-gray-600">${allItems.length}개 항목을 정리하고 있습니다.</p>
-                </div>
-            `;
-
-            try {
-                // Generate HTML content
-                const appOrigin = window.location.origin; // Capture origin before HTML generation
-                const htmlContent = generateShareHTML(title, sender, location, date, allItems, appOrigin);
-                
-                // Generate unique ID
-                const shareId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-                
-                // Save to IndexedDB
-                const shareLink = {
-                    id: shareId,
-                    title,
-                    sender,
-                    location,
-                    date,
-                    guideItems: allItems,
-                    featured,
-                    timestamp: Date.now()
-                };
-                
-                await addShareLink(shareLink);
-                
-                // Download HTML file
-                const filename = `${title}-손안에가이드.html`;
-                downloadHTML(filename, htmlContent);
-                
-                // Show success message
-                shareModalContent.innerHTML = `
-                    <div class="text-center p-6">
-                        <div class="text-6xl mb-4">🎉</div>
-                        <h3 class="text-xl font-bold mb-4">가이드북이 생성되었습니다!</h3>
-                        <p class="text-sm text-gray-600 mb-4">
-                            HTML 파일이 다운로드되었습니다.<br>
-                            ${featured ? '추천 갤러리에 표시됩니다.' : ''}
-                        </p>
-                        <button onclick="document.getElementById('shareModal').classList.add('hidden'); location.reload();" 
-                            data-testid="button-close-success"
-                            class="bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-600">
-                            확인
-                        </button>
-                    </div>
-                `;
-                
-                if (isSelectionMode) toggleSelectionMode(false);
-                
-            } catch (error) {
-                console.error('Share error:', error);
-                shareModalContent.innerHTML = `
-                    <div class="text-center p-6">
-                        <div class="text-4xl mb-4">😥</div>
-                        <p class="text-lg font-semibold mb-2">공유 중 오류가 발생했습니다</p>
-                        <p class="text-sm text-gray-600 mb-4">${error.message}</p>
-                        <button onclick="document.getElementById('shareModal').classList.add('hidden')" 
-                            data-testid="button-close-error"
-                            class="bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600">
-                            닫기
-                        </button>
-                    </div>
-                `;
-            }
-        });
-
-        // Handle cancel button
-        document.getElementById('cancelMetadata').addEventListener('click', () => {
-            shareModal.classList.add('hidden');
-        });
+        
+        // 입력 필드 초기화
+        document.getElementById('shareLinkName').value = '';
+        document.getElementById('shareFeatured').checked = false;
     }
+
+    // 모달 닫기 버튼
+    closeShareModalBtn?.addEventListener('click', () => {
+        shareModal.classList.add('hidden');
+    });
+
+    // 생성 버튼 클릭
+    document.getElementById('createShareLinkBtn')?.addEventListener('click', async () => {
+        const linkName = document.getElementById('shareLinkName').value.trim();
+        const featured = document.getElementById('shareFeatured').checked;
+
+        // 입력 검증
+        if (!linkName) {
+            return showToast('링크 이름을 입력해주세요!');
+        }
+
+        // 선택된 항목 가져오기
+        const items = await getAllItems();
+        const selectedItems = isSelectionMode && selectedItemIds.size > 0
+            ? items.filter(item => selectedItemIds.has(item.id))
+            : items;
+
+        if (selectedItems.length === 0) {
+            return showToast('선택된 항목이 없습니다.');
+        }
+
+        // 로딩 상태 표시
+        const createBtn = document.getElementById('createShareLinkBtn');
+        const originalText = createBtn.textContent;
+        createBtn.disabled = true;
+        createBtn.textContent = '생성 중...';
+
+        try {
+            // 메타데이터 자동 생성 (임시값)
+            const today = new Date().toLocaleDateString('ko-KR', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            // HTML 콘텐츠 생성
+            const appOrigin = window.location.origin;
+            const htmlContent = generateShareHTML(
+                linkName,
+                '여행자', // 임시 발신자
+                '파리, 프랑스', // 임시 위치
+                today,
+                selectedItems,
+                appOrigin
+            );
+
+            // 서버 API 호출
+            const response = await fetch('/api/share/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: linkName,
+                    htmlContent,
+                    featured
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || '서버 오류가 발생했습니다');
+            }
+
+            const result = await response.json();
+            const shareUrl = `${window.location.origin}/share/${result.shortId}`;
+
+            // 성공 메시지
+            showToast('✅ 공유 링크가 생성되었습니다!');
+            
+            // 모달 닫기
+            shareModal.classList.add('hidden');
+            
+            // 선택 모드 해제
+            if (isSelectionMode) toggleSelectionMode(false);
+            
+            // 보관함 새로고침
+            await renderArchive();
+
+            // URL 복사 제안 (옵션)
+            if (confirm(`공유 링크가 생성되었습니다!\n\n${shareUrl}\n\n클립보드에 복사하시겠습니까?`)) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    showToast('링크가 복사되었습니다!');
+                }).catch(() => {
+                    showToast('수동으로 복사해주세요: ' + shareUrl);
+                });
+            }
+
+        } catch (error) {
+            console.error('Share error:', error);
+            showToast('❌ ' + error.message);
+        } finally {
+            // 버튼 복구
+            createBtn.disabled = false;
+            createBtn.textContent = originalText;
+        }
+    });
 
     async function renderArchive() {
         try {
