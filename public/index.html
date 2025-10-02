@@ -584,6 +584,7 @@
 
     <!-- Archive Page -->
     <div id="archivePage" class="ui-layer bg-white">
+        <!-- 존 1: 최상단 헤더 (고정) -->
         <!-- Default Header -->
         <header id="archiveHeader" class="header-safe-area">
              <button id="archiveBackBtn" class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 text-gray-800 interactive-btn absolute top-1/2 left-4 -translate-y-1/2" aria-label="뒤로가기">
@@ -604,17 +605,20 @@
             </button>
         </header>
         
-        <div class="content-safe-area">
-            <!-- Featured Gallery (상단 고정) -->
-            <div id="featuredGallery" class="px-4 py-3 bg-white border-b border-gray-100">
-                <div id="featuredGrid" class="grid grid-cols-3 gap-3"></div>
-            </div>
-            
+        <!-- 존 2: 추천 갤러리 (고정) -->
+        <div id="featuredGallery" class="px-4 py-3 bg-white border-b border-gray-100" style="flex-shrink: 0;">
+            <div id="featuredGrid" class="grid grid-cols-3 gap-3"></div>
+        </div>
+        
+        <!-- 존 3: 내 보관함 (스크롤 영역) -->
+        <div id="archiveScrollZone" style="flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0;">
             <div id="archiveGridContainer" class="px-4 py-4">
                 <div id="archiveGrid"></div>
                 <p id="emptyArchiveMessage" class="text-slate-500 text-center mt-10 hidden">저장된 항목이 없습니다.</p>
             </div>
         </div>
+        
+        <!-- 존 4: 하단 Footer (고정) -->
         <footer id="archiveFooter" class="footer-safe-area bg-white/95 backdrop-blur-sm border-t border-gray-200/80">
              <button id="archiveSelectBtn" aria-label="항목 선택" class="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-gemini-blue interactive-btn shadow-2xl">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
