@@ -765,9 +765,6 @@ document.addEventListener('DOMContentLoaded', () => {
             selectionHeader.classList.remove('hidden');
             selectedItemIds.clear();
             updateSelectionUI();
-            // 선택 모드: 공유/삭제 버튼 밝게 표시
-            if (archiveShareBtn) archiveShareBtn.classList.remove('opacity-50');
-            if (archiveDeleteBtn) archiveDeleteBtn.classList.remove('opacity-50');
         } else {
             archiveGrid.classList.remove('selection-mode');
             archiveHeader.classList.remove('hidden');
@@ -778,10 +775,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.archive-item').forEach(item => {
                 item.classList.remove('selected');
             });
-            
-            // 일반 모드: 공유/삭제 버튼 흐리게 표시
-            if (archiveShareBtn) archiveShareBtn.classList.add('opacity-50');
-            if (archiveDeleteBtn) archiveDeleteBtn.classList.add('opacity-50');
         }
     }
 
