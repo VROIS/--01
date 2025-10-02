@@ -4,10 +4,11 @@ This is a location-based travel guide application called "내손가이드" (My H
 
 ## 📝 Recent Changes
 
-### 🔗 Share Feature Implementation (2025-10-02) - COMPLETE ✅
+### 🔗 Share Feature Implementation (2025-10-02) - IN PROGRESS 🚧
 **Issue:** Previous share system was broken by predecessor developer
 **Solution:** Complete reimplementation of share functionality from scratch
-**Changes:**
+
+**✅ 완료된 부분 (백엔드):**
 1. **Database Schema** (`shared/schema.ts`)
    - Created `sharedHtmlPages` table with 8-character short IDs
    - Fields: id (short), userId, name, htmlContent, guideIds[], thumbnail, sender, location
@@ -24,25 +25,64 @@ This is a location-based travel guide application called "내손가이드" (My H
    - GET `/api/share/:id` - JSON endpoint for programmatic access
    - Comprehensive error pages (404, 410, 500) with styled HTML
 
-4. **Frontend Implementation** (`public/index.js`, `public/index.html`)
-   - Simplified share modal (removed social icons: Kakao, Instagram, Facebook, WhatsApp)
-   - Single "링크 복사하기" (Copy Link) button for universal sharing
-   - Modal reset logic to fix "다시하니 안됨" (can't use twice) bug
-   - Automatic HTML generation from selected guides
-   - Clipboard integration for easy sharing
+4. **Frontend Modal** (`public/index.js`, `public/index.html`)
+   - ✅ Simplified share modal (removed social icons)
+   - ✅ Single "링크 복사하기" button
+   - ✅ Modal reset logic fixed ("다시하니 안됨" bug)
+   - ✅ Clipboard fallback (URL 직접 표시)
 
-**Technical Details:**
-- URL format: `yourdomain.com/s/abc12345` (8 characters)
-- HTML pages are self-contained (images embedded as data URLs)
-- Download count tracking on every access
-- Link expiration via isActive flag
-- Temp user ID system (to be replaced with real auth)
+**❌ 남은 문제 (공유 HTML 페이지):**
 
-**Impact:** 
-- ✅ Share links work in browser, KakaoTalk, and all messaging apps
-- ✅ Short URLs easy to type manually (8 characters vs previous 36)
-- ✅ Modal can be reused multiple times without refresh
-- ✅ Complete system with detailed code comments for future maintenance
+**테스트 결과 (2025-10-02 오후):**
+1. ❌ **공유 모달 터치 문제** 
+   - 증상: 모바일에서 모달 배경 클릭 시 보관함 이미지가 재생됨
+   - 원인: z-index/pointer-events 문제
+   - 위치: `public/index.html` - share modal CSS
+
+2. ❌ **오프라인 미작동 (핵심 기능!)**
+   - 증상: 공유 페이지 1회 열람 후 오프라인에서 작동 안 됨
+   - 필요: Service Worker 구현 (캐싱)
+   - 참고: `public/service-worker.js` 예시 확인 필요
+
+3. ❌ **반응형 디자인 깨짐**
+   - 증상: 모바일 ✅ / 노트북 ❌ (레이아웃 깨짐)
+   - 필요: Media query 추가 (`@media (min-width: 768px)`)
+
+4. ❌ **상세 뷰 UX 불일치 (중요!)**
+   - 현재: 일반 웹페이지 스타일 (이미지 박스 + 버튼)
+   - 필요: 앱과 동일한 UX
+     - 전체 화면 배경 이미지 (`.full-screen-bg`)
+     - 텍스트 오버레이 (`.ui-layer`)
+     - 버튼 하단 배치 (`.footer-safe-area`)
+   - 참고 파일: `public/index.html` - `#detailPage` 구조
+   - 첨부 이미지: `attached_assets/image_1759396618399.png`
+
+5. ❌ **아이콘 불일치**
+   - 현재: 이모지 사용 (🏠, ▶, ❚❚)
+   - 필요: SVG 아이콘으로 교체
+   - 참고: `public/index.html` - SVG 아이콘 예시 복사
+
+**작업 우선순위:**
+1. **상세 뷰 UX 수정** (앱 구조 복사) - 가장 중요!
+2. **반응형 디자인** 추가
+3. **SVG 아이콘** 교체
+4. **Service Worker** 추가 (오프라인)
+5. 공유 모달 터치 문제 수정
+
+**데이터 구조 (중요!):**
+```javascript
+// IndexedDB (프론트엔드)
+currentContent = {
+    imageDataUrl: "data:image/jpeg;base64,/9j...",
+    description: "해설 텍스트..."
+    // ❌ title 필드 없음!
+}
+```
+
+**다음 작업 시 참고:**
+- `generateShareHTML()` 함수 재작성 진행 중 (line 220)
+- 실제 앱 구조: `public/index.html` - `#detailPage` 참조
+- 첨부 이미지로 UX 확인 가능
 
 ### Critical Fix (2025-10-01) - Subscription Data Restoration
 **Issue:** Users lost all data (guides, share links) when canceling and resubscribing
