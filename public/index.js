@@ -206,12 +206,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    /**
+     * 🌐 공유 HTML 생성 함수 (독립적인 작은 홈페이지)
+     * 
+     * 구조: 갤러리 뷰 + 상세 뷰 + Web Speech API
+     * - 갤러리: 2열 그리드 썸네일
+     * - 상세: 큰 이미지 + 자동 음성 재생 + 해설 토글
+     * - 홈 버튼: 상세뷰 + 갤러리 하단
+     */
     function generateShareHTML(title, sender, location, date, guideItems, appOrigin) {
-        const guideItemsHTML = guideItems.map((item, index) => `
-            <div class="guide-item">
-                ${item.imageDataUrl ? `<img src="${item.imageDataUrl}" alt="Guide ${index + 1}">` : ''}
-                <p class="description">${item.description || ''}</p>
+        // 갤러리 그리드 아이템 생성
+        const galleryItemsHTML = guideItems.map((item, index) => `
+            <div class="gallery-item" data-id="${index}">
+                <img src="${item.imageDataUrl || ''}" alt="${item.title || `가이드 ${index + 1}`}">
+                <p>${item.title || `가이드 ${index + 1}`}</p>
             </div>
+        `).join('');
+
+        // 데이터 저장소 (숨김) - 해설 텍스트 보관
+        const dataStorageHTML = guideItems.map((item, index) => `
+            <div data-id="${index}">${item.description || ''}</div>
         `).join('');
 
         return `<!DOCTYPE html>
@@ -221,77 +235,337 @@ document.addEventListener('DOMContentLoaded', () => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title} - 손안에 가이드</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            background: #FFFEFA;
-            color: #333;
-            line-height: 1.6;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            background-color: #f0f2f5;
         }
-        .container { max-width: 800px; margin: 0 auto; }
+        .hidden { display: none !important; }
+        
+        /* 헤더 (메타데이터) */
         .header {
-            background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 16px;
-            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #343a40;
+            color: #fff;
             text-align: center;
         }
-        .header h1 { font-size: 2rem; margin-bottom: 10px; }
-        .metadata { 
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .header h1 {
+            margin: 0 0 15px 0;
+            font-size: 28px;
         }
-        .metadata p { margin: 8px 0; color: #666; }
-        .guide-item {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .metadata {
+            font-size: 14px;
+            opacity: 0.9;
         }
-        .guide-item img {
+        .metadata p {
+            margin: 5px 0;
+        }
+        
+        /* 갤러리 뷰 */
+        #gallery-view {
+            padding: 15px;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .gallery-item {
+            cursor: pointer;
+            text-align: center;
+        }
+        .gallery-item img {
             width: 100%;
+            height: 150px;
+            object-fit: cover;
             border-radius: 8px;
-            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            background-color: #e9e9e9;
         }
-        .description {
-            font-size: 1rem;
+        .gallery-item:hover img {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+        .gallery-item p {
+            margin: 8px 0 0;
+            font-weight: 700;
             color: #333;
-            white-space: pre-wrap;
+            font-size: 14px;
         }
-        .app-link {
+        
+        /* 갤러리 하단 버튼 */
+        .gallery-footer {
+            text-align: center;
+            padding: 30px 15px;
+        }
+        .app-button {
             display: inline-block;
             background: #4285F4;
             color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 16px 32px;
+            border-radius: 12px;
             text-decoration: none;
-            font-weight: 600;
-            margin-top: 20px;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+            transition: all 0.3s;
         }
-        .app-link:hover { background: #3367D6; }
+        .app-button:hover {
+            background: #3367D6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(66, 133, 244, 0.4);
+        }
+        
+        /* 상세 뷰 */
+        #detail-view {
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 40px);
+            box-sizing: border-box;
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+        .back-button {
+            padding: 10px 15px;
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .home-button {
+            padding: 10px 15px;
+            background-color: #4285F4;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #detail-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1c2b33;
+            margin: 0;
+            flex-grow: 1;
+            text-align: center;
+        }
+        .detail-image-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .detail-image {
+            width: 100%;
+            max-width: 500px;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+        .audio-button, .text-toggle-button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0 10px;
+        }
+        .audio-button {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .audio-button.playing {
+            background-color: #dc3545;
+        }
+        .text-toggle-button {
+            background-color: #f0f2f5;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+        #detail-text {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            line-height: 1.8;
+            margin-top: 20px;
+            max-height: 40vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📍 ${title}</h1>
-        </div>
+    <!-- 헤더 (메타데이터) -->
+    <div class="header">
+        <h1>${title}</h1>
         <div class="metadata">
-            <p><strong>👤 발신자:</strong> ${sender} 님이 보냄</p>
-            <p><strong>📍 위치:</strong> ${location}</p>
-            <p><strong>📅 생성일:</strong> ${date}</p>
-        </div>
-        ${guideItemsHTML}
-        <div style="text-align: center; margin-top: 40px;">
-            <a href="${appOrigin}" class="app-link">🎯 앱으로 가기</a>
+            <p>👤 ${sender} 님이 보냄</p>
+            <p>📍 ${location}</p>
+            <p>📅 ${date}</p>
         </div>
     </div>
+    
+    <!-- 갤러리 뷰 -->
+    <div id="gallery-view">
+        <div class="gallery-grid">
+            ${galleryItemsHTML}
+        </div>
+        <div class="gallery-footer">
+            <a href="${appOrigin}" class="app-button">🏠 손안에 가이드 시작하기</a>
+        </div>
+    </div>
+    
+    <!-- 상세 뷰 (숨김) -->
+    <div id="detail-view" class="hidden">
+        <div class="detail-header">
+            <button class="back-button">&larr; 목록으로</button>
+            <h2 id="detail-title"></h2>
+            <a href="${appOrigin}" class="home-button" title="앱으로 이동">🏠</a>
+        </div>
+        <div class="detail-image-container">
+            <img id="detail-image" src="">
+        </div>
+        <div class="controls">
+            <button id="detail-audio-button" class="audio-button">▶ 재생</button>
+            <button id="detail-text-toggle" class="text-toggle-button">해설 보기</button>
+        </div>
+        <div id="detail-text" class="hidden"></div>
+    </div>
+    
+    <!-- 데이터 저장소 (숨김) -->
+    <div id="data-storage" class="hidden">
+        ${dataStorageHTML}
+    </div>
+    
+    <script>
+        const galleryView = document.getElementById('gallery-view');
+        const detailView = document.getElementById('detail-view');
+        const header = document.querySelector('.header');
+        const works = [];
+        
+        // 데이터 로드
+        document.querySelectorAll('#data-storage > div').forEach(el => {
+            const id = el.dataset.id;
+            const galleryItem = document.querySelector('.gallery-item[data-id="' + id + '"]');
+            works.push({
+                id: id,
+                title: galleryItem.querySelector('p').textContent,
+                imgSrc: galleryItem.querySelector('img').src,
+                text: el.innerHTML
+            });
+        });
+        
+        // Web Speech API
+        const synth = window.speechSynthesis;
+        let voices = [];
+        
+        function populateVoiceList() {
+            voices = synth.getVoices().filter(v => v.lang.startsWith('ko'));
+        }
+        
+        function stopAudio() {
+            if (synth.speaking) synth.cancel();
+        }
+        
+        function playAudio(text) {
+            stopAudio();
+            const utterance = new SpeechSynthesisUtterance(text.replace(/<br\\s*\\/?>/gi, ' '));
+            const koVoice = voices.find(v => v.lang.startsWith('ko'));
+            if (koVoice) utterance.voice = koVoice;
+            utterance.lang = 'ko-KR';
+            utterance.rate = 1.0;
+            
+            const audioBtn = document.getElementById('detail-audio-button');
+            utterance.onstart = () => {
+                audioBtn.textContent = '❚❚ 일시정지';
+                audioBtn.classList.add('playing');
+            };
+            utterance.onend = () => {
+                audioBtn.textContent = '▶ 다시듣기';
+                audioBtn.classList.remove('playing');
+            };
+            synth.speak(utterance);
+        }
+        
+        populateVoiceList();
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = populateVoiceList;
+        }
+        
+        // 갤러리 아이템 클릭
+        document.querySelectorAll('.gallery-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const work = works.find(w => w.id === item.dataset.id);
+                document.getElementById('detail-title').textContent = work.title;
+                document.getElementById('detail-image').src = work.imgSrc;
+                document.getElementById('detail-text').innerHTML = work.text;
+                document.getElementById('detail-text').classList.add('hidden');
+                document.getElementById('detail-text-toggle').textContent = '해설 보기';
+                
+                galleryView.classList.add('hidden');
+                header.classList.add('hidden');
+                detailView.classList.remove('hidden');
+                
+                playAudio(work.text);
+            });
+        });
+        
+        // 뒤로 가기
+        document.querySelector('.back-button').addEventListener('click', () => {
+            stopAudio();
+            detailView.classList.add('hidden');
+            header.classList.remove('hidden');
+            galleryView.classList.remove('hidden');
+        });
+        
+        // 음성 재생/정지
+        document.getElementById('detail-audio-button').addEventListener('click', () => {
+            const btn = document.getElementById('detail-audio-button');
+            if (synth.speaking) {
+                stopAudio();
+                btn.textContent = '▶ 다시듣기';
+                btn.classList.remove('playing');
+            } else {
+                const work = works.find(w => w.title === document.getElementById('detail-title').textContent);
+                playAudio(work.text);
+            }
+        });
+        
+        // 해설 텍스트 토글
+        document.getElementById('detail-text-toggle').addEventListener('click', () => {
+            const textDiv = document.getElementById('detail-text');
+            const btn = document.getElementById('detail-text-toggle');
+            if (textDiv.classList.contains('hidden')) {
+                textDiv.classList.remove('hidden');
+                btn.textContent = '해설 숨기기';
+            } else {
+                textDiv.classList.add('hidden');
+                btn.textContent = '해설 보기';
+            }
+        });
+    </script>
 </body>
 </html>`;
     }
