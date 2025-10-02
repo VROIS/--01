@@ -981,6 +981,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     featuredLinks = [];
                 }
                 
+                // 임시 샘플 데이터 (테스트용)
+                if (featuredLinks.length === 0) {
+                    const sampleImages = items.slice(0, 3);
+                    if (sampleImages.length > 0) {
+                        featuredLinks = sampleImages.map(item => ({
+                            id: item.id,
+                            title: '샘플',
+                            guideItems: [{ imageDataUrl: item.imageDataUrl }]
+                        }));
+                    }
+                }
+                
                 if (featuredLinks.length > 0) {
                     featuredGallery.classList.remove('hidden');
                     featuredGrid.innerHTML = featuredLinks.map(link => {
@@ -1372,6 +1384,29 @@ document.addEventListener('DOMContentLoaded', () => {
     generateVideoBtn?.addEventListener('click', handleGenerateVideoDemo);
 
     initializeApp();
+
+    // 임시 샘플 데이터 추가 함수 (테스트용)
+    window.addSampleImages = async function() {
+        const sampleData = [
+            {
+                id: 'sample-1',
+                imageDataUrl: 'assets/sample1.png',
+                description: '사모트라케의 니케. 기원전 190년경 제작된 헬레니즘 시대의 걸작입니다. 승리의 여신 니케가 배의 선수에 내려앉는 순간을 포착한 이 조각은 역동적인 움직임과 바람에 휘날리는 옷자락의 표현이 탁월합니다. 루브르 박물관 계단 위에서 관람객을 맞이하는 이 작품은 고대 그리스 조각의 정수를 보여줍니다.'
+            }
+        ];
+
+        for (const data of sampleData) {
+            try {
+                await addItem(data);
+            } catch (e) {
+                console.log('Sample already exists or error:', e);
+            }
+        }
+        
+        await renderArchive();
+        showToast('샘플 이미지가 추가되었습니다!');
+        console.log('✅ 샘플 이미지 추가 완료!');
+    };
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
