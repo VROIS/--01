@@ -20,6 +20,7 @@ import {
   guides,
   shareLinks,
   creditTransactions,
+  sharedHtmlPages,
   type User,
   type UpsertUser,
   type Guide,
@@ -27,7 +28,9 @@ import {
   type ShareLink,
   type InsertShareLink,
   type CreditTransaction,
-  type InsertCreditTransaction
+  type InsertCreditTransaction,
+  type SharedHtmlPage,
+  type InsertSharedHtmlPage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, inArray, and, sql } from "drizzle-orm";
@@ -69,6 +72,13 @@ export interface IStorage {
   generateReferralCode(userId: string): Promise<string>;
   processReferralReward(referralCode: string, newUserId: string): Promise<void>;
   processCashbackReward(paymentAmount: number, userId: string): Promise<void>;
+  
+  // Shared HTML page operations
+  createSharedHtmlPage(userId: string, page: InsertSharedHtmlPage): Promise<SharedHtmlPage>;
+  getSharedHtmlPage(id: string): Promise<SharedHtmlPage | undefined>;
+  getFeaturedHtmlPages(): Promise<SharedHtmlPage[]>;
+  incrementDownloadCount(id: string): Promise<void>;
+  deactivateHtmlPage(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -441,6 +451,69 @@ export class DatabaseStorage implements IStorage {
       description: `💰 현금 킥백: ${user.email || userId}님 결제 $${(paymentAmount/100).toFixed(2)}`,
       referenceId: userId,
     });
+  }
+
+  // Shared HTML page operations
+  async createSharedHtmlPage(userId: string, page: InsertSharedHtmlPage): Promise<SharedHtmlPage> {
+    // Generate short, URL-friendly ID (8 characters)
+    const generateShortId = () => crypto.randomBytes(6).toString('base64url').slice(0, 8);
+    
+    let attempts = 0;
+    const maxAttempts = 5;
+    
+    while (attempts < maxAttempts) {
+      try {
+        const shortId = generateShortId();
+        
+        const [newPage] = await db
+          .insert(sharedHtmlPages)
+          .values({ ...page, id: shortId, userId })
+          .returning();
+        
+        return newPage;
+      } catch (error: any) {
+        attempts++;
+        if (error?.code === '23505' && attempts < maxAttempts) {
+          // Unique constraint violation - try again with new ID
+          console.log(`🔄 ID 충돌 발생 (시도 ${attempts}/${maxAttempts}), 재시도 중...`);
+          continue;
+        }
+        throw error;
+      }
+    }
+    
+    throw new Error(`💥 ${maxAttempts}회 시도 후 고유 ID 생성 실패. 다시 시도해주세요.`);
+  }
+
+  async getSharedHtmlPage(id: string): Promise<SharedHtmlPage | undefined> {
+    const [page] = await db
+      .select()
+      .from(sharedHtmlPages)
+      .where(eq(sharedHtmlPages.id, id));
+    return page;
+  }
+
+  async getFeaturedHtmlPages(): Promise<SharedHtmlPage[]> {
+    return await db
+      .select()
+      .from(sharedHtmlPages)
+      .where(and(eq(sharedHtmlPages.featured, true), eq(sharedHtmlPages.isActive, true)))
+      .orderBy(desc(sharedHtmlPages.createdAt))
+      .limit(3);
+  }
+
+  async incrementDownloadCount(id: string): Promise<void> {
+    await db
+      .update(sharedHtmlPages)
+      .set({ downloadCount: sql`download_count + 1` })
+      .where(eq(sharedHtmlPages.id, id));
+  }
+
+  async deactivateHtmlPage(id: string): Promise<void> {
+    await db
+      .update(sharedHtmlPages)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(sharedHtmlPages.id, id));
   }
 }
 
