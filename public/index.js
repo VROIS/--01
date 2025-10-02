@@ -886,26 +886,102 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             const shareUrl = `${window.location.origin}/share/${result.shortId}`;
 
-            // 성공 메시지
-            showToast('✅ 공유 링크가 생성되었습니다!');
-            
-            // 모달 닫기
-            shareModal.classList.add('hidden');
+            // ✅ 성공 화면 - 소셜 공유 버튼들 표시
+            shareModalContent.innerHTML = `
+                <div class="p-6">
+                    <div class="text-center mb-6">
+                        <div class="text-6xl mb-3">🎉</div>
+                        <h3 class="text-xl font-bold mb-2">공유 링크가 생성되었습니다!</h3>
+                        <p class="text-sm text-gray-600">친구들과 여행 추억을 공유해보세요</p>
+                    </div>
+
+                    <!-- 링크 복사 영역 -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <label class="block text-xs font-medium text-gray-600 mb-2">공유 링크</label>
+                        <div class="flex gap-2">
+                            <input 
+                                type="text" 
+                                value="${shareUrl}" 
+                                readonly
+                                class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-sm"
+                                onclick="this.select()"
+                            >
+                            <button 
+                                onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('링크가 복사되었습니다!'))"
+                                class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700"
+                                data-testid="button-copy-link"
+                            >
+                                복사
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 소셜 공유 버튼들 -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">바로 공유하기</label>
+                        <div class="grid grid-cols-4 gap-3">
+                            <!-- 카카오톡 -->
+                            <a href="https://sharer.kakao.com/talk/friends/picker/link" 
+                               target="_blank"
+                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition"
+                               data-testid="share-kakao">
+                                <img src="https://www.kakaocorp.com/page/favicon.ico" 
+                                     alt="카카오톡" 
+                                     class="w-12 h-12 rounded-xl mb-2">
+                                <span class="text-xs text-gray-700">카카오톡</span>
+                            </a>
+                            
+                            <!-- 인스타그램 -->
+                            <a href="https://www.instagram.com/" 
+                               target="_blank"
+                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition"
+                               data-testid="share-instagram">
+                                <img src="https://static.cdninstagram.com/rsrc.php/v3/yI/r/VsNE-OHk_8a.png" 
+                                     alt="인스타그램" 
+                                     class="w-12 h-12 rounded-xl mb-2">
+                                <span class="text-xs text-gray-700">인스타그램</span>
+                            </a>
+                            
+                            <!-- 페이스북 -->
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}" 
+                               target="_blank"
+                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition"
+                               data-testid="share-facebook">
+                                <img src="https://www.facebook.com/images/fb_icon_325x325.png" 
+                                     alt="페이스북" 
+                                     class="w-12 h-12 rounded-xl mb-2">
+                                <span class="text-xs text-gray-700">페이스북</span>
+                            </a>
+                            
+                            <!-- 왓츠앱 -->
+                            <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(linkName + ' ' + shareUrl)}" 
+                               target="_blank"
+                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition"
+                               data-testid="share-whatsapp">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" 
+                                     alt="WhatsApp" 
+                                     class="w-12 h-12 rounded-xl mb-2">
+                                <span class="text-xs text-gray-700">WhatsApp</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 닫기 버튼 -->
+                    <button 
+                        onclick="document.getElementById('shareModal').classList.add('hidden'); location.reload();"
+                        class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 px-6 rounded-lg transition-colors"
+                        data-testid="button-close-success"
+                    >
+                        완료
+                    </button>
+                </div>
+            `;
             
             // 선택 모드 해제
             if (isSelectionMode) toggleSelectionMode(false);
             
             // 보관함 새로고침
             await renderArchive();
-
-            // URL 복사 제안 (옵션)
-            if (confirm(`공유 링크가 생성되었습니다!\n\n${shareUrl}\n\n클립보드에 복사하시겠습니까?`)) {
-                navigator.clipboard.writeText(shareUrl).then(() => {
-                    showToast('링크가 복사되었습니다!');
-                }).catch(() => {
-                    showToast('수동으로 복사해주세요: ' + shareUrl);
-                });
-            }
 
         } catch (error) {
             console.error('Share error:', error);
