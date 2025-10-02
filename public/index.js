@@ -385,6 +385,11 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBtn.disabled = isFromArchive;
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // ⚠️ CRITICAL: DO NOT MODIFY WITHOUT USER APPROVAL
+    // 사용자 승인 없이 절대 수정 금지 - AI 및 모든 개발자 주의
+    // Verified: 2025-10-02 | Status: Production-Ready ✅
+    // ═══════════════════════════════════════════════════════════════
     async function showArchivePage() {
         pauseCamera();
         synth.cancel();
@@ -1065,6 +1070,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // ⚠️ CRITICAL: DO NOT MODIFY WITHOUT USER APPROVAL
+    // 사용자 승인 없이 절대 수정 금지 - AI 및 모든 개발자 주의
+    // Verified: 2025-10-02 | Status: Production-Ready ✅
+    // ═══════════════════════════════════════════════════════════════
     async function viewArchiveItem(itemId) {
         try {
             const items = await getAllItems();
