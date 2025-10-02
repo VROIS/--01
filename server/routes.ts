@@ -1107,7 +1107,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get shared HTML page (공유 페이지 조회 및 다운로드)
+  // Short URL route - Serve HTML content directly (짧은 URL 공유 페이지)
+  app.get('/s/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const page = await storage.getSharedHtmlPage(id);
+      
+      if (!page) {
+        return res.status(404).send(`
+          <!DOCTYPE html>
+          <html lang="ko">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>페이지를 찾을 수 없습니다</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+                     display: flex; align-items: center; justify-content: center; 
+                     min-height: 100vh; margin: 0; background: #f5f5f5; }
+              .error { text-align: center; padding: 2rem; }
+              .error h1 { font-size: 3rem; color: #333; margin-bottom: 1rem; }
+              .error p { color: #666; font-size: 1.2rem; }
+            </style>
+          </head>
+          <body>
+            <div class="error">
+              <h1>404</h1>
+              <p>공유 페이지를 찾을 수 없습니다.</p>
+            </div>
+          </body>
+          </html>
+        `);
+      }
+      
+      if (!page.isActive) {
+        return res.status(410).send(`
+          <!DOCTYPE html>
+          <html lang="ko">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>링크가 만료되었습니다</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+                     display: flex; align-items: center; justify-content: center; 
+                     min-height: 100vh; margin: 0; background: #f5f5f5; }
+              .error { text-align: center; padding: 2rem; }
+              .error h1 { font-size: 3rem; color: #333; margin-bottom: 1rem; }
+              .error p { color: #666; font-size: 1.2rem; }
+            </style>
+          </head>
+          <body>
+            <div class="error">
+              <h1>410</h1>
+              <p>이 링크는 만료되었습니다.</p>
+            </div>
+          </body>
+          </html>
+        `);
+      }
+      
+      // Increment download count
+      await storage.incrementDownloadCount(id);
+      
+      // Serve the HTML content directly
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(page.htmlContent);
+      
+    } catch (error) {
+      console.error('공유 페이지 조회 오류:', error);
+      res.status(500).send(`
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>오류가 발생했습니다</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+                   display: flex; align-items: center; justify-content: center; 
+                   min-height: 100vh; margin: 0; background: #f5f5f5; }
+            .error { text-align: center; padding: 2rem; }
+            .error h1 { font-size: 3rem; color: #333; margin-bottom: 1rem; }
+            .error p { color: #666; font-size: 1.2rem; }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h1>500</h1>
+            <p>서버 오류가 발생했습니다.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+  });
+  
+  // Get shared HTML page (공유 페이지 조회 및 다운로드) - API endpoint
   app.get('/api/share/:id', async (req, res) => {
     try {
       const { id } = req.params;
@@ -1133,7 +1230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sender: page.sender,
         location: page.location,
         featured: page.featured,
-        downloadCount: page.downloadCount + 1,
+        downloadCount: (page.downloadCount || 0) + 1,
         createdAt: page.createdAt,
       });
       
