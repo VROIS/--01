@@ -797,7 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ✅ 공유 링크 생성 로직 - 2025.10.02 간소화 (링크 이름 + Featured만)
+    // ✅ 공유 링크 생성 로직 - 2025.10.02 소셜 아이콘 클릭 방식
     async function handleCreateGuidebookClick() {
         const items = await getAllItems();
         if (items.length === 0) return showToast('공유할 항목이 없습니다.');
@@ -814,7 +814,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 입력 필드 초기화
         document.getElementById('shareLinkName').value = '';
-        document.getElementById('shareFeatured').checked = false;
+        
+        // 소셜 아이콘 클릭 이벤트 등록
+        document.querySelectorAll('[data-share-platform]').forEach(icon => {
+            icon.onclick = async () => {
+                const platform = icon.getAttribute('data-share-platform');
+                await createAndShareLink(platform, allItems);
+            };
+        });
     }
 
     // 모달 닫기 버튼
@@ -822,31 +829,22 @@ document.addEventListener('DOMContentLoaded', () => {
         shareModal.classList.add('hidden');
     });
 
-    // 생성 버튼 클릭
-    document.getElementById('createShareLinkBtn')?.addEventListener('click', async () => {
+    // 링크 생성 및 공유 함수
+    async function createAndShareLink(platform, selectedItems) {
         const linkName = document.getElementById('shareLinkName').value.trim();
-        const featured = document.getElementById('shareFeatured').checked;
 
         // 입력 검증
         if (!linkName) {
-            return showToast('링크 이름을 입력해주세요!');
+            return showToast('링크 이름을 먼저 입력해주세요!');
         }
 
-        // 선택된 항목 가져오기
-        const items = await getAllItems();
-        const selectedItems = isSelectionMode && selectedItemIds.size > 0
-            ? items.filter(item => selectedItemIds.has(item.id))
-            : items;
-
-        if (selectedItems.length === 0) {
-            return showToast('선택된 항목이 없습니다.');
-        }
-
-        // 로딩 상태 표시
-        const createBtn = document.getElementById('createShareLinkBtn');
-        const originalText = createBtn.textContent;
-        createBtn.disabled = true;
-        createBtn.textContent = '생성 중...';
+        // 로딩 표시
+        shareModalContent.innerHTML = `
+            <div class="p-6 text-center">
+                <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-lg font-semibold">링크 생성 중...</p>
+            </div>
+        `;
 
         try {
             // 메타데이터 자동 생성 (임시값)
@@ -874,7 +872,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     title: linkName,
                     htmlContent,
-                    featured
+                    featured: false
                 })
             });
 
@@ -886,112 +884,47 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             const shareUrl = `${window.location.origin}/share/${result.shortId}`;
 
-            // ✅ 성공 화면 - 소셜 공유 버튼들 표시
-            shareModalContent.innerHTML = `
-                <div class="p-6">
-                    <div class="text-center mb-6">
-                        <div class="text-6xl mb-3">🎉</div>
-                        <h3 class="text-xl font-bold mb-2">공유 링크가 생성되었습니다!</h3>
-                        <p class="text-sm text-gray-600">친구들과 여행 추억을 공유해보세요</p>
-                    </div>
-
-                    <!-- 링크 복사 영역 -->
-                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                        <label class="block text-xs font-medium text-gray-600 mb-2">공유 링크</label>
-                        <div class="flex gap-2">
-                            <input 
-                                type="text" 
-                                value="${shareUrl}" 
-                                readonly
-                                class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-sm"
-                                onclick="this.select()"
-                            >
-                            <button 
-                                onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('링크가 복사되었습니다!'))"
-                                class="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700"
-                                data-testid="button-copy-link"
-                            >
-                                복사
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 소셜 공유 버튼들 -->
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-3">바로 공유하기</label>
-                        <div class="grid grid-cols-4 gap-3">
-                            <!-- 카카오톡 -->
-                            <a href="https://sharer.kakao.com/talk/friends/picker/link" 
-                               target="_blank"
-                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition"
-                               data-testid="share-kakao">
-                                <img src="https://www.kakaocorp.com/page/favicon.ico" 
-                                     alt="카카오톡" 
-                                     class="w-12 h-12 rounded-xl mb-2">
-                                <span class="text-xs text-gray-700">카카오톡</span>
-                            </a>
-                            
-                            <!-- 인스타그램 -->
-                            <a href="https://www.instagram.com/" 
-                               target="_blank"
-                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition"
-                               data-testid="share-instagram">
-                                <img src="https://static.cdninstagram.com/rsrc.php/v3/yI/r/VsNE-OHk_8a.png" 
-                                     alt="인스타그램" 
-                                     class="w-12 h-12 rounded-xl mb-2">
-                                <span class="text-xs text-gray-700">인스타그램</span>
-                            </a>
-                            
-                            <!-- 페이스북 -->
-                            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}" 
-                               target="_blank"
-                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition"
-                               data-testid="share-facebook">
-                                <img src="https://www.facebook.com/images/fb_icon_325x325.png" 
-                                     alt="페이스북" 
-                                     class="w-12 h-12 rounded-xl mb-2">
-                                <span class="text-xs text-gray-700">페이스북</span>
-                            </a>
-                            
-                            <!-- 왓츠앱 -->
-                            <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(linkName + ' ' + shareUrl)}" 
-                               target="_blank"
-                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition"
-                               data-testid="share-whatsapp">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" 
-                                     alt="WhatsApp" 
-                                     class="w-12 h-12 rounded-xl mb-2">
-                                <span class="text-xs text-gray-700">WhatsApp</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- 닫기 버튼 -->
-                    <button 
-                        onclick="document.getElementById('shareModal').classList.add('hidden'); location.reload();"
-                        class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 px-6 rounded-lg transition-colors"
-                        data-testid="button-close-success"
-                    >
-                        완료
-                    </button>
-                </div>
-            `;
-            
             // 선택 모드 해제
             if (isSelectionMode) toggleSelectionMode(false);
             
             // 보관함 새로고침
             await renderArchive();
+            
+            // 모달 닫기
+            shareModal.classList.add('hidden');
+            
+            // 플랫폼별 공유
+            const shareText = `${linkName} - ${shareUrl}`;
+            
+            switch(platform) {
+                case 'kakao':
+                    window.open('https://sharer.kakao.com/talk/friends/picker/link', '_blank');
+                    // 클립보드에 링크 복사
+                    navigator.clipboard.writeText(shareUrl);
+                    showToast('링크가 복사되었습니다! 카카오톡에서 붙여넣기 해주세요.');
+                    break;
+                    
+                case 'instagram':
+                    window.open('https://www.instagram.com/', '_blank');
+                    navigator.clipboard.writeText(shareUrl);
+                    showToast('링크가 복사되었습니다! 인스타그램에서 붙여넣기 해주세요.');
+                    break;
+                    
+                case 'facebook':
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
+                    break;
+                    
+                case 'whatsapp':
+                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
+                    break;
+            }
 
         } catch (error) {
             console.error('Share error:', error);
+            shareModal.classList.add('hidden');
             showToast('❌ ' + error.message);
-        } finally {
-            // 버튼 복구
-            createBtn.disabled = false;
-            createBtn.textContent = originalText;
         }
-    });
+    }
 
     async function renderArchive() {
         try {
