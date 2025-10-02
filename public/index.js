@@ -1338,8 +1338,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 선택 버튼: 선택 모드 토글
         toggleSelectionMode(!isSelectionMode);
     });
+    // ✅ 공유 버튼 간편 로직 - 2025.10.02 구현 완료
+    // 핵심: 1회 클릭 → 선택 모드 활성화 / 2회 클릭 (선택 후) → 공유 모달
     archiveShareBtn?.addEventListener('click', async () => {
-        // 공유 버튼: 선택 모드 OFF → 활성화 / 선택 항목 있음 → 공유 모달
         if (!isSelectionMode) {
             showToast('이미지를 선택해주세요');
             toggleSelectionMode(true);
@@ -1354,8 +1355,9 @@ document.addEventListener('DOMContentLoaded', () => {
         await handleCreateGuidebookClick();
     });
     
+    // ✅ 삭제 버튼 간편 로직 - 2025.10.02 구현 완료
+    // 핵심: 1회 클릭 → 선택 모드 활성화 / 2회 클릭 (선택 후) → 삭제 실행
     archiveDeleteBtn?.addEventListener('click', async () => {
-        // 삭제 버튼: 선택 모드 OFF → 활성화 / 선택 항목 있음 → 삭제
         if (!isSelectionMode) {
             showToast('이미지를 선택해주세요');
             toggleSelectionMode(true);
