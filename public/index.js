@@ -387,6 +387,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function showArchivePage() {
         pauseCamera();
+        synth.cancel();
+        resetSpeechState();
         if (isSelectionMode) { 
             toggleSelectionMode(false);
         }
@@ -1087,8 +1089,21 @@ document.addEventListener('DOMContentLoaded', () => {
             textOverlay.classList.remove('hidden', 'animate-in');
             loadingHeader.classList.add('hidden');
             detailFooter.classList.remove('hidden');
-            descriptionText.innerHTML = item.description;
+            
+            synth.cancel();
             resetSpeechState();
+            descriptionText.innerHTML = '';
+            
+            const description = item.description || '';
+            const sentences = description.match(/[^.?!]+[.?!]+/g) || [description];
+            sentences.forEach(sentence => {
+                if (!sentence) return;
+                const span = document.createElement('span');
+                span.textContent = sentence.trim() + ' ';
+                descriptionText.appendChild(span);
+                queueForSpeech(sentence.trim(), span);
+            });
+            
             updateAudioButton('play');
 
         } catch (error) {
