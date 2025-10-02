@@ -812,8 +812,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // 모달 열기 (HTML에 이미 정의됨)
         shareModal.classList.remove('hidden');
         
-        // 입력 필드 초기화
-        document.getElementById('shareLinkName').value = '';
+        // 입력 필드 초기화 (setTimeout으로 DOM 준비 대기)
+        setTimeout(() => {
+            const nameInput = document.getElementById('shareLinkName');
+            if (nameInput) nameInput.value = '';
+        }, 0);
         
         // 소셜 아이콘 클릭 이벤트 등록
         document.querySelectorAll('[data-share-platform]').forEach(icon => {
@@ -865,24 +868,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 appOrigin
             );
 
+            // 서버로 보낼 데이터 (스키마 형식에 맞춤)
+            const requestData = {
+                name: linkName, // title → name 으로 변경
+                htmlContent: htmlContent,
+                guideIds: selectedItems.map(item => item.id), // 필수 필드
+                thumbnail: selectedItems[0]?.imageDataUrl || null, // 첫 이미지
+                sender: '여행자', // 임시값
+                location: '파리, 프랑스', // 임시값
+                featured: false
+            };
+
             // 서버 API 호출
             const response = await fetch('/api/share/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: linkName,
-                    htmlContent,
-                    featured: false
-                })
+                body: JSON.stringify(requestData)
             });
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || '서버 오류가 발생했습니다');
+                throw new Error(error.error || '서버 오류가 발생했습니다');
             }
 
             const result = await response.json();
-            const shareUrl = `${window.location.origin}/share/${result.shortId}`;
+            const shareUrl = `${window.location.origin}/s/${result.id}`;
 
             // 선택 모드 해제
             if (isSelectionMode) toggleSelectionMode(false);
