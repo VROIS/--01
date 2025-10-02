@@ -394,33 +394,55 @@
     <input type="file" id="upload-input" class="hidden" accept="image/*">
     <div id="toastContainer"></div>
     
-    <!-- Share Modal (Prototype) -->
-    <div id="shareModal" class="absolute inset-0 z-50 bg-gray-900/60 backdrop-blur-sm flex items-end justify-center hidden">
-        <div id="shareModalContent" class="bg-white rounded-t-2xl shadow-xl w-full max-w-md transition-transform transform">
-            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-gray-800">공유하기</h2>
-                <button id="closeShareModalBtn" class="p-2 text-gray-500 hover:text-gray-800">&times;</button>
+    <!-- 공유 링크 생성 모달 - 2025.10.02 간소화 -->
+    <div id="shareModal" class="absolute inset-0 z-50 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center hidden">
+        <div id="shareModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transition-transform transform">
+            <!-- 헤더 -->
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">공유 링크 생성</h2>
+                <button id="closeShareModalBtn" data-testid="button-close-share-modal" class="p-2 text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
             </div>
-            <div class="p-6">
-                <p class="text-center text-gray-600 mb-6">선택한 항목을 공유할 앱을 선택하세요.<br><small>(v2.0에서 정식 지원 예정)</small></p>
-                <div class="grid grid-cols-4 gap-4">
-                    <a href="#" class="share-modal-social-icon">
-                        <img src="https://www.kakaocorp.com/page/favicon.ico" alt="카카오톡">
-                        <span>카카오톡</span>
-                    </a>
-                    <a href="#" class="share-modal-social-icon">
-                        <img src="https://static.cdninstagram.com/rsrc.php/v3/yI/r/VsNE-OHk_8a.png" alt="인스타그램">
-                        <span>인스타그램</span>
-                    </a>
-                    <a href="#" class="share-modal-social-icon">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
-                        <span>WhatsApp</span>
-                    </a>
-                     <a href="#" class="share-modal-social-icon">
-                        <img src="https://sf-tb-sg.ibytedtos.com/obj/eden-sg/uhtyfhohheehvoml/tiktok/web/image/tiktok-logo-dark.png" alt="TikTok">
-                        <span>TikTok</span>
-                    </a>
+            
+            <!-- 폼 -->
+            <div class="p-6 space-y-6">
+                <!-- 링크 이름 입력 (필수) -->
+                <div>
+                    <label for="shareLinkName" class="block text-sm font-medium text-gray-700 mb-2">
+                        링크 이름 <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="shareLinkName" 
+                        data-testid="input-share-link-name"
+                        placeholder="예: 내가 맛본 파리 최악의 음식들"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        maxlength="50"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">사용자의 창의력을 발휘해보세요!</p>
                 </div>
+                
+                <!-- Featured 체크박스 -->
+                <div class="flex items-start">
+                    <input 
+                        type="checkbox" 
+                        id="shareFeatured" 
+                        data-testid="checkbox-featured"
+                        class="mt-1 h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    >
+                    <label for="shareFeatured" class="ml-3">
+                        <span class="block text-sm font-medium text-gray-700">⭐ Featured Gallery에 표시</span>
+                        <span class="block text-xs text-gray-500 mt-1">보관함 상단에 추천 콘텐츠로 게시됩니다</span>
+                    </label>
+                </div>
+                
+                <!-- 생성 버튼 -->
+                <button 
+                    id="createShareLinkBtn" 
+                    data-testid="button-create-share-link"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg"
+                >
+                    생성하기
+                </button>
             </div>
         </div>
     </div>
