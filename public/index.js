@@ -225,6 +225,16 @@ document.addEventListener('DOMContentLoaded', () => {
      * 4. 텍스트 초기 표시 로직: 음성과 동시에 표시 (hidden 제거)
      */
     function generateShareHTML(title, sender, location, date, guideItems, appOrigin) {
+        // HTML escape 함수 (XSS 방지 및 파싱 에러 방지)
+        const escapeHTML = (str) => {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
+        
         // 갤러리 그리드 아이템 생성 (2열)
         const galleryItemsHTML = guideItems.map((item, index) => `
             <div class="gallery-item" data-id="${index}">
@@ -252,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>${title} - 손안에 가이드</title>
+    <title>${escapeHTML(title)} - 손안에 가이드</title>
     <link rel="manifest" href="data:application/json;base64,${utf8ToBase64(JSON.stringify({
         name: title,
         short_name: title,
@@ -422,11 +432,11 @@ document.addEventListener('DOMContentLoaded', () => {
 <body>
     <!-- 헤더 (메타데이터) -->
     <div class="header">
-        <h1>${title}</h1>
+        <h1>${escapeHTML(title)}</h1>
         <div class="metadata">
-            <p>👤 ${sender} 님이 보냄</p>
-            <p>📍 ${location}</p>
-            <p>📅 ${date}</p>
+            <p>👤 ${escapeHTML(sender)} 님이 보냄</p>
+            <p>📍 ${escapeHTML(location)}</p>
+            <p>📅 ${escapeHTML(date)}</p>
         </div>
     </div>
     
