@@ -309,6 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
             justify-content: space-around;
             align-items: center;
             padding: 0 1rem;
+            position: relative;
         }
         
         /* 텍스트 오버레이 */
