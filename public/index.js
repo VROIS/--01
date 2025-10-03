@@ -207,13 +207,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * ⚠️ **수정금지** - 2025-10-03 3시간 디버깅 끝에 완성
+     * 
      * 🌐 공유 HTML 생성 함수 (독립적인 PWA 홈페이지)
      * 
-     * 구조: 앱과 동일한 UX/UI
+     * 구조: 앱과 동일한 UX/UI (public/index.html #detailPage 복사)
      * - 갤러리: 2열 그리드 썸네일 (모바일 최적화)
      * - 상세: 전체 화면 배경 이미지 + 텍스트 오버레이
-     * - 오프라인: Service Worker로 캐싱
-     * - 반응형: 모바일/노트북 지원
+     * - z-index 계층: background(1) → ui-layer(10) → header(20) → content(25) → footer(30)
+     * - position: header-safe-area는 반드시 relative (버튼 클릭 위해 필수!)
+     * - 텍스트 자동 하이라이트: onboundary 이벤트로 문장 단위 강조
+     * 
+     * 핵심 수정사항:
+     * 1. .header-safe-area에 position: relative 추가 (버튼 클릭 문제 해결)
+     * 2. .content-safe-area에 z-index: 25 추가 (텍스트 표시 문제 해결)
+     * 3. playAudio에 onboundary 하이라이트 기능 추가
+     * 4. 텍스트 초기 표시 로직: 음성과 동시에 표시 (hidden 제거)
      */
     function generateShareHTML(title, sender, location, date, guideItems, appOrigin) {
         // 갤러리 그리드 아이템 생성 (2열)

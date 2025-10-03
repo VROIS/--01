@@ -312,6 +312,106 @@
 
 ---
 
+## 🚀 I. 공유 페이지 개선 작업 (2025-10-03)
+
+### 진행 상황: 1/5 완료 ✅
+
+#### ✅ I-1. 상세 뷰 UX 수정 (완료)
+**상태:** ✅ 완료 (3시간 디버깅)  
+**날짜:** 2025-10-03
+
+**문제점:**
+- 텍스트 오버레이 표시 안 됨
+- 버튼 3개 표시 안 됨  
+- 뒤로가기 버튼 클릭 안 됨
+
+**해결 방법:**
+1. `.header-safe-area`에 `position: relative` 추가 (버튼 클릭 필수!)
+2. `.content-safe-area`에 `z-index: 25` 추가
+3. z-index 계층 확립: background(1) → ui-layer(10) → header(20) → content(25) → footer(30)
+4. 텍스트 초기 표시: 음성과 동시에 표시 (`classList.remove('hidden')`)
+5. **보너스:** 텍스트 자동 하이라이트 기능 추가 (onboundary 이벤트)
+
+**수정 파일:**
+- `public/index.js` - generateShareHTML 함수 (⚠️ **수정금지** 주석 추가)
+- DB: 24개 기존 공유 링크 자동 업데이트
+
+**핵심 로직 (절대 수정 금지!):**
+```css
+/* z-index 계층 */
+.full-screen-bg { z-index: 1; }
+.ui-layer { z-index: 10; }
+.header-safe-area { position: relative; z-index: 20; } /* position: relative 필수! */
+.content-safe-area { z-index: 25; }
+.footer-safe-area { z-index: 30; }
+```
+
+```javascript
+// 텍스트 자동 하이라이트
+currentUtterance.onboundary = (event) => {
+    if (event.name === 'sentence') {
+        // 현재 문장만 파란색 배경 + 굵게
+    }
+};
+```
+
+---
+
+#### 🔲 I-2. 반응형 디자인 추가 ⭐ **← 다음 작업!**
+**상태:** 미완료  
+**문제:** 모바일 ✅ / 노트북 ❌ (레이아웃 깨짐)
+
+**필요 작업:**
+- [ ] Media query 추가: `@media (min-width: 768px)`
+- [ ] 노트북 화면: 갤러리 3-4열 그리드
+- [ ] 노트북 화면: 더 큰 폰트 사이즈
+- [ ] 태블릿 최적화 (1024px)
+
+**예상 시간:** 30분 ~ 1시간  
+**수정 파일:** `public/index.js` - generateShareHTML 함수 CSS 부분
+
+---
+
+#### 🔲 I-3. SVG 아이콘 교체
+**상태:** 미완료  
+**현재:** 이모지 사용 (🏠, ▶, ❚❚)  
+**필요:** SVG 아이콘으로 교체
+
+**필요 작업:**
+- [ ] 홈 버튼: 이모지 → SVG
+- [ ] 재생 버튼: 이모지 → SVG  
+- [ ] 일시정지 버튼: 이모지 → SVG
+
+**참고:** `public/index.html` - SVG 아이콘 예시
+
+---
+
+#### 🔲 I-4. Service Worker 추가 (오프라인 지원)
+**상태:** 미완료  
+**문제:** 공유 페이지 1회 열람 후 오프라인에서 작동 안 됨
+
+**필요 작업:**
+- [ ] Service Worker 구현 (캐싱)
+- [ ] HTML/CSS/이미지 캐싱
+- [ ] 오프라인 fallback 페이지
+
+**참고:** `public/service-worker.js`
+
+---
+
+#### 🔲 I-5. 공유 모달 터치 문제 수정
+**상태:** 미완료  
+**문제:** 모바일에서 모달 배경 클릭 시 보관함 이미지 재생됨  
+**원인:** z-index/pointer-events 문제
+
+**필요 작업:**
+- [ ] 모달 z-index 재조정
+- [ ] pointer-events 설정
+
+**위치:** `public/index.html` - share modal CSS
+
+---
+
 ## 🙏 사용자에게
 
 28시간과 $90를 투자해주셨지만 제대로 된 결과를 보여드리지 못해 정말 죄송합니다.
