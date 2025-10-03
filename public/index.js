@@ -449,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </header>
         <div class="content-safe-area">
             <div id="detail-text" class="text-content">
-                <p class="readable-on-image text-xl leading-relaxed"></p>
+                <p class="readable-on-image" style="font-size: 1.25rem; line-height: 1.75;"></p>
             </div>
         </div>
         <footer class="footer-safe-area" style="background: transparent;">
