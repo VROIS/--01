@@ -17,502 +17,362 @@ interface SharePageData {
 export function generateShareHtml(data: SharePageData): string {
   const { title, items, createdAt, location, includeAudio } = data;
   
-  // 최대 20개 아이템으로 제한 (2*10 그리드)
+  // 최대 20개 아이템으로 제한
   const limitedItems = items.slice(0, 20);
   
-  // 갤러리 아이템 생성
+  // 갤러리 아이템 생성 (2열 그리드)
   const galleryItemsHtml = limitedItems.map((item, index) => `
-    <div class="gallery-item" data-id="${item.id}">
-      <img src="data:image/jpeg;base64,${item.imageBase64}" alt="${item.title}">
-      <p>${item.title}</p>
+    <div class="gallery-item" data-id="${index}">
+      <img src="data:image/jpeg;base64,${item.imageBase64}" alt="가이드 ${index + 1}" loading="lazy">
+      <p>가이드 ${index + 1}</p>
     </div>
   `).join('');
 
-  // 데이터 스토리지 생성
-  const dataStorageHtml = limitedItems.map(item => `
-    <div data-id="${item.id}">${item.description}</div>
-  `).join('');
+  // 데이터 JSON (앱과 동일한 구조)
+  const dataJSON = JSON.stringify(limitedItems.map((item, index) => ({
+    id: index,
+    imageDataUrl: `data:image/jpeg;base64,${item.imageBase64}`,
+    description: item.description
+  })));
+
+  // 앱 origin (현재 호스트 기반)
+  const appOrigin = '/';
 
   return `<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} - 내손가이드</title>
-  <meta property="og:title" content="${title} - 내손가이드">
-  <meta property="og:description" content="${limitedItems[0]?.description?.substring(0, 100) || '친구가 공유한 여행 가이드'}">
-  <meta property="og:type" content="website">
-  <meta name="created-at" content="${createdAt}">
-  ${location ? `<meta name="location" content="${location}">` : ''}
-  
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      margin: 0;
-      background-color: #f0f2f5;
-      padding-bottom: 100px; /* 하단 고정 버튼 공간 확보 */
-    }
-    
-    .hidden { display: none !important; }
-    
-    .header {
-      padding: 20px;
-      background-color: #343a40;
-      color: #fff;
-      text-align: center;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    
-    .header h1 {
-      margin: 0;
-      font-size: 28px;
-    }
-    
-    .meta-info {
-      margin-top: 10px;
-      font-size: 14px;
-      opacity: 0.8;
-    }
-    
-    .voice-selector {
-      margin-top: 15px;
-    }
-    
-    .voice-selector label {
-      margin-right: 10px;
-    }
-    
-    .voice-selector select {
-      padding: 5px;
-      border-radius: 5px;
-    }
-    
-    #gallery-view {
-      padding: 15px;
-      max-height: calc(100vh - 200px);
-      overflow-y: auto;
-    }
-    
-    /* 2*10 그리드 최적화 */
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr); /* 모바일에서 2열 고정 */
-      gap: 15px;
-      max-width: 500px;
-      margin: 0 auto;
-    }
-    
-    .gallery-item {
-      cursor: pointer;
-      text-align: center;
-      transition: transform 0.2s;
-    }
-    
-    .gallery-item:hover {
-      transform: scale(1.02);
-    }
-    
-    .gallery-item img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,.1);
-      background-color: #e9e9e9;
-    }
-    
-    .gallery-item p {
-      margin: 8px 0 0;
-      font-weight: 700;
-      color: #333;
-      font-size: 14px;
-      line-height: 1.3;
-    }
-    
-    /* 상세뷰 */
-    #detail-view {
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
-      display: flex;
-      flex-direction: column;
-      min-height: calc(100vh - 100px);
-      box-sizing: border-box;
-    }
-    
-    .detail-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-shrink: 0;
-    }
-    
-    .back-button {
-      padding: 10px 15px;
-      background-color: #6c757d;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    
-    #detail-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: #1c2b33;
-      margin: 0;
-      text-align: right;
-      flex-grow: 1;
-    }
-    
-    .detail-image-container {
-      flex-grow: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-    
-    .detail-image {
-      width: 100%;
-      max-width: 500px;
-      max-height: 70vh;
-      object-fit: contain;
-      display: block;
-      border-radius: 12px;
-      box-shadow: 0 5px 20px rgba(0,0,0,.15);
-    }
-    
-    .controls {
-      text-align: center;
-      margin-bottom: 20px;
-      flex-shrink: 0;
-    }
-    
-    .audio-button, .text-toggle-button {
-      padding: 12px 25px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 18px;
-      font-weight: 700;
-      margin: 0 10px;
-    }
-    
-    .audio-button {
-      background-color: #007bff;
-      color: #fff;
-    }
-    
-    .audio-button.playing {
-      background-color: #dc3545;
-    }
-    
-    .text-toggle-button {
-      background-color: #f0f2f5;
-      color: #333;
-      border: 1px solid #ccc;
-    }
-    
-    #detail-text {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      line-height: 1.8;
-      margin-top: 20px;
-      max-height: 40vh;
-      overflow-y: auto;
-    }
-    
-    /* 하단 고정 네비게이션 */
-    .fixed-bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 80px;
-      background-color: #fff;
-      border-top: 1px solid #ddd;
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      box-shadow: 0 -2px 10px rgba(0,0,0,.1);
-      z-index: 50;
-    }
-    
-    .nav-button {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 8px 16px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      color: #666;
-      transition: color 0.2s;
-    }
-    
-    .nav-button:hover {
-      color: #007bff;
-    }
-    
-    .nav-icon {
-      font-size: 24px;
-      margin-bottom: 4px;
-    }
-    
-    /* 모바일 최적화 */
-    @media (max-width: 480px) {
-      .gallery-grid {
-        gap: 10px;
-        padding: 0 10px;
-      }
-      
-      .gallery-item img {
-        height: 120px;
-      }
-      
-      .gallery-item p {
-        font-size: 12px;
-      }
-      
-      .header h1 {
-        font-size: 24px;
-      }
-      
-      #detail-title {
-        font-size: 20px;
-      }
-    }
-  </style>
-</head>
-
-<body>
-  <!-- 헤더 -->
-  <div class="header">
-    <h1>${title}</h1>
-    <div class="meta-info">
-      ${location ? `📍 ${location} • ` : ''}📅 ${new Date(createdAt).toLocaleDateString('ko-KR')}
-    </div>
-    ${includeAudio ? `
-    <div class="voice-selector">
-      <label for="voice-select">목소리 선택:</label>
-      <select id="voice-select"></select>
-    </div>
-    ` : ''}
-  </div>
-
-  <!-- 갤러리 뷰 -->
-  <div id="gallery-view">
-    <div class="gallery-grid">
-      ${galleryItemsHtml}
-    </div>
-  </div>
-
-  <!-- 상세 뷰 -->
-  <div id="detail-view" class="hidden">
-    <div class="detail-header">
-      <button class="back-button">&larr; 목록으로</button>
-      <h2 id="detail-title"></h2>
-    </div>
-    <div class="detail-image-container">
-      <img id="detail-image" src="">
-    </div>
-    <div class="controls">
-      ${includeAudio ? '<button id="detail-audio-button" class="audio-button">▶ 재생</button>' : ''}
-      <button id="detail-text-toggle" class="text-toggle-button">해설 보기</button>
-    </div>
-    <div id="detail-text" class="hidden"></div>
-  </div>
-
-  <!-- 데이터 스토리지 -->
-  <div id="data-storage" class="hidden">
-    ${dataStorageHtml}
-  </div>
-
-  <!-- 하단 고정 네비게이션 -->
-  <div class="fixed-bottom-nav">
-    <button class="nav-button" onclick="goToApp()">
-      <div class="nav-icon">🏠</div>
-      <div>앱으로 가기</div>
-    </button>
-    <button class="nav-button" onclick="shareAgain()">
-      <div class="nav-icon">📤</div>
-      <div>공유하기</div>
-    </button>
-    <button class="nav-button" onclick="showInfo()">
-      <div class="nav-icon">ℹ️</div>
-      <div>정보</div>
-    </button>
-  </div>
-
-  <script>
-    // 데이터 초기화
-    const galleryView = document.getElementById("gallery-view");
-    const detailView = document.getElementById("detail-view");
-    const header = document.querySelector(".header");
-    const works = [];
-
-    // 작품 데이터 수집
-    document.querySelectorAll("#data-storage > div").forEach(div => {
-      const id = div.dataset.id;
-      const galleryItem = document.querySelector(\`[data-id="\${id}"]\`);
-      if (galleryItem) {
-        works.push({
-          id: id,
-          title: galleryItem.querySelector("p").textContent,
-          imgSrc: galleryItem.querySelector("img").src,
-          text: div.innerHTML
-        });
-      }
-    });
-
-    ${includeAudio ? `
-    // TTS 기능
-    const synth = window.speechSynthesis;
-    const voiceSelect = document.getElementById("voice-select");
-    let voices = [];
-
-    function populateVoiceList() {
-      voices = synth.getVoices().filter(voice => voice.lang.startsWith("ko"));
-      const selectedVoice = voiceSelect.value;
-      voiceSelect.innerHTML = "";
-      
-      voices.forEach(voice => {
-        const option = document.createElement("option");
-        option.textContent = voice.name + " (" + voice.lang + ")";
-        option.value = voice.name;
-        voiceSelect.appendChild(option);
-      });
-      
-      voiceSelect.value = selectedVoice;
-    }
-
-    function stopAudio() {
-      if (synth.speaking) {
-        synth.cancel();
-      }
-    }
-
-    function playAudio(text) {
-      stopAudio();
-      
-      const utterance = new SpeechSynthesisUtterance(text.replace(/<br\\s*\\/?>/gi, " "));
-      const selectedVoice = voices.find(voice => voice.name === voiceSelect.value);
-      
-      utterance.voice = selectedVoice;
-      utterance.lang = "ko-KR";
-      utterance.rate = 1.0;
-      
-      const audioButton = document.getElementById("detail-audio-button");
-      
-      utterance.onstart = () => {
-        audioButton.textContent = "❚❚ 일시정지";
-        audioButton.classList.add("playing");
-      };
-      
-      utterance.onend = () => {
-        audioButton.textContent = "▶ 다시듣기";
-        audioButton.classList.remove("playing");
-      };
-      
-      synth.speak(utterance);
-    }
-
-    // 음성 목록 초기화
-    populateVoiceList();
-    if (synth.onvoiceschanged !== undefined) {
-      synth.onvoiceschanged = populateVoiceList;
-    }
-    ` : ''}
-
-    // 갤러리 아이템 클릭 이벤트
-    document.querySelectorAll(".gallery-item").forEach(item => {
-      item.addEventListener("click", () => {
-        const work = works.find(w => w.id === item.dataset.id);
-        
-        document.getElementById("detail-title").textContent = work.title;
-        document.getElementById("detail-image").src = work.imgSrc;
-        document.getElementById("detail-text").innerHTML = work.text;
-        document.getElementById("detail-text").classList.add("hidden");
-        document.getElementById("detail-text-toggle").textContent = "해설 보기";
-        
-        galleryView.classList.add("hidden");
-        header.classList.add("hidden");
-        detailView.classList.remove("hidden");
-        
-        ${includeAudio ? 'playAudio(work.text);' : ''}
-      });
-    });
-
-    // 뒤로가기 버튼
-    document.querySelector(".back-button").addEventListener("click", () => {
-      ${includeAudio ? 'stopAudio();' : ''}
-      detailView.classList.add("hidden");
-      header.classList.remove("hidden");
-      galleryView.classList.remove("hidden");
-    });
-
-    ${includeAudio ? `
-    // 오디오 버튼
-    document.getElementById("detail-audio-button")?.addEventListener("click", () => {
-      const currentWork = works.find(w => w.title === document.getElementById("detail-title").textContent);
-      if (currentWork) {
-        if (synth.speaking) {
-          stopAudio();
-        } else {
-          playAudio(currentWork.text);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>${title} - 손안에 가이드</title>
+    <meta property="og:title" content="${title} - 내손가이드">
+    <meta property="og:description" content="${limitedItems[0]?.description?.substring(0, 100) || '친구가 공유한 여행 가이드'}">
+    <meta property="og:type" content="website">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            background-color: #f0f2f5;
+            overflow-x: hidden;
         }
-      }
-    });
-    ` : ''}
-
-    // 텍스트 토글 버튼
-    document.getElementById("detail-text-toggle").addEventListener("click", () => {
-      const textDiv = document.getElementById("detail-text");
-      const toggleButton = document.getElementById("detail-text-toggle");
-      
-      if (textDiv.classList.contains("hidden")) {
-        textDiv.classList.remove("hidden");
-        toggleButton.textContent = "해설 숨기기";
-      } else {
-        textDiv.classList.add("hidden");
-        toggleButton.textContent = "해설 보기";
-      }
-    });
-
-    // 하단 네비게이션 기능들
-    function goToApp() {
-      const currentHost = window.location.host;
-      window.open(\`https://\${currentHost}\`, '_blank');
-    }
-
-    function shareAgain() {
-      if (navigator.share) {
-        navigator.share({
-          title: '${title} - 내손가이드',
-          text: '친구가 공유한 여행 가이드를 확인해보세요!',
-          url: window.location.href
+        .hidden { display: none !important; }
+        
+        /* 앱과 동일한 전체 화면 배경 */
+        .full-screen-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 1;
+        }
+        
+        /* UI 오버레이 레이어 */
+        .ui-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 3구역 레이아웃 */
+        .header-safe-area {
+            width: 100%;
+            height: 80px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 1rem;
+            position: relative;
+        }
+        .content-safe-area {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            background: transparent;
+        }
+        .footer-safe-area {
+            width: 100%;
+            height: 100px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 1rem;
+        }
+        
+        /* 텍스트 오버레이 */
+        .text-content {
+            padding: 2rem 1.5rem;
+            line-height: 1.8;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+        .readable-on-image {
+            color: white;
+            text-shadow: 0px 2px 8px rgba(0, 0, 0, 0.95);
+        }
+        
+        /* 버튼 공통 스타일 (앱과 동일) */
+        .interactive-btn {
+            transition: transform 0.1s ease;
+            cursor: pointer;
+            border: none;
+        }
+        .interactive-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* 헤더 (메타데이터) */
+        .header {
+            padding: 20px;
+            background-color: #343a40;
+            color: #fff;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 15px 0;
+            font-size: 28px;
+        }
+        .metadata {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .metadata p {
+            margin: 5px 0;
+        }
+        
+        /* 갤러리 뷰 */
+        #gallery-view {
+            padding: 15px;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .gallery-item {
+            cursor: pointer;
+            text-align: center;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            background-color: #e9e9e9;
+        }
+        .gallery-item:hover img {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+        .gallery-item p {
+            margin: 8px 0 0;
+            font-weight: 700;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        /* 갤러리 하단 버튼 */
+        .gallery-footer {
+            text-align: center;
+            padding: 30px 15px;
+        }
+        .app-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #4285F4;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+            transition: all 0.3s;
+        }
+        .app-button:hover {
+            background: #3367D6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(66, 133, 244, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 (메타데이터) -->
+    <div class="header">
+        <h1>${title}</h1>
+        <div class="metadata">
+            <p>👤 공유된 가이드</p>
+            ${location ? `<p>📍 ${location}</p>` : ''}
+            <p>📅 ${new Date(createdAt).toLocaleDateString('ko-KR')}</p>
+        </div>
+    </div>
+    
+    <!-- 갤러리 뷰 -->
+    <div id="gallery-view">
+        <div class="gallery-grid">
+            ${galleryItemsHtml}
+        </div>
+        <div class="gallery-footer">
+            <a href="${appOrigin}" class="app-button">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                손안에 가이드 시작하기
+            </a>
+        </div>
+    </div>
+    
+    <!-- 상세 뷰 (앱과 100% 동일한 구조) -->
+    <div id="detail-view" class="ui-layer hidden">
+        <img id="detail-bg" src="" class="full-screen-bg">
+        <header class="header-safe-area">
+            <button id="detail-back" class="interactive-btn" style="width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: absolute; top: 50%; left: 1rem; transform: translateY(-50%);" aria-label="뒤로가기">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 1.5rem; height: 1.5rem;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+            </button>
+        </header>
+        <div class="content-safe-area">
+            <div id="detail-text" class="text-content hidden">
+                <p id="detail-description" class="readable-on-image" style="font-size: 1.25rem; line-height: 1.75rem;"></p>
+            </div>
+        </div>
+        <footer id="detail-footer" class="footer-safe-area hidden" style="background: transparent;">
+            ${includeAudio ? `
+            <button id="detail-audio" class="interactive-btn" style="width: 4rem; height: 4rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);" aria-label="오디오 재생">
+                <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" style="width: 2rem; height: 2rem;" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.648c1.295.748 1.295 2.538 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+                </svg>
+                <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" style="width: 2rem; height: 2rem; display: none;" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z" clip-rule="evenodd" />
+                </svg>
+            </button>
+            ` : ''}
+            <a href="${appOrigin}" class="interactive-btn" style="width: 4rem; height: 4rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); text-decoration: none;" aria-label="앱으로 이동">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 2rem; height: 2rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </a>
+        </footer>
+    </div>
+    
+    <!-- 데이터 저장 -->
+    <script id="app-data" type="application/json">${dataJSON}</script>
+    
+    <script>
+        // 데이터 로드
+        const appData = JSON.parse(document.getElementById('app-data').textContent);
+        const galleryView = document.getElementById('gallery-view');
+        const detailView = document.getElementById('detail-view');
+        const header = document.querySelector('.header');
+        
+        ${includeAudio ? `
+        // Web Speech API
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let currentUtterance = null;
+        
+        function populateVoiceList() {
+            voices = synth.getVoices().filter(v => v.lang.startsWith('ko'));
+        }
+        
+        function stopAudio() {
+            if (synth.speaking) synth.cancel();
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            if (playIcon) playIcon.style.display = 'block';
+            if (pauseIcon) pauseIcon.style.display = 'none';
+        }
+        
+        function playAudio(text) {
+            stopAudio();
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            const koVoice = voices.find(v => v.lang.startsWith('ko'));
+            if (koVoice) currentUtterance.voice = koVoice;
+            currentUtterance.lang = 'ko-KR';
+            currentUtterance.rate = 1.0;
+            
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            
+            currentUtterance.onstart = () => {
+                if (playIcon) playIcon.style.display = 'none';
+                if (pauseIcon) pauseIcon.style.display = 'block';
+            };
+            currentUtterance.onend = () => {
+                if (playIcon) playIcon.style.display = 'block';
+                if (pauseIcon) pauseIcon.style.display = 'none';
+            };
+            synth.speak(currentUtterance);
+        }
+        
+        populateVoiceList();
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = populateVoiceList;
+        }
+        ` : ''}
+        
+        // 갤러리 아이템 클릭 (앱과 100% 동일한 로직)
+        document.querySelectorAll('.gallery-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const itemData = appData[parseInt(item.dataset.id)];
+                
+                // 배경 이미지 설정
+                document.getElementById('detail-bg').src = itemData.imageDataUrl;
+                
+                // 텍스트 설정
+                document.getElementById('detail-description').textContent = itemData.description;
+                
+                // UI 표시
+                galleryView.classList.add('hidden');
+                header.classList.add('hidden');
+                detailView.classList.remove('hidden');
+                document.getElementById('detail-text').classList.remove('hidden');
+                document.getElementById('detail-footer').classList.remove('hidden');
+                
+                ${includeAudio ? `
+                // 음성 자동 재생
+                playAudio(itemData.description);
+                ` : ''}
+            });
         });
-      } else {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-          alert('링크가 클립보드에 복사되었습니다!');
+        
+        // 뒤로 가기
+        document.getElementById('detail-back').addEventListener('click', () => {
+            ${includeAudio ? 'stopAudio();' : ''}
+            detailView.classList.add('hidden');
+            document.getElementById('detail-text').classList.add('hidden');
+            document.getElementById('detail-footer').classList.add('hidden');
+            header.classList.remove('hidden');
+            galleryView.classList.remove('hidden');
         });
-      }
-    }
-
-    function showInfo() {
-      alert(\`📍 생성 위치: \${${location ? `"${location}"` : '"위치 정보 없음"'}}\\n📅 생성 일시: \${new Date("${createdAt}").toLocaleString('ko-KR')}\\n📊 콘텐츠 수: \${works.length}개\`);
-    }
-
-    // 초기 화면 설정
-    galleryView.classList.remove("hidden");
-  </script>
+        
+        ${includeAudio ? `
+        // 음성 재생/정지
+        const audioBtn = document.getElementById('detail-audio');
+        if (audioBtn) {
+            audioBtn.addEventListener('click', () => {
+                if (synth.speaking) {
+                    stopAudio();
+                } else {
+                    const text = document.getElementById('detail-description').textContent;
+                    playAudio(text);
+                }
+            });
+        }
+        ` : ''}
+    </script>
 </body>
 </html>`;
 }
