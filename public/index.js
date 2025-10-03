@@ -437,32 +437,32 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     </div>
     
-    <!-- 상세 뷰 (앱과 동일한 구조) -->
+    <!-- 상세 뷰 (앱과 100% 동일한 구조) -->
     <div id="detail-view" class="ui-layer hidden">
         <img id="detail-bg" src="" class="full-screen-bg">
         <header class="header-safe-area">
-            <button id="detail-back" class="interactive-btn" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 10px 40px rgba(0,0,0,0.3); position: absolute; top: 50%; left: 1rem; transform: translateY(-50%);" aria-label="뒤로가기">
-                <svg xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <button id="detail-back" class="interactive-btn" style="width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: absolute; top: 50%; left: 1rem; transform: translateY(-50%);" aria-label="뒤로가기">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 1.5rem; height: 1.5rem;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                 </svg>
             </button>
         </header>
         <div class="content-safe-area">
-            <div id="detail-text" class="text-content">
-                <p class="readable-on-image" style="font-size: 1.25rem; line-height: 1.75;"></p>
+            <div id="detail-text" class="text-content hidden">
+                <p id="detail-description" class="readable-on-image" style="font-size: 1.25rem; line-height: 1.75rem;"></p>
             </div>
         </div>
-        <footer class="footer-safe-area" style="background: transparent;">
-            <button id="detail-audio" class="interactive-btn" style="width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 10px 40px rgba(0,0,0,0.3);" aria-label="오디오 재생">
-                <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" style="width: 32px; height: 32px;" viewBox="0 0 24 24" fill="currentColor">
+        <footer id="detail-footer" class="footer-safe-area hidden" style="background: transparent;">
+            <button id="detail-audio" class="interactive-btn" style="width: 4rem; height: 4rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);" aria-label="오디오 재생">
+                <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" style="width: 2rem; height: 2rem;" viewBox="0 0 24 24" fill="currentColor">
                     <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.648c1.295.748 1.295 2.538 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
                 </svg>
-                <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" style="width: 32px; height: 32px; display: none;" viewBox="0 0 24 24" fill="currentColor">
+                <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" style="width: 2rem; height: 2rem; display: none;" viewBox="0 0 24 24" fill="currentColor">
                     <path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z" clip-rule="evenodd" />
                 </svg>
             </button>
-            <a href="${appOrigin}" class="interactive-btn" style="width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 10px 40px rgba(0,0,0,0.3); text-decoration: none;" aria-label="앱으로 이동">
-                <svg xmlns="http://www.w3.org/2000/svg" style="width: 32px; height: 32px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <a href="${appOrigin}" class="interactive-btn" style="width: 4rem; height: 4rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); text-decoration: none;" aria-label="앱으로 이동">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 2rem; height: 2rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
             </a>
@@ -523,18 +523,23 @@ document.addEventListener('DOMContentLoaded', () => {
             synth.onvoiceschanged = populateVoiceList;
         }
         
-        // 갤러리 아이템 클릭
+        // 갤러리 아이템 클릭 (앱과 100% 동일한 로직)
         document.querySelectorAll('.gallery-item').forEach(item => {
             item.addEventListener('click', () => {
                 const itemData = appData[parseInt(item.dataset.id)];
                 
-                // 상세 뷰 표시
+                // 배경 이미지 설정
                 document.getElementById('detail-bg').src = itemData.imageDataUrl;
-                document.getElementById('detail-text').querySelector('p').textContent = itemData.description;
                 
+                // 텍스트 설정
+                document.getElementById('detail-description').textContent = itemData.description;
+                
+                // UI 표시
                 galleryView.classList.add('hidden');
                 header.classList.add('hidden');
                 detailView.classList.remove('hidden');
+                document.getElementById('detail-text').classList.remove('hidden');
+                document.getElementById('detail-footer').classList.remove('hidden');
                 
                 // 음성 자동 재생
                 playAudio(itemData.description);
@@ -545,6 +550,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('detail-back').addEventListener('click', () => {
             stopAudio();
             detailView.classList.add('hidden');
+            document.getElementById('detail-text').classList.add('hidden');
+            document.getElementById('detail-footer').classList.add('hidden');
             header.classList.remove('hidden');
             galleryView.classList.remove('hidden');
         });
@@ -554,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (synth.speaking) {
                 stopAudio();
             } else {
-                const text = document.getElementById('detail-text').querySelector('p').textContent;
+                const text = document.getElementById('detail-description').textContent;
                 playAudio(text);
             }
         });
