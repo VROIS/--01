@@ -512,14 +512,19 @@ document.addEventListener('DOMContentLoaded', () => {
         function playAudio(text) {
             stopAudio();
             
+            // ⚠️ 오프라인 최적화 - <br> 태그를 공백으로 치환 (현장 테스트 완료)
+            const cleanText = text.replace(/<br\s*\/?>/gi, ' ');
+            
             // 문장 분리 및 하이라이트 준비
-            const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+            const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
             const textElement = document.getElementById('detail-description');
             
             // 원본 텍스트 저장
-            const originalText = text;
+            const originalText = cleanText;
             
-            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance = new SpeechSynthesisUtterance(cleanText);
+            
+            // ⚠️ 오프라인 최적화 - voice 명시적 설정 (현장 테스트 완료)
             const koVoice = voices.find(v => v.lang.startsWith('ko'));
             if (koVoice) currentUtterance.voice = koVoice;
             currentUtterance.lang = 'ko-KR';
