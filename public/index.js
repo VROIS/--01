@@ -270,6 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             height: 100vh;
             object-fit: cover;
             z-index: 1;
+            pointer-events: none;
         }
         
         /* UI 오버레이 레이어 */
