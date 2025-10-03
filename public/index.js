@@ -461,6 +461,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z" clip-rule="evenodd" />
                 </svg>
             </button>
+            <button id="text-toggle" class="interactive-btn" style="width: 4rem; height: 4rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);" aria-label="해설 읽기">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 2rem; height: 2rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </button>
             <a href="${appOrigin}" class="interactive-btn" style="width: 4rem; height: 4rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); text-decoration: none;" aria-label="앱으로 이동">
                 <svg xmlns="http://www.w3.org/2000/svg" style="width: 2rem; height: 2rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -538,8 +543,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 galleryView.classList.add('hidden');
                 header.classList.add('hidden');
                 detailView.classList.remove('hidden');
-                document.getElementById('detail-text').classList.remove('hidden');
                 document.getElementById('detail-footer').classList.remove('hidden');
+                
+                // 텍스트는 숨김 상태로 시작 (앱과 동일)
+                document.getElementById('detail-text').classList.add('hidden');
                 
                 // 음성 자동 재생
                 playAudio(itemData.description);
@@ -554,6 +561,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('detail-footer').classList.add('hidden');
             header.classList.remove('hidden');
             galleryView.classList.remove('hidden');
+        });
+        
+        // 텍스트 토글 버튼 (앱과 동일한 로직)
+        document.getElementById('text-toggle')?.addEventListener('click', () => {
+            document.getElementById('detail-text').classList.toggle('hidden');
         });
         
         // 음성 재생/정지
