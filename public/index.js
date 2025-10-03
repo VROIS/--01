@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * - 반응형: 모바일/노트북 지원
      */
     function generateShareHTML(title, sender, location, date, guideItems, appOrigin) {
-        // 갤러리 그리드 아이템 생성
+        // 갤러리 그리드 아이템 생성 (2열)
         const galleryItemsHTML = guideItems.map((item, index) => `
             <div class="gallery-item" data-id="${index}">
                 <img src="${item.imageDataUrl || ''}" alt="가이드 ${index + 1}" loading="lazy">
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `).join('');
 
-        // 데이터 저장소 (숨김) - 이미지 + 텍스트
+        // 데이터 JSON (이미지 + 설명만, title 없음!)
         const dataJSON = JSON.stringify(guideItems.map((item, index) => ({
             id: index,
             imageDataUrl: item.imageDataUrl || '',
@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         .hidden { display: none !important; }
         
-        /* 전체 화면 배경 이미지 (앱과 동일) */
+        /* 앱과 동일한 전체 화면 배경 */
         .full-screen-bg {
             position: fixed;
             top: 0;
@@ -277,13 +277,14 @@ document.addEventListener('DOMContentLoaded', () => {
             flex-direction: column;
         }
         
-        /* 안전 영역 */
+        /* 3구역 레이아웃 */
         .header-safe-area {
             width: 100%;
             height: 80px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
+            justify-content: center;
             padding: 0 1rem;
             position: relative;
         }
@@ -313,6 +314,16 @@ document.addEventListener('DOMContentLoaded', () => {
         .readable-on-image {
             color: white;
             text-shadow: 0px 2px 8px rgba(0, 0, 0, 0.95);
+        }
+        
+        /* 버튼 공통 스타일 (앱과 동일) */
+        .interactive-btn {
+            transition: transform 0.1s ease;
+            cursor: pointer;
+            border: none;
+        }
+        .interactive-btn:active {
+            transform: scale(0.95);
         }
         
         /* 헤더 (메타데이터) */
@@ -373,7 +384,9 @@ document.addEventListener('DOMContentLoaded', () => {
             padding: 30px 15px;
         }
         .app-button {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             background: #4285F4;
             color: white;
             padding: 16px 32px;
@@ -388,104 +401,6 @@ document.addEventListener('DOMContentLoaded', () => {
             background: #3367D6;
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(66, 133, 244, 0.4);
-        }
-        
-        /* 상세 뷰 */
-        #detail-view {
-            padding: 20px;
-            max-width: 800px;
-            margin: auto;
-            display: flex;
-            flex-direction: column;
-            min-height: calc(100vh - 40px);
-            box-sizing: border-box;
-        }
-        .detail-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-shrink: 0;
-        }
-        .back-button {
-            padding: 10px 15px;
-            background-color: #6c757d;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .home-button {
-            padding: 10px 15px;
-            background-color: #4285F4;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        #detail-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1c2b33;
-            margin: 0;
-            flex-grow: 1;
-            text-align: center;
-        }
-        .detail-image-container {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .detail-image {
-            width: 100%;
-            max-width: 500px;
-            max-height: 100%;
-            object-fit: contain;
-            display: block;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-        }
-        .controls {
-            text-align: center;
-            margin-bottom: 20px;
-            flex-shrink: 0;
-        }
-        .audio-button, .text-toggle-button {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: 700;
-            margin: 0 10px;
-        }
-        .audio-button {
-            background-color: #007bff;
-            color: #fff;
-        }
-        .audio-button.playing {
-            background-color: #dc3545;
-        }
-        .text-toggle-button {
-            background-color: #f0f2f5;
-            color: #333;
-            border: 1px solid #ccc;
-        }
-        #detail-text {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            line-height: 1.8;
-            margin-top: 20px;
-            max-height: 40vh;
-            overflow-y: auto;
         }
     </style>
 </head>
@@ -506,53 +421,61 @@ document.addEventListener('DOMContentLoaded', () => {
             ${galleryItemsHTML}
         </div>
         <div class="gallery-footer">
-            <a href="${appOrigin}" class="app-button">🏠 손안에 가이드 시작하기</a>
+            <a href="${appOrigin}" class="app-button">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                손안에 가이드 시작하기
+            </a>
         </div>
     </div>
     
-    <!-- 상세 뷰 (숨김) -->
-    <div id="detail-view" class="hidden">
-        <div class="detail-header">
-            <button class="back-button">&larr; 목록으로</button>
-            <h2 id="detail-title"></h2>
-            <a href="${appOrigin}" class="home-button" title="앱으로 이동">🏠</a>
+    <!-- 상세 뷰 (앱과 동일한 구조) -->
+    <div id="detail-view" class="ui-layer hidden">
+        <img id="detail-bg" src="" class="full-screen-bg">
+        <header class="header-safe-area">
+            <button id="detail-back" class="interactive-btn" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 10px 40px rgba(0,0,0,0.3); position: absolute; top: 50%; left: 1rem; transform: translateY(-50%);" aria-label="뒤로가기">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+            </button>
+        </header>
+        <div class="content-safe-area">
+            <div id="detail-text" class="text-content">
+                <p class="readable-on-image text-xl leading-relaxed"></p>
+            </div>
         </div>
-        <div class="detail-image-container">
-            <img id="detail-image" src="">
-        </div>
-        <div class="controls">
-            <button id="detail-audio-button" class="audio-button">▶ 재생</button>
-            <button id="detail-text-toggle" class="text-toggle-button">해설 보기</button>
-        </div>
-        <div id="detail-text" class="hidden"></div>
+        <footer class="footer-safe-area" style="background: transparent;">
+            <button id="detail-audio" class="interactive-btn" style="width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 10px 40px rgba(0,0,0,0.3);" aria-label="오디오 재생">
+                <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" style="width: 32px; height: 32px;" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.648c1.295.748 1.295 2.538 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+                </svg>
+                <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" style="width: 32px; height: 32px; display: none;" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z" clip-rule="evenodd" />
+                </svg>
+            </button>
+            <a href="${appOrigin}" class="interactive-btn" style="width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); color: #4285F4; box-shadow: 0 10px 40px rgba(0,0,0,0.3); text-decoration: none;" aria-label="앱으로 이동">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 32px; height: 32px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </a>
+        </footer>
     </div>
     
-    <!-- 데이터 저장소 (숨김) -->
-    <div id="data-storage" class="hidden">
-        ${dataStorageHTML}
-    </div>
+    <!-- 데이터 저장 -->
+    <script id="app-data" type="application/json">${dataJSON}</script>
     
     <script>
+        // 데이터 로드
+        const appData = JSON.parse(document.getElementById('app-data').textContent);
         const galleryView = document.getElementById('gallery-view');
         const detailView = document.getElementById('detail-view');
         const header = document.querySelector('.header');
-        const works = [];
-        
-        // 데이터 로드
-        document.querySelectorAll('#data-storage > div').forEach(el => {
-            const id = el.dataset.id;
-            const galleryItem = document.querySelector('.gallery-item[data-id="' + id + '"]');
-            works.push({
-                id: id,
-                title: galleryItem.querySelector('p').textContent,
-                imgSrc: galleryItem.querySelector('img').src,
-                text: el.innerHTML
-            });
-        });
         
         // Web Speech API
         const synth = window.speechSynthesis;
         let voices = [];
+        let currentUtterance = null;
         
         function populateVoiceList() {
             voices = synth.getVoices().filter(v => v.lang.startsWith('ko'));
@@ -560,26 +483,32 @@ document.addEventListener('DOMContentLoaded', () => {
         
         function stopAudio() {
             if (synth.speaking) synth.cancel();
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
         }
         
         function playAudio(text) {
             stopAudio();
-            const utterance = new SpeechSynthesisUtterance(text.replace(/<br\\s*\\/?>/gi, ' '));
+            currentUtterance = new SpeechSynthesisUtterance(text);
             const koVoice = voices.find(v => v.lang.startsWith('ko'));
-            if (koVoice) utterance.voice = koVoice;
-            utterance.lang = 'ko-KR';
-            utterance.rate = 1.0;
+            if (koVoice) currentUtterance.voice = koVoice;
+            currentUtterance.lang = 'ko-KR';
+            currentUtterance.rate = 1.0;
             
-            const audioBtn = document.getElementById('detail-audio-button');
-            utterance.onstart = () => {
-                audioBtn.textContent = '❚❚ 일시정지';
-                audioBtn.classList.add('playing');
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            
+            currentUtterance.onstart = () => {
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
             };
-            utterance.onend = () => {
-                audioBtn.textContent = '▶ 다시듣기';
-                audioBtn.classList.remove('playing');
+            currentUtterance.onend = () => {
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
             };
-            synth.speak(utterance);
+            synth.speak(currentUtterance);
         }
         
         populateVoiceList();
@@ -590,23 +519,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // 갤러리 아이템 클릭
         document.querySelectorAll('.gallery-item').forEach(item => {
             item.addEventListener('click', () => {
-                const work = works.find(w => w.id === item.dataset.id);
-                document.getElementById('detail-title').textContent = work.title;
-                document.getElementById('detail-image').src = work.imgSrc;
-                document.getElementById('detail-text').innerHTML = work.text;
-                document.getElementById('detail-text').classList.add('hidden');
-                document.getElementById('detail-text-toggle').textContent = '해설 보기';
+                const itemData = appData[parseInt(item.dataset.id)];
+                
+                // 상세 뷰 표시
+                document.getElementById('detail-bg').src = itemData.imageDataUrl;
+                document.getElementById('detail-text').querySelector('p').textContent = itemData.description;
                 
                 galleryView.classList.add('hidden');
                 header.classList.add('hidden');
                 detailView.classList.remove('hidden');
                 
-                playAudio(work.text);
+                // 음성 자동 재생
+                playAudio(itemData.description);
             });
         });
         
         // 뒤로 가기
-        document.querySelector('.back-button').addEventListener('click', () => {
+        document.getElementById('detail-back').addEventListener('click', () => {
             stopAudio();
             detailView.classList.add('hidden');
             header.classList.remove('hidden');
@@ -614,28 +543,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         // 음성 재생/정지
-        document.getElementById('detail-audio-button').addEventListener('click', () => {
-            const btn = document.getElementById('detail-audio-button');
+        document.getElementById('detail-audio').addEventListener('click', () => {
             if (synth.speaking) {
                 stopAudio();
-                btn.textContent = '▶ 다시듣기';
-                btn.classList.remove('playing');
             } else {
-                const work = works.find(w => w.title === document.getElementById('detail-title').textContent);
-                playAudio(work.text);
-            }
-        });
-        
-        // 해설 텍스트 토글
-        document.getElementById('detail-text-toggle').addEventListener('click', () => {
-            const textDiv = document.getElementById('detail-text');
-            const btn = document.getElementById('detail-text-toggle');
-            if (textDiv.classList.contains('hidden')) {
-                textDiv.classList.remove('hidden');
-                btn.textContent = '해설 숨기기';
-            } else {
-                textDiv.classList.add('hidden');
-                btn.textContent = '해설 보기';
+                const text = document.getElementById('detail-text').querySelector('p').textContent;
+                playAudio(text);
             }
         });
     </script>
