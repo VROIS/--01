@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         /* 헤더 (메타데이터) */
         .header {
             padding: 20px;
-            background-color: #343a40;
+            background-color: #4285F4; /* Gemini Blue - 앱 통일 */
             color: #fff;
             text-align: center;
         }
