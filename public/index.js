@@ -501,6 +501,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         function playAudio(text) {
             stopAudio();
+            
+            // 문장 분리 및 하이라이트 준비
+            const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+            const textElement = document.getElementById('detail-description');
+            
+            // 원본 텍스트 저장
+            const originalText = text;
+            
             currentUtterance = new SpeechSynthesisUtterance(text);
             const koVoice = voices.find(v => v.lang.startsWith('ko'));
             if (koVoice) currentUtterance.voice = koVoice;
@@ -510,14 +518,36 @@ document.addEventListener('DOMContentLoaded', () => {
             const playIcon = document.getElementById('play-icon');
             const pauseIcon = document.getElementById('pause-icon');
             
+            let currentSentenceIndex = 0;
+            
             currentUtterance.onstart = () => {
                 playIcon.style.display = 'none';
                 pauseIcon.style.display = 'block';
             };
+            
+            // 단어 경계마다 하이라이트
+            currentUtterance.onboundary = (event) => {
+                if (event.name === 'sentence') {
+                    // 현재 문장 하이라이트
+                    const highlightedHTML = sentences.map((sentence, idx) => {
+                        if (idx === currentSentenceIndex) {
+                            return '<span style="background-color: rgba(66, 133, 244, 0.3); font-weight: 600;">' + sentence + '</span>';
+                        }
+                        return sentence;
+                    }).join('');
+                    
+                    textElement.innerHTML = highlightedHTML;
+                    currentSentenceIndex++;
+                }
+            };
+            
             currentUtterance.onend = () => {
                 playIcon.style.display = 'block';
                 pauseIcon.style.display = 'none';
+                // 하이라이트 제거, 원본 복원
+                textElement.textContent = originalText;
             };
+            
             synth.speak(currentUtterance);
         }
         
