@@ -257,7 +257,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Set proper headers for caching and content type
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minute cache
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // 캐시 비활성화 (테스트용)
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.send(htmlContent);
       
     } catch (error) {
