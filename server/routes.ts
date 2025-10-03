@@ -255,6 +255,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         includeAudio: shareLink.includeAudio || false
       });
 
+      // 디버그: 생성된 HTML 일부 출력
+      console.log('🔍 [공유 HTML] Tailwind 포함 여부:', htmlContent.includes('cdn.tailwindcss.com'));
+      console.log('🔍 [공유 HTML] bg-black/60 클래스 포함 여부:', htmlContent.includes('bg-black/60'));
+      console.log('🔍 [공유 HTML] detail-view ID 포함 여부:', htmlContent.includes('id="detail-view"'));
+
       // Set proper headers for caching and content type
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // 캐시 비활성화 (테스트용)
