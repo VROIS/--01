@@ -282,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
             flex-direction: column;
         }
         .header-safe-area { 
+            position: relative;
             width: 100%; 
             height: 80px; 
             flex-shrink: 0; 
