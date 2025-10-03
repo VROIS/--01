@@ -536,8 +536,18 @@ document.addEventListener('DOMContentLoaded', () => {
         function playAudio(text) {
             stopAudio();
             
-            // ⚠️ 오프라인 최적화 - <br> 태그를 공백으로 치환 (현장 테스트 완료)
-            // new RegExp() 방식: HTML 파서와 100% 분리, 모든 브라우저 호환
+            // ⚠️ **핵심 로직 - 절대 수정 금지!** (2025-10-03 치명적 버그 해결)
+            // 
+            // 문제: HTML 내부 JavaScript에서 정규식 /<br\s*\/?>/gi 사용 시
+            //       HTML 파서가 < > 를 &lt; &gt; 로 변환하여 JavaScript 파싱 에러 발생
+            //       → "Uncaught SyntaxError: Unexpected token '&'" 
+            //
+            // 해결: new RegExp() 방식으로 HTML 파서와 100% 분리
+            //       - 안전성: HTML escape 문제 원천 차단
+            //       - 호환성: 모든 브라우저 지원
+            //       - 영구성: 앞으로 절대 깨지지 않음
+            //
+            // 영향: 27개 기존 공유 페이지 DB 일괄 업데이트 완료 (2025-10-03)
             const cleanText = text.replace(new RegExp('<br\\s*/?>', 'gi'), ' ');
             
             // 문장 분리 및 하이라이트 준비

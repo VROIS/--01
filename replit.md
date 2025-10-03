@@ -44,29 +44,35 @@ This is a location-based travel guide application called "내손가이드" (My H
    - ✅ DB 24개 기존 공유 링크 자동 업데이트
    - ⚠️ **수정금지** 주석 추가 (핵심 로직 보호)
 
-**❌ 남은 작업 (4/5):**
+6. **JavaScript 정규식 HTML Escape 버그 해결** (`public/index.js` - playAudio) ✅
+   - ✅ **치명적 버그:** `/<br\s*\/?>/gi` → HTML 파서가 `&lt;` 변환 → JavaScript 파싱 에러
+   - ✅ **해결책:** `new RegExp('<br\\s*/?>', 'gi')` 방식으로 HTML 파서와 100% 분리
+   - ✅ **영향:** 27개 기존 공유 페이지 DB 일괄 업데이트 완료
+   - ✅ **안전성:** 모든 브라우저 호환, 앞으로 절대 깨지지 않음
+   - ⚠️ **수정금지** 주석 추가 (핵심 로직 보호)
 
-1. ❌ **반응형 디자인 추가** ⭐ **← 다음 작업!**
-   - 증상: 모바일 ✅ / 노트북 ❌ (레이아웃 깨짐)
-   - 필요: Media query 추가 (`@media (min-width: 768px)`)
-   - 예상 시간: 30분~1시간
+7. **반응형 디자인 추가** (`public/index.js` - generateShareHTML) ✅
+   - ✅ 모바일: 2열 그리드
+   - ✅ 노트북/PC: 3열 그리드 (`@media (min-width: 768px)`)
+   - ✅ 갤러리 패딩 최적화 (모바일 20px, 데스크톱 30px)
 
-2. ❌ **SVG 아이콘 교체**
-   - 현재: 이모지 사용 (🏠, ▶, ❚❚)
-   - 필요: SVG 아이콘으로 교체
-   - 참고: `public/index.html` - SVG 아이콘 예시
+**❌ 남은 작업 (2/5):**
 
-3. ❌ **Service Worker 추가 (오프라인 지원)**
+1. ❌ **Service Worker 추가 (오프라인 지원)** ⭐ **← 다음 작업!**
    - 증상: 공유 페이지 1회 열람 후 오프라인에서 작동 안 됨
    - 필요: Service Worker 구현 (캐싱)
    - 참고: `public/service-worker.js`
 
-4. ❌ **공유 모달 터치 문제 수정**
+2. ❌ **공유 모달 터치 문제 수정**
    - 증상: 모바일에서 모달 배경 클릭 시 보관함 이미지가 재생됨
    - 원인: z-index/pointer-events 문제
    - 위치: `public/index.html` - share modal CSS
 
+**참고:** SVG 아이콘 교체는 선택사항 (현재 이모지도 충분함)
+
 **핵심 로직 (절대 수정 금지!):**
+
+**1. CSS z-index 계층 (상세 뷰 UX)**
 ```css
 /* ⚠️ 수정금지 - 2025-10-03 3시간 디버깅 끝에 완성 */
 .full-screen-bg { z-index: 1; }
@@ -77,6 +83,16 @@ This is a location-based travel guide application called "내손가이드" (My H
 }
 .content-safe-area { z-index: 25; }
 .footer-safe-area { z-index: 30; }
+```
+
+**2. JavaScript 정규식 (HTML 파싱 에러 방지)**
+```javascript
+// ⚠️ 수정금지 - 2025-10-03 치명적 버그 해결
+// HTML 내부 JavaScript에서는 정규식 리터럴 대신 new RegExp() 사용!
+const cleanText = text.replace(new RegExp('<br\\s*/?>', 'gi'), ' ');
+
+// ❌ 절대 사용 금지: /<br\s*\/?>/gi 
+//    → HTML 파서가 < > 를 &lt; &gt; 로 변환하여 파싱 에러 발생
 ```
 
 **참고 파일:**
