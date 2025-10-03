@@ -373,12 +373,26 @@ document.addEventListener('DOMContentLoaded', () => {
         /* 갤러리 뷰 */
         #gallery-view {
             padding: 15px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
         }
+        
+        /* 반응형: 태블릿/노트북/PC (768px 이상) */
+        @media (min-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+            #gallery-view {
+                padding: 30px;
+            }
+        }
+        
         .gallery-item {
             cursor: pointer;
             text-align: center;
