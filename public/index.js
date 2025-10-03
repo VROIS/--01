@@ -524,13 +524,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             currentUtterance = new SpeechSynthesisUtterance(cleanText);
             
-            // ⚠️ 오프라인 최적화 - Microsoft Heami 음성 하드코딩 (현장 테스트 완료)
-            const heamiVoice = voices.find(v => v.name.includes('Heami'));
-            const googleKoVoice = voices.find(v => v.name.includes('Google') && v.lang.startsWith('ko'));
-            const fallbackKoVoice = voices.find(v => v.lang.startsWith('ko'));
-            
-            // 우선순위: MS Heami → Google 한국어 → 기타 한국어
-            currentUtterance.voice = heamiVoice || googleKoVoice || fallbackKoVoice;
+            // ⚠️ 오프라인 최적화 - Microsoft Heami 음성 강제 지정 (현장 테스트 완료)
+            // 첨부된 HTML 방식: 정확한 이름 매칭으로 음성 고정
+            const targetVoice = voices.find(v => v.name === 'Microsoft Heami - Korean (Korea)');
+            currentUtterance.voice = targetVoice;
             currentUtterance.lang = 'ko-KR';
             currentUtterance.rate = 1.0;
             
