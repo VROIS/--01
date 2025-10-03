@@ -537,8 +537,8 @@ document.addEventListener('DOMContentLoaded', () => {
             stopAudio();
             
             // ⚠️ 오프라인 최적화 - <br> 태그를 공백으로 치환 (현장 테스트 완료)
-            // HTML entity 사용: < = &lt;, > = &gt;
-            const cleanText = text.replace(/&lt;br\\s*\\/?&gt;/gi, ' ');
+            // new RegExp() 방식: HTML 파서와 100% 분리, 모든 브라우저 호환
+            const cleanText = text.replace(new RegExp('<br\\s*/?>', 'gi'), ' ');
             
             // 문장 분리 및 하이라이트 준비
             const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
