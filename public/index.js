@@ -231,13 +231,20 @@ document.addEventListener('DOMContentLoaded', () => {
             description: item.description || ''
         })));
 
+        // UTF-8 안전한 base64 인코딩
+        const utf8ToBase64 = (str) => {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+                return String.fromCharCode('0x' + p1);
+            }));
+        };
+
         return `<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>${title} - 손안에 가이드</title>
-    <link rel="manifest" href="data:application/json;base64,${btoa(JSON.stringify({
+    <link rel="manifest" href="data:application/json;base64,${utf8ToBase64(JSON.stringify({
         name: title,
         short_name: title,
         start_url: '.',
