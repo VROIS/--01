@@ -296,6 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch; 
             background: transparent;
+            z-index: 25;
         }
         .footer-safe-area { 
             width: 100%; 
@@ -542,8 +543,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 detailView.classList.remove('hidden');
                 document.getElementById('detail-footer').classList.remove('hidden');
                 
-                // 텍스트는 숨김 상태로 시작 (앱과 동일)
-                document.getElementById('detail-text').classList.add('hidden');
+                // 텍스트는 표시 상태로 시작 (음성과 동시에 보임)
+                document.getElementById('detail-text').classList.remove('hidden');
                 
                 // 음성 자동 재생
                 playAudio(itemData.description);
