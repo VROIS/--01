@@ -261,56 +261,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         .hidden { display: none !important; }
         
-        /* 앱과 동일한 전체 화면 배경 */
-        .full-screen-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-            z-index: 1;
-            pointer-events: none;
+        /* 앱과 100% 동일한 CSS (복사) */
+        .full-screen-bg { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+            object-fit: cover; 
+            z-index: 1; 
         }
-        
-        /* UI 오버레이 레이어 */
-        .ui-layer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            display: flex;
+        .ui-layer { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: 10; 
+            display: flex; 
             flex-direction: column;
         }
-        
-        /* 3구역 레이아웃 */
-        .header-safe-area {
-            width: 100%;
-            height: 80px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .header-safe-area { 
+            width: 100%; 
+            height: 80px; 
+            flex-shrink: 0; 
+            z-index: 20;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
             padding: 0 1rem;
-            position: relative;
         }
-        .content-safe-area {
-            flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+        .content-safe-area { 
+            flex: 1; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; 
             background: transparent;
         }
-        .footer-safe-area {
-            width: 100%;
-            height: 100px;
-            flex-shrink: 0;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
+        .footer-safe-area { 
+            width: 100%; 
+            height: 100px; 
+            flex-shrink: 0; 
+            z-index: 30; 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
             padding: 0 1rem;
-            position: relative;
         }
         
         /* 텍스트 오버레이 */
