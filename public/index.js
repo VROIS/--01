@@ -523,7 +523,8 @@ document.addEventListener('DOMContentLoaded', () => {
             stopAudio();
             
             // ⚠️ 오프라인 최적화 - <br> 태그를 공백으로 치환 (현장 테스트 완료)
-            const cleanText = text.replace(/<br\s*\/?>/gi, ' ');
+            // HTML 안의 JavaScript이므로 < 를 \x3C로 escape
+            const cleanText = text.replace(/\x3Cbr\s*\/?\x3E/gi, ' ');
             
             // 문장 분리 및 하이라이트 준비
             const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
