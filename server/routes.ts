@@ -1186,6 +1186,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   /**
+   * 📦 GET /sw-share.js - 공유 페이지용 Service Worker
+   * 
+   * 목적: 오프라인 지원 - 한 번 열람 후 영구 접근 가능
+   * 
+   * 핵심:
+   * - /s/:id 경로를 캐시하여 오프라인에서도 작동
+   * - 여행 중 인터넷 없을 때 필수 (해외 로밍 OFF, 지하철, 산악 지역)
+   * - Cache-First 전략: 캐시 우선, 실패 시 네트워크
+   */
+  app.get('/sw-share.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.send(`
+const CACHE_NAME = 'share-page-cache-v1';
+
+// Service Worker 설치
+self.addEventListener('install', (event) => {
+  console.log('[SW] 설치됨');
+  self.skipWaiting();
+});
+
+// Service Worker 활성화
+self.addEventListener('activate', (event) => {
+  console.log('[SW] 활성화됨');
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+// 네트워크 요청 가로채기 (오프라인 지원!)
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // /s/:id 경로만 캐싱 (공유 페이지)
+  if (url.pathname.startsWith('/s/')) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(cache => {
+        return cache.match(event.request).then(cachedResponse => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          
+          return fetch(event.request).then(networkResponse => {
+            if (networkResponse && networkResponse.status === 200) {
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          }).catch(() => {
+            return new Response('오프라인 상태입니다.', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+            });
+          });
+        });
+      })
+    );
+  }
+});
+    `);
+  });
+  
+  /**
    * 📄 GET /s/:id - 짧은 URL로 HTML 페이지 직접 서빙
    * 
    * 목적: 공유된 링크를 브라우저/카톡에서 열면 HTML 페이지를 직접 표시
