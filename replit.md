@@ -56,22 +56,28 @@ This is a location-based travel guide application called "내손가이드" (My H
    - ✅ 노트북/PC: 3열 그리드 (`@media (min-width: 768px)`)
    - ✅ 갤러리 패딩 최적화 (모바일 20px, 데스크톱 30px)
 
-8. **Service Worker 추가 (오프라인 지원)** ✅ **← 2025-10-03 완료!**
+8. **Service Worker 추가 (오프라인 지원)** ✅ **← 2025-10-04 완료!**
    - ✅ **서버 라우트:** `/sw-share.js` (line 1201, `server/routes.ts`)
    - ✅ **HTML 등록:** Service Worker 자동 등록 (line 665-680, `public/index.js`)
    - ✅ **캐싱 전략:** Cache-First (캐시 우선, 실패 시 네트워크)
    - ✅ **테스트 완료:** 오프라인 모드에서 6개 이미지 포함 전체 페이지 작동
    - ✅ **자동 작동:** 사용자가 링크 클릭만 하면 백그라운드에서 자동 캐싱
+   - ✅ **iOS Safari 오프라인 수정 (2025-10-04):** 캐시된 응답에 Content-Disposition: inline 헤더 추가 → txt 다운로드 방지
    - ⚠️ **브라우저 호환:** 크롬/파이어폭스 완벽 지원, 사파리 iOS 15+ 필요
 
-**❌ 남은 작업 (1/5):**
+**✅ 공유 기능 100% 완료! (2025-10-04)**
 
-1. ❌ **공유 모달 터치 문제 수정** ⭐ **← 다음 작업!**
+모든 핵심 기능 구현 완료:
+- ✅ 상세 뷰 UX (z-index 계층, 텍스트 표시)
+- ✅ JavaScript 정규식 HTML Escape 버그
+- ✅ 반응형 디자인 (모바일 2열, 데스크톱 3열)
+- ✅ Service Worker 오프라인 지원 (iOS Safari 포함)
+
+**선택 작업 (필요시):**
+1. ⭕ **공유 모달 터치 문제** (낮은 우선순위)
    - 증상: 모바일에서 모달 배경 클릭 시 보관함 이미지가 재생됨
-   - 원인: z-index/pointer-events 문제
-   - 위치: `public/index.html` - share modal CSS
-
-**참고:** SVG 아이콘 교체는 선택사항 (현재 이모지도 충분함)
+   - 영향: 사용성 불편하나 치명적이지 않음
+2. ⭕ **SVG 아이콘 교체** (선택사항 - 현재 이모지도 충분함)
 
 **핵심 로직 (절대 수정 금지!):**
 
@@ -100,7 +106,7 @@ const cleanText = text.replace(new RegExp('<br\\s*/?>', 'gi'), ' ');
 
 **3. Service Worker (오프라인 지원)**
 ```javascript
-// ⚠️ 수정금지 - 2025-10-03 오프라인 지원 구현
+// ⚠️ 수정금지 - 2025-10-04 오프라인 지원 + iOS Safari 수정 완료
 // 자동 작동: 사용자가 링크 클릭만 하면 백그라운드에서 자동 캐싱
 
 // HTML 등록 코드 (public/index.js - line 665-680)
@@ -112,9 +118,16 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// 서버 라우트 (server/routes.ts - line 1201)
+// 서버 라우트 (server/routes.ts - line 1228-1268)
 // Cache-First 전략: /s/:id 경로만 캐싱
 // 첫 방문: 자동 캐싱 → 다음부터 오프라인 접근 가능
+
+// ⚠️ iOS Safari 오프라인 수정 (2025-10-04):
+// 문제: 오프라인(비행기모드)에서 캐시된 HTML을 txt 파일로 다운로드하려 함
+// 해결: 캐시된 응답에 Content-Disposition: inline 헤더 명시적 추가
+const headers = new Headers(cachedResponse.headers);
+headers.set('Content-Disposition', 'inline');
+headers.set('Content-Type', 'text/html; charset=utf-8');
 ```
 
 **참고 파일:**

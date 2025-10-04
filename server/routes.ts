@@ -1222,6 +1222,10 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// ⚠️ 수정금지 - 2025-10-04 오프라인 iOS Safari 다운로드 문제 해결
+// 문제: 오프라인(비행기모드)에서 캐시된 HTML을 txt 파일로 다운로드하려 함
+// 해결: 캐시된 응답에 Content-Disposition: inline 헤더 명시적 추가
+// 영향: iOS Safari 15+ 필수, Chrome/Android는 문제 없음
 // 네트워크 요청 가로채기 (오프라인 지원!)
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
@@ -1233,6 +1237,8 @@ self.addEventListener('fetch', (event) => {
         return cache.match(event.request).then(cachedResponse => {
           if (cachedResponse) {
             // ⚠️ iOS Safari 다운로드 방지: 헤더 명시적 추가
+            // 이유: iOS Safari는 큰 HTML 파일을 오프라인에서 열 때
+            //       Content-Disposition 헤더가 없으면 다운로드 프롬프트 표시
             const headers = new Headers(cachedResponse.headers);
             headers.set('Content-Disposition', 'inline');
             headers.set('Content-Type', 'text/html; charset=utf-8');
