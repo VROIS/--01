@@ -1343,7 +1343,9 @@ self.addEventListener('fetch', (event) => {
       await storage.incrementDownloadCount(id);
       
       // ✅ HTML 콘텐츠 직접 반환
+      // Content-Disposition: inline - iOS Safari 다운로드 방지 (브라우저에서 바로 열기)
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Content-Disposition', 'inline');
       res.send(page.htmlContent);
       
     } catch (error) {
