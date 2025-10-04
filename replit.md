@@ -56,14 +56,17 @@ This is a location-based travel guide application called "내손가이드" (My H
    - ✅ 노트북/PC: 3열 그리드 (`@media (min-width: 768px)`)
    - ✅ 갤러리 패딩 최적화 (모바일 20px, 데스크톱 30px)
 
-**❌ 남은 작업 (2/5):**
+8. **Service Worker 추가 (오프라인 지원)** ✅ **← 2025-10-03 완료!**
+   - ✅ **서버 라우트:** `/sw-share.js` (line 1201, `server/routes.ts`)
+   - ✅ **HTML 등록:** Service Worker 자동 등록 (line 665-680, `public/index.js`)
+   - ✅ **캐싱 전략:** Cache-First (캐시 우선, 실패 시 네트워크)
+   - ✅ **테스트 완료:** 오프라인 모드에서 6개 이미지 포함 전체 페이지 작동
+   - ✅ **자동 작동:** 사용자가 링크 클릭만 하면 백그라운드에서 자동 캐싱
+   - ⚠️ **브라우저 호환:** 크롬/파이어폭스 완벽 지원, 사파리 iOS 15+ 필요
 
-1. ❌ **Service Worker 추가 (오프라인 지원)** ⭐ **← 다음 작업!**
-   - 증상: 공유 페이지 1회 열람 후 오프라인에서 작동 안 됨
-   - 필요: Service Worker 구현 (캐싱)
-   - 참고: `public/service-worker.js`
+**❌ 남은 작업 (1/5):**
 
-2. ❌ **공유 모달 터치 문제 수정**
+1. ❌ **공유 모달 터치 문제 수정** ⭐ **← 다음 작업!**
    - 증상: 모바일에서 모달 배경 클릭 시 보관함 이미지가 재생됨
    - 원인: z-index/pointer-events 문제
    - 위치: `public/index.html` - share modal CSS
@@ -93,6 +96,25 @@ const cleanText = text.replace(new RegExp('<br\\s*/?>', 'gi'), ' ');
 
 // ❌ 절대 사용 금지: /<br\s*\/?>/gi 
 //    → HTML 파서가 < > 를 &lt; &gt; 로 변환하여 파싱 에러 발생
+```
+
+**3. Service Worker (오프라인 지원)**
+```javascript
+// ⚠️ 수정금지 - 2025-10-03 오프라인 지원 구현
+// 자동 작동: 사용자가 링크 클릭만 하면 백그라운드에서 자동 캐싱
+
+// HTML 등록 코드 (public/index.js - line 665-680)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw-share.js')
+            .then(registration => console.log('✅ [SW] 등록 성공'))
+            .catch(error => console.log('❌ [SW] 등록 실패'));
+    });
+}
+
+// 서버 라우트 (server/routes.ts - line 1201)
+// Cache-First 전략: /s/:id 경로만 캐싱
+// 첫 방문: 자동 캐싱 → 다음부터 오프라인 접근 가능
 ```
 
 **참고 파일:**
