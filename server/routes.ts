@@ -1232,7 +1232,16 @@ self.addEventListener('fetch', (event) => {
       caches.open(CACHE_NAME).then(cache => {
         return cache.match(event.request).then(cachedResponse => {
           if (cachedResponse) {
-            return cachedResponse;
+            // ⚠️ iOS Safari 다운로드 방지: 헤더 명시적 추가
+            const headers = new Headers(cachedResponse.headers);
+            headers.set('Content-Disposition', 'inline');
+            headers.set('Content-Type', 'text/html; charset=utf-8');
+            
+            return new Response(cachedResponse.body, {
+              status: cachedResponse.status,
+              statusText: cachedResponse.statusText,
+              headers: headers
+            });
           }
           
           return fetch(event.request).then(networkResponse => {
@@ -1243,7 +1252,10 @@ self.addEventListener('fetch', (event) => {
           }).catch(() => {
             return new Response('오프라인 상태입니다.', {
               status: 503,
-              headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+              headers: { 
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Content-Disposition': 'inline'
+              }
             });
           });
         });
