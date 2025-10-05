@@ -1529,7 +1529,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const pageName = page.name || '공유 페이지';
                     return `
                         <a href="${shareUrl}" target="_blank" 
-                           class="relative bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+                           class="relative block bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
                            data-testid="featured-${page.id}">
                             ${thumbnail ? `
                                 <img src="${thumbnail}" alt="${pageName}" 
@@ -1539,9 +1539,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <span class="text-4xl">📍</span>
                                 </div>
                             `}
-                            <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-transparent flex items-start justify-center pt-3 px-2">
-                                <h3 class="text-white font-bold text-center leading-tight" 
-                                    style="font-size: clamp(0.75rem, 3vw, 1rem); text-shadow: 0 2px 8px rgba(0,0,0,0.8);">
+                            <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/20 flex items-start justify-center pt-3 px-3">
+                                <h3 class="text-white font-bold text-center leading-snug line-clamp-2" 
+                                    style="font-size: clamp(0.875rem, 4vw, 1.125rem); text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.8);">
                                     ${pageName}
                                 </h3>
                             </div>
