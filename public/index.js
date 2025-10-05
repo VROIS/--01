@@ -1342,6 +1342,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (copyBtn) {
             copyBtn.onclick = () => createAndCopyShareLink();
         }
+        
+        // ⚠️ 2025-10-05: 모달 배경 클릭 시 닫기 (모달 내용 클릭은 무시)
+        shareModal.addEventListener('click', (e) => {
+            if (e.target === shareModal) {
+                shareModal.classList.add('hidden');
+            }
+        });
     }
 
     /**
@@ -1452,16 +1459,36 @@ document.addEventListener('DOMContentLoaded', () => {
             // 🔄 보관함 새로고침 (새 공유 링크 반영)
             await renderArchive();
             
-            // ❌ 모달 닫기
-            shareModal.classList.add('hidden');
+            // ✅ 2025-10-05: 모달 안에 성공 메시지 크게 표시 (3초간)
+            // 목적: 사용자가 링크가 생성되었다는 것을 명확히 인지
+            shareModalContent.innerHTML = `
+                <div class="p-8 text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">링크 생성 완료!</h3>
+                    ${copySuccess ? `
+                        <p class="text-lg text-gray-700 mb-3">✅ 링크가 클립보드에 복사되었습니다</p>
+                        <p class="text-base text-gray-600">카카오톡, 문자, 메신저 등<br>원하는 곳에 붙여넣기 하세요!</p>
+                    ` : `
+                        <p class="text-base text-gray-700 mb-4">아래 링크를 복사해서 공유하세요:</p>
+                        <div class="bg-gray-100 p-4 rounded-lg mb-3">
+                            <p class="text-sm font-mono text-gray-800 break-all">${shareUrl}</p>
+                        </div>
+                        <button onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('복사 완료!'))" 
+                                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            링크 복사하기
+                        </button>
+                    `}
+                </div>
+            `;
             
-            // ✅ 성공 메시지 (클립보드 성공 여부에 따라 다른 메시지)
-            if (copySuccess) {
-                showToast('✅ 링크가 복사되었습니다! 원하는 곳에 붙여넣기 하세요.');
-            } else {
-                // 클립보드 실패 시 URL 직접 표시
-                showToast(`✅ 링크 생성 완료!\n${shareUrl}\n\n위 링크를 복사해서 공유하세요!`, 10000);
-            }
+            // 3초 후 자동으로 모달 닫기
+            setTimeout(() => {
+                shareModal.classList.add('hidden');
+            }, 3000);
 
         } catch (error) {
             console.error('Share error:', error);

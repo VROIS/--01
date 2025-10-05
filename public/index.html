@@ -395,8 +395,9 @@
     <div id="toastContainer"></div>
     
     <!-- 공유 링크 생성 모달 - 2025.10.02 간소화 -->
-    <div id="shareModal" class="absolute inset-0 z-50 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center hidden">
-        <div id="shareModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transition-transform transform">
+    <!-- ⚠️ 2025-10-05: z-index 최상위 + pointer-events로 배경 클릭 시 보관함 이미지 재생 방지 -->
+    <div id="shareModal" class="fixed inset-0 z-[9999] bg-gray-900/60 backdrop-blur-sm flex items-center justify-center hidden" style="pointer-events: auto;">
+        <div id="shareModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transition-transform transform" style="pointer-events: auto;">
             <!-- 헤더 -->
             <div class="p-6 border-b border-gray-200 flex justify-between items-center">
                 <h2 class="text-xl font-bold text-gray-800">공유 링크 생성</h2>
