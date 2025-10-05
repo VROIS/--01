@@ -1470,16 +1470,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function loadFeaturedGallery() {
+        try {
+            const response = await fetch('/api/share/featured/list');
+            if (!response.ok) return;
+            
+            const data = await response.json();
+            const featuredPages = data.pages || [];
+            
+            if (featuredPages.length > 0) {
+                featuredGallery.classList.remove('hidden');
+                featuredGrid.innerHTML = featuredPages.map(page => {
+                    const thumbnail = page.thumbnail || '';
+                    const shareUrl = `${window.location.origin}/s/${page.id}`;
+                    return `
+                        <a href="${shareUrl}" target="_blank" 
+                           class="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                           data-testid="featured-${page.id}">
+                            ${thumbnail ? `
+                                <img src="${thumbnail}" alt="${page.name}" 
+                                     class="w-full aspect-square object-cover">
+                            ` : `
+                                <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                                    <span class="text-4xl">📍</span>
+                                </div>
+                            `}
+                        </a>
+                    `;
+                }).join('');
+            } else {
+                featuredGallery.classList.add('hidden');
+            }
+        } catch (error) {
+            console.warn('Featured gallery not available yet:', error);
+            featuredGallery?.classList.add('hidden');
+        }
+    }
+
     async function renderArchive() {
         try {
-            console.log('⏱️ [1] renderArchive 시작');
-            const startTime = performance.now();
-            
-            console.log('⏱️ [2] getAllItems 호출 전');
             const items = await getAllItems();
-            console.log(`⏱️ [3] getAllItems 완료 (${(performance.now() - startTime).toFixed(0)}ms, ${items.length}개 아이템)`);
             
-            // ⚡ 내 보관함 먼저 렌더링 (즉시 표시)
+            // Featured Gallery 로드
+            loadFeaturedGallery();
+            
             if (items.length === 0) {
                 archiveGrid.classList.add('hidden');
                 emptyArchiveMessage.classList.remove('hidden');
@@ -1487,8 +1521,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 emptyArchiveMessage.classList.add('hidden');
                 archiveGrid.classList.remove('hidden');
                 
-                console.log('⏱️ [4] 내 보관함 렌더링 시작');
-                // 3열 그리드에 맞는 컴팩트한 카드 디자인
                 archiveGrid.innerHTML = items.map(item => `
                     <div class="archive-item relative ${selectedItemIds.has(item.id) ? 'selected ring-2 ring-blue-500' : ''}" 
                          data-id="${item.id}" 
@@ -1510,7 +1542,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         `}
                     </div>
                 `).join('');
-                console.log(`⏱️ [5] 내 보관함 렌더링 완료 (${(performance.now() - startTime).toFixed(0)}ms)`);
             }
 
         } catch (error) {
