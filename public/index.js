@@ -822,17 +822,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderFeaturedManagement(shares, featured) {
         const select = document.getElementById('featuredShareSelect');
+        const searchInput = document.getElementById('shareSearchInput');
         const list = document.getElementById('featuredList');
         const count = document.getElementById('featuredCount');
         
-        // 드롭다운 렌더링
-        select.innerHTML = '<option value="">공유 페이지를 선택하세요</option>';
-        shares.forEach(share => {
-            const option = document.createElement('option');
-            option.value = share.id;
-            option.textContent = `${share.name} (${new Date(share.createdAt).toLocaleDateString()})`;
-            select.appendChild(option);
-        });
+        // 전체 공유 페이지 데이터 저장 (검색용)
+        window.allShares = shares;
+        
+        // 드롭다운 렌더링 함수
+        const renderOptions = (filteredShares) => {
+            select.innerHTML = '<option value="">공유 페이지를 선택하세요</option>';
+            filteredShares.forEach(share => {
+                const option = document.createElement('option');
+                option.value = share.id;
+                option.textContent = `${share.name} (${new Date(share.createdAt).toLocaleDateString()})`;
+                select.appendChild(option);
+            });
+            
+            // 검색 결과가 없을 때
+            if (filteredShares.length === 0) {
+                select.innerHTML = '<option value="">검색 결과가 없습니다</option>';
+            }
+        };
+        
+        // 초기 렌더링
+        renderOptions(shares);
+        
+        // 검색 기능
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filtered = window.allShares.filter(share => {
+                    const name = share.name.toLowerCase();
+                    const date = new Date(share.createdAt).toLocaleDateString();
+                    return name.includes(searchTerm) || date.includes(searchTerm);
+                });
+                renderOptions(filtered);
+            });
+        }
         
         // Featured 목록 렌더링
         count.textContent = featured.length;
@@ -1900,14 +1927,28 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         const password = authPassword.value;
         
-        // Simple password check - in production, this should be more secure
-        if (password === '1234') {
-            authSection.classList.add('hidden');
-            promptSettingsSection.classList.remove('hidden');
-            await loadFeaturedData(); // Featured 데이터 로드 (인증 후에만)
-            showToast('인증되었습니다.');
-        } else {
-            showToast('잘못된 비밀번호입니다.');
+        try {
+            // 백엔드 API로 비밀번호 인증
+            const response = await fetch('/api/admin/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+            
+            if (response.ok) {
+                // 인증 성공
+                authSection.classList.add('hidden');
+                promptSettingsSection.classList.remove('hidden');
+                await loadFeaturedData(); // Featured 데이터 로드
+                showToast('관리자 인증 성공');
+            } else {
+                // 인증 실패
+                showToast('잘못된 비밀번호입니다.');
+                authPassword.value = '';
+            }
+        } catch (error) {
+            console.error('인증 오류:', error);
+            showToast('인증 중 오류가 발생했습니다.');
             authPassword.value = '';
         }
     }
