@@ -618,15 +618,15 @@
             <h1 id="selectionCount" class="text-xl font-bold text-gray-800">0개 선택</h1>
         </header>
         
-        <!-- ✅ 존 2: 추천 갤러리 (헤더 바로 아래 고정) -->
-        <!-- 핵심: 내 보관함 위에 배치, max-height로 공간 제한 -->
-        <div id="featuredGallery" class="hidden px-4 py-3 bg-white border-b border-gray-100" style="flex-shrink: 0; max-height: 40vh; overflow: visible;">
-            <div id="featuredGrid" class="grid grid-cols-3 gap-3"></div>
-        </div>
-        
         <!-- ✅ 존 3: 내 보관함 (스크롤 영역) - 2025.10.05 수정 -->
         <!-- 핵심: flex:1 + overflow-y:auto + min-height:0 조합으로 스크롤 활성화 -->
+        <!-- Featured Gallery도 여기 안으로 이동 -->
         <div id="archiveScrollZone" style="flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; position: relative; background: #f9fafb;">
+            <!-- ✅ 존 2: 추천 갤러리 (스크롤 영역 내부 상단) -->
+            <div id="featuredGallery" class="hidden px-4 py-3 bg-white border-b border-gray-100">
+                <div id="featuredGrid" class="grid grid-cols-3 gap-3"></div>
+            </div>
+            
             <div id="archiveGridContainer" class="px-4 py-4">
                 <div id="archiveGrid"></div>
                 <p id="emptyArchiveMessage" class="text-slate-500 text-center mt-10 hidden">저장된 항목이 없습니다.</p>
