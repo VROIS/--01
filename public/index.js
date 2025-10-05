@@ -1617,13 +1617,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // ⚡ Featured Gallery 백그라운드 로딩 함수
     async function loadFeaturedGallery() {
         try {
+            console.log('⏱️ [7] Featured API 호출 시작');
+            const apiStartTime = performance.now();
             const response = await fetch('/api/share/featured/list');
+            console.log(`⏱️ [8] Featured API 응답 (${(performance.now() - apiStartTime).toFixed(0)}ms)`);
             if (!response.ok) return;
             
             const data = await response.json();
             const featuredPages = data.pages || [];
             
             if (featuredPages.length > 0) {
+                console.log('⏱️ [9] Featured Gallery 렌더링 시작');
                 featuredGallery.classList.remove('hidden');
                 featuredGrid.innerHTML = featuredPages.map(page => {
                     const thumbnail = page.thumbnail || '';
@@ -1643,6 +1647,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </a>
                     `;
                 }).join('');
+                console.log('⏱️ [10] Featured Gallery 렌더링 완료');
             } else {
                 featuredGallery.classList.add('hidden');
             }
@@ -1654,12 +1659,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderArchive() {
         try {
+            console.log('⏱️ [1] renderArchive 시작');
+            const startTime = performance.now();
+            
             // ⚡ Featured Gallery 먼저 숨기기 (로딩 중)
             if (featuredGallery) {
                 featuredGallery.classList.add('hidden');
             }
             
+            console.log('⏱️ [2] getAllItems 호출 전');
             const items = await getAllItems();
+            console.log(`⏱️ [3] getAllItems 완료 (${(performance.now() - startTime).toFixed(0)}ms, ${items.length}개 아이템)`);
             
             // ⚡ 내 보관함 먼저 렌더링 (즉시 표시)
             if (items.length === 0) {
@@ -1669,6 +1679,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 emptyArchiveMessage.classList.add('hidden');
                 archiveGrid.classList.remove('hidden');
                 
+                console.log('⏱️ [4] 내 보관함 렌더링 시작');
                 // 3열 그리드에 맞는 컴팩트한 카드 디자인
                 archiveGrid.innerHTML = items.map(item => `
                     <div class="archive-item relative ${selectedItemIds.has(item.id) ? 'selected ring-2 ring-blue-500' : ''}" 
@@ -1691,10 +1702,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         `}
                     </div>
                 `).join('');
+                console.log(`⏱️ [5] 내 보관함 렌더링 완료 (${(performance.now() - startTime).toFixed(0)}ms)`);
             }
             
             // ⚡ Featured Gallery 백그라운드 로드 (비차단)
             if (featuredGallery && featuredGrid) {
+                console.log('⏱️ [6] Featured Gallery 백그라운드 로드 시작');
                 loadFeaturedGallery();
             }
 
