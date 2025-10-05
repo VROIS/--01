@@ -1146,6 +1146,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * - Zod 검증 실패 시 400 에러
    * - ID 생성 실패 시 500 에러
    */
+  // ⭐ 관리자 체크 미들웨어
+  const requireAdmin = (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+      return res.status(401).json({ error: '인증이 필요합니다.' });
+    }
+    if (!req.user?.isAdmin) {
+      return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+    }
+    next();
+  };
+
   app.post('/api/share/create', async (req, res) => {
     try {
       // 🔑 사용자 ID (현재 임시, 나중에 req.user.id로 변경 필요)
@@ -1182,6 +1193,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('공유 페이지 생성 오류:', error);
       res.status(500).json({ error: '공유 페이지 생성에 실패했습니다.' });
+    }
+  });
+
+  /**
+   * 🔐 관리자 API - Featured 갤러리 관리
+   */
+  
+  // GET /api/admin/shares - 관리자의 모든 공유 페이지 목록
+  app.get('/api/admin/shares', requireAdmin, async (req: any, res) => {
+    try {
+      const shares = await storage.getUserSharedHtmlPages(req.user.id);
+      res.json(shares);
+    } catch (error) {
+      console.error('공유 페이지 목록 조회 오류:', error);
+      res.status(500).json({ error: '목록 조회에 실패했습니다.' });
+    }
+  });
+
+  // GET /api/admin/featured - 현재 Featured 목록
+  app.get('/api/admin/featured', requireAdmin, async (req: any, res) => {
+    try {
+      const featured = await storage.getFeaturedHtmlPages();
+      res.json(featured);
+    } catch (error) {
+      console.error('Featured 목록 조회 오류:', error);
+      res.status(500).json({ error: '목록 조회에 실패했습니다.' });
+    }
+  });
+
+  // POST /api/admin/featured/:id - Featured로 추가
+  app.post('/api/admin/featured/:id', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      // 현재 Featured 개수 확인 (최대 3개)
+      const currentFeatured = await storage.getFeaturedHtmlPages();
+      if (currentFeatured.length >= 3 && !currentFeatured.find(p => p.id === id)) {
+        return res.status(400).json({ error: 'Featured는 최대 3개까지만 가능합니다.' });
+      }
+      
+      await storage.setFeatured(id, true);
+      res.json({ success: true, message: 'Featured로 추가되었습니다.' });
+    } catch (error) {
+      console.error('Featured 추가 오류:', error);
+      res.status(500).json({ error: 'Featured 추가에 실패했습니다.' });
+    }
+  });
+
+  // DELETE /api/admin/featured/:id - Featured 제거
+  app.delete('/api/admin/featured/:id', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.setFeatured(id, false);
+      res.json({ success: true, message: 'Featured에서 제거되었습니다.' });
+    } catch (error) {
+      console.error('Featured 제거 오류:', error);
+      res.status(500).json({ error: 'Featured 제거에 실패했습니다.' });
     }
   });
   

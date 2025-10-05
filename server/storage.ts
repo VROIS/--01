@@ -76,7 +76,9 @@ export interface IStorage {
   // Shared HTML page operations
   createSharedHtmlPage(userId: string, page: InsertSharedHtmlPage): Promise<SharedHtmlPage>;
   getSharedHtmlPage(id: string): Promise<SharedHtmlPage | undefined>;
+  getUserSharedHtmlPages(userId: string): Promise<SharedHtmlPage[]>;
   getFeaturedHtmlPages(): Promise<SharedHtmlPage[]>;
+  setFeatured(id: string, featured: boolean): Promise<void>;
   incrementDownloadCount(id: string): Promise<void>;
   deactivateHtmlPage(id: string): Promise<void>;
 }
@@ -603,6 +605,37 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(sharedHtmlPages)
       .set({ downloadCount: sql`download_count + 1` })
+      .where(eq(sharedHtmlPages.id, id));
+  }
+
+  /**
+   * 📋 사용자의 모든 공유 페이지 조회
+   * 
+   * 목적: 관리자 설정 페이지에서 사용자의 공유 페이지 목록 표시
+   * 
+   * @param userId - 사용자 ID
+   * @returns 사용자의 모든 공유 페이지 (최신순)
+   */
+  async getUserSharedHtmlPages(userId: string): Promise<SharedHtmlPage[]> {
+    return await db
+      .select()
+      .from(sharedHtmlPages)
+      .where(eq(sharedHtmlPages.userId, userId))
+      .orderBy(desc(sharedHtmlPages.createdAt));
+  }
+
+  /**
+   * ⭐ Featured 설정/해제
+   * 
+   * 목적: 관리자가 공유 페이지를 추천 갤러리에 추가/제거
+   * 
+   * @param id - 공유 페이지 ID
+   * @param featured - true=Featured 추가, false=제거
+   */
+  async setFeatured(id: string, featured: boolean): Promise<void> {
+    await db
+      .update(sharedHtmlPages)
+      .set({ featured, updatedAt: new Date() })
       .where(eq(sharedHtmlPages.id, id));
   }
 
