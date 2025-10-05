@@ -1526,18 +1526,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 featuredGrid.innerHTML = featuredPages.map(page => {
                     const thumbnail = page.thumbnail || '';
                     const shareUrl = `${window.location.origin}/s/${page.id}`;
+                    const pageName = page.name || '공유 페이지';
                     return `
                         <a href="${shareUrl}" target="_blank" 
-                           class="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                           class="relative bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
                            data-testid="featured-${page.id}">
                             ${thumbnail ? `
-                                <img src="${thumbnail}" alt="${page.name}" 
+                                <img src="${thumbnail}" alt="${pageName}" 
                                      class="w-full aspect-square object-cover">
                             ` : `
                                 <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
                                     <span class="text-4xl">📍</span>
                                 </div>
                             `}
+                            <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-transparent flex items-start justify-center pt-3 px-2">
+                                <h3 class="text-white font-bold text-center leading-tight" 
+                                    style="font-size: clamp(0.75rem, 3vw, 1rem); text-shadow: 0 2px 8px rgba(0,0,0,0.8);">
+                                    ${pageName}
+                                </h3>
+                            </div>
                         </a>
                     `;
                 }).join('');
