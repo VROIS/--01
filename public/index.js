@@ -1831,6 +1831,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 authSection.classList.add('hidden');
                 promptSettingsSection.classList.remove('hidden');
                 showToast('관리자 인증 성공');
+                
+                // Featured 갤러리 관리 데이터 로드
+                await loadAdminData();
             } else {
                 // 인증 실패
                 showToast('잘못된 비밀번호입니다.');
@@ -1842,6 +1845,141 @@ document.addEventListener('DOMContentLoaded', () => {
             authPassword.value = '';
         }
     }
+
+    // Featured 갤러리 관리 함수들
+    async function loadAdminData() {
+        await Promise.all([
+            loadUserShares(),
+            loadFeaturedList()
+        ]);
+    }
+
+    async function loadUserShares() {
+        try {
+            const response = await fetch('/api/share/user/list');
+            if (!response.ok) throw new Error('Failed to load shares');
+            
+            const data = await response.json();
+            const shares = data.shares || [];
+            
+            const select = document.getElementById('featuredShareSelect');
+            if (!select) return;
+            
+            if (shares.length === 0) {
+                select.innerHTML = '<option value="">공유 페이지가 없습니다</option>';
+                return;
+            }
+            
+            select.innerHTML = shares.map(share => 
+                `<option value="${share.id}">${share.name} (${new Date(share.createdAt).toLocaleDateString()})</option>`
+            ).join('');
+            
+            // 검색 기능
+            const searchInput = document.getElementById('shareSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    Array.from(select.options).forEach(opt => {
+                        const text = opt.textContent.toLowerCase();
+                        opt.style.display = text.includes(term) ? '' : 'none';
+                    });
+                });
+            }
+        } catch (error) {
+            console.error('공유 페이지 로드 오류:', error);
+            const select = document.getElementById('featuredShareSelect');
+            if (select) select.innerHTML = '<option value="">로드 실패</option>';
+        }
+    }
+
+    async function loadFeaturedList() {
+        try {
+            const response = await fetch('/api/share/featured/list');
+            if (!response.ok) throw new Error('Failed to load featured');
+            
+            const data = await response.json();
+            const featured = data.pages || [];
+            
+            const list = document.getElementById('featuredList');
+            const count = document.getElementById('featuredCount');
+            
+            if (count) count.textContent = featured.length;
+            
+            if (!list) return;
+            
+            if (featured.length === 0) {
+                list.innerHTML = '<p class="text-sm text-gray-400">Featured 페이지가 없습니다</p>';
+                return;
+            }
+            
+            list.innerHTML = featured.map(page => `
+                <div class="flex items-center justify-between p-2 bg-yellow-50 rounded">
+                    <span class="text-sm">${page.name}</span>
+                    <button onclick="removeFeatured('${page.id}')" class="text-red-500 hover:text-red-700 text-sm">
+                        ✕ 제거
+                    </button>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Featured 목록 로드 오류:', error);
+            const list = document.getElementById('featuredList');
+            if (list) list.innerHTML = '<p class="text-sm text-red-400">로드 실패</p>';
+        }
+    }
+
+    window.addFeatured = async function() {
+        const select = document.getElementById('featuredShareSelect');
+        if (!select || !select.value) {
+            showToast('공유 페이지를 선택해주세요');
+            return;
+        }
+        
+        const shareId = select.value;
+        
+        try {
+            const response = await fetch('/api/share/featured/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ shareId })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showToast('Featured에 추가되었습니다');
+                await loadFeaturedList();
+            } else {
+                showToast(data.error || 'Featured 추가 실패');
+            }
+        } catch (error) {
+            console.error('Featured 추가 오류:', error);
+            showToast('Featured 추가 중 오류 발생');
+        }
+    };
+
+    window.removeFeatured = async function(shareId) {
+        if (!confirm('Featured에서 제거하시겠습니까?')) return;
+        
+        try {
+            const response = await fetch('/api/share/featured/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ shareId })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showToast('Featured에서 제거되었습니다');
+                await loadFeaturedList();
+            } else {
+                showToast(data.error || 'Featured 제거 실패');
+            }
+        } catch (error) {
+            console.error('Featured 제거 오류:', error);
+            showToast('Featured 제거 중 오류 발생');
+        }
+    };
 
     function savePrompts() {
         const imagePrompt = imagePromptTextarea.value.trim();
