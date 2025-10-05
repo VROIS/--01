@@ -95,6 +95,24 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPaused = false;
     let currentlySpeakingElement = null;
     let lastAudioClickTime = 0;
+    
+    // ═══════════════════════════════════════════════════════════════
+    // 🚀 전역 디바운스 시스템 (2025-10-05)
+    // 목적: 버튼 버벅거림 완전 제거 - 손님 30명 테스트 대비
+    // ═══════════════════════════════════════════════════════════════
+    const buttonDebounceMap = new Map();
+    function debounceClick(buttonId, callback, delay = 500) {
+        const now = Date.now();
+        const lastClick = buttonDebounceMap.get(buttonId) || 0;
+        
+        if (now - lastClick < delay) {
+            return false; // 클릭 무시
+        }
+        
+        buttonDebounceMap.set(buttonId, now);
+        callback();
+        return true;
+    }
 
     // App State
     let currentContent = { imageDataUrl: null, description: '' };
@@ -797,6 +815,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetSpeechState() {
+        // 🧹 메모리 최적화: 이전 음성 완전 정리 (2025-10-05)
+        synth.cancel(); // 모든 대기 중인 음성 취소
         utteranceQueue = [];
         isSpeaking = false;
         isPaused = false;
@@ -2040,12 +2060,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- Event Listeners ---
+    // --- Event Listeners (디바운스 적용) ---
     startCameraFromFeaturesBtn?.addEventListener('click', handleStartFeaturesClick);
-    shootBtn?.addEventListener('click', capturePhoto);
+    shootBtn?.addEventListener('click', () => debounceClick('shoot', capturePhoto, 800));
     uploadBtn?.addEventListener('click', () => uploadInput.click());
-    micBtn?.addEventListener('click', handleMicButtonClick);
-    archiveBtn?.addEventListener('click', showArchivePage);
+    micBtn?.addEventListener('click', () => debounceClick('mic', handleMicButtonClick, 500));
+    archiveBtn?.addEventListener('click', () => debounceClick('archive', showArchivePage, 300));
     uploadInput?.addEventListener('change', handleFileSelect);
     
     backBtn?.addEventListener('click', () => cameFromArchive ? showArchivePage() : showMainPage());
@@ -2053,45 +2073,49 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsBackBtn?.addEventListener('click', showArchivePage);
     
     audioBtn?.addEventListener('click', onAudioBtnClick);
-    saveBtn?.addEventListener('click', handleSaveClick);
+    saveBtn?.addEventListener('click', () => debounceClick('save', handleSaveClick, 500));
     textToggleBtn?.addEventListener('click', () => textOverlay.classList.toggle('hidden'));
 
     archiveSelectBtn?.addEventListener('click', () => {
         // 선택 버튼: 선택 모드 토글
         toggleSelectionMode(!isSelectionMode);
     });
-    // ✅ 공유 버튼 간편 로직 - 2025.10.02 구현 완료
+    // ✅ 공유 버튼 간편 로직 - 2025.10.02 구현 완료 (디바운스 추가)
     // 핵심: 1회 클릭 → 선택 모드 활성화 / 2회 클릭 (선택 후) → 공유 모달
     archiveShareBtn?.addEventListener('click', async () => {
-        if (!isSelectionMode) {
-            showToast('이미지를 선택해주세요');
-            toggleSelectionMode(true);
-            return;
-        }
-        
-        if (selectedItemIds.size === 0) {
-            showToast('이미지를 선택해주세요');
-            return;
-        }
-        
-        await handleCreateGuidebookClick();
+        debounceClick('share', async () => {
+            if (!isSelectionMode) {
+                showToast('이미지를 선택해주세요');
+                toggleSelectionMode(true);
+                return;
+            }
+            
+            if (selectedItemIds.size === 0) {
+                showToast('이미지를 선택해주세요');
+                return;
+            }
+            
+            await handleCreateGuidebookClick();
+        }, 600);
     });
     
-    // ✅ 삭제 버튼 간편 로직 - 2025.10.02 구현 완료
+    // ✅ 삭제 버튼 간편 로직 - 2025.10.02 구현 완료 (디바운스 추가)
     // 핵심: 1회 클릭 → 선택 모드 활성화 / 2회 클릭 (선택 후) → 삭제 실행
     archiveDeleteBtn?.addEventListener('click', async () => {
-        if (!isSelectionMode) {
-            showToast('이미지를 선택해주세요');
-            toggleSelectionMode(true);
-            return;
-        }
-        
-        if (selectedItemIds.size === 0) {
-            showToast('이미지를 선택해주세요');
-            return;
-        }
-        
-        await handleDeleteSelected();
+        debounceClick('delete', async () => {
+            if (!isSelectionMode) {
+                showToast('이미지를 선택해주세요');
+                toggleSelectionMode(true);
+                return;
+            }
+            
+            if (selectedItemIds.size === 0) {
+                showToast('이미지를 선택해주세요');
+                return;
+            }
+            
+            await handleDeleteSelected();
+        }, 600);
     });
     
     archiveSettingsBtn?.addEventListener('click', showSettingsPage);
