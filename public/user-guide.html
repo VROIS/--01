@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>손안에 가이드 - 사용설명서</title>
+    <style>
+        @media print {
+            @page {
+                size: A4;
+                margin: 15mm;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            line-height: 1.6;
+            color: #222;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            padding: 20mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 4px solid #4F46E5;
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #4F46E5;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .intro {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .intro h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .intro p {
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            color: #4F46E5;
+            margin-bottom: 15px;
+            padding-left: 15px;
+            border-left: 6px solid #4F46E5;
+            font-weight: bold;
+        }
+
+        .steps {
+            display: grid;
+            gap: 15px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            background: #f8f9ff;
+            padding: 18px;
+            border-radius: 10px;
+            border-left: 5px solid #4F46E5;
+        }
+
+        .step-number {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-right: 15px;
+        }
+
+        .step-content h3 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .step-content p {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .button-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .button-icon {
+            width: 40px;
+            height: 40px;
+            background: #4F46E5;
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .button-text {
+            flex: 1;
+        }
+
+        .button-text strong {
+            display: block;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .button-text span {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .tips {
+            background: #fff7ed;
+            border: 2px solid #fb923c;
+            border-radius: 10px;
+            padding: 18px;
+            margin-top: 20px;
+        }
+
+        .tips h3 {
+            font-size: 20px;
+            color: #ea580c;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .tips h3::before {
+            content: "💡";
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .tips ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .tips li {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 8px;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .tips li::before {
+            content: "✓";
+            position: absolute;
+            left: 5px;
+            color: #ea580c;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .featured-section {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            padding: 18px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .featured-section h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .featured-section p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .print-button {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px 0;
+        }
+
+        .print-button button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .print-button button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 2px solid #e5e7eb;
+            font-size: 14px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✈️ 손안에 가이드</h1>
+            <p>AI가 들려주는 여행 이야기 - 파리 현장 가이드가 만든 PWA</p>
+        </div>
+
+        <div class="intro">
+            <h2>🎯 이 앱으로 무엇을 할 수 있나요?</h2>
+            <p>
+                여행지에서 <strong>사진만 찍으면</strong> AI가 자동으로 설명을 작성하고,<br>
+                <strong>음성으로 읽어줍니다.</strong> 카메라 버튼 하나로 모든 게 끝!
+            </p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📱 3단계 사용법</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>📸 사진 촬영하기</h3>
+                        <p>화면 아래 <strong>카메라 버튼</strong>을 누르세요. 카메라가 켜지면 여행지를 향해 <strong>촬영 버튼</strong>을 누릅니다.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>🤖 AI가 자동 설명</h3>
+                        <p>잠깐 기다리면 AI가 사진을 분석해서 <strong>텍스트 설명</strong>을 만들어줍니다. 화면에서 바로 읽을 수 있어요!</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>🔊 음성으로 듣기</h3>
+                        <p><strong>▶ 재생 버튼</strong>을 누르면 AI가 설명을 음성으로 읽어줍니다. 눈이 피곤할 때 귀로 들으세요!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🔘 주요 버튼 설명</h2>
+            <div class="buttons-grid">
+                <div class="button-item">
+                    <div class="button-icon">📷</div>
+                    <div class="button-text">
+                        <strong>카메라</strong>
+                        <span>사진 촬영</span>
+                    </div>
+                </div>
+
+                <div class="button-item">
+                    <div class="button-icon">▶</div>
+                    <div class="button-text">
+                        <strong>재생</strong>
+                        <span>음성 듣기</span>
+                    </div>
+                </div>
+
+                <div class="button-item">
+                    <div class="button-icon">💾</div>
+                    <div class="button-text">
+                        <strong>저장</strong>
+                        <span>보관함에 저장</span>
+                    </div>
+                </div>
+
+                <div class="button-item">
+                    <div class="button-icon">📁</div>
+                    <div class="button-text">
+                        <strong>보관함</strong>
+                        <span>저장한 사진 보기</span>
+                    </div>
+                </div>
+
+                <div class="button-item">
+                    <div class="button-icon">📤</div>
+                    <div class="button-text">
+                        <strong>공유</strong>
+                        <span>친구에게 전송</span>
+                    </div>
+                </div>
+
+                <div class="button-item">
+                    <div class="button-icon">🗑️</div>
+                    <div class="button-text">
+                        <strong>삭제</strong>
+                        <span>사진 지우기</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="featured-section">
+            <h3>⭐ 추천 콘텐츠 (Featured Gallery)</h3>
+            <p>
+                메인 화면 위쪽에 <strong>큰 글씨로 된 제목</strong>이 보이나요?<br>
+                클릭하면 파리 가이드가 직접 선별한 명소 설명을 볼 수 있습니다!<br>
+                다운로드 수가 많은 인기 콘텐츠를 확인하세요.
+            </p>
+        </div>
+
+        <div class="tips">
+            <h3>💡 꿀팁</h3>
+            <ul>
+                <li><strong>음성이 안 나올 때:</strong> 휴대폰 무음 모드를 해제하고 볼륨을 올려보세요</li>
+                <li><strong>사진을 여러 장 찍고 싶을 때:</strong> 저장 버튼을 누르면 보관함에 저장되고, 다시 카메라를 사용할 수 있어요</li>
+                <li><strong>오디오는 짧게:</strong> 여행 중에는 1분 이상 듣기 어려우니 핵심만 빠르게 들으세요</li>
+                <li><strong>인터넷 연결 필수:</strong> AI 분석을 위해 와이파이나 데이터가 필요합니다</li>
+                <li><strong>친구에게 공유:</strong> 보관함에서 선택 → 공유 버튼으로 카카오톡/문자로 전송 가능</li>
+            </ul>
+        </div>
+
+        <div class="footer no-print">
+            <p>문의: 파리 현장 가이드 | 손안에 가이드 v1.0 | 2025년 10월</p>
+        </div>
+
+        <div class="print-button no-print">
+            <button onclick="window.print()">🖨️ 이 설명서 인쇄하기</button>
+        </div>
+    </div>
+
+    <script>
+        // 인쇄 후 자동으로 창 닫기 옵션
+        window.onafterprint = function() {
+            console.log('인쇄 완료!');
+        };
+    </script>
+</body>
+</html>
