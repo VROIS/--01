@@ -796,150 +796,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showPage(settingsPage);
     }
 
-    // ⭐ Featured 갤러리 관리 기능
-    async function loadFeaturedData() {
-        try {
-            // 공유 페이지 목록 로드
-            const sharesResponse = await fetch('/api/admin/shares', {
-                credentials: 'include'
-            });
-            
-            if (sharesResponse.status === 403) {
-                // 관리자가 아님 - Featured 섹션 숨기기
-                return;
-            }
-            
-            const shares = await sharesResponse.json();
-            const featuredResponse = await fetch('/api/admin/featured', {
-                credentials: 'include'
-            });
-            const featured = await featuredResponse.json();
-            
-            renderFeaturedManagement(shares, featured);
-        } catch (error) {
-            console.error('Featured 데이터 로드 실패:', error);
-        }
-    }
-
-    function renderFeaturedManagement(shares, featured) {
-        const select = document.getElementById('featuredShareSelect');
-        const searchInput = document.getElementById('shareSearchInput');
-        const list = document.getElementById('featuredList');
-        const count = document.getElementById('featuredCount');
-        
-        // 전체 공유 페이지 데이터 저장 (검색용)
-        window.allShares = shares;
-        
-        // 드롭다운 렌더링 함수
-        const renderOptions = (filteredShares) => {
-            select.innerHTML = '<option value="">공유 페이지를 선택하세요</option>';
-            filteredShares.forEach(share => {
-                const option = document.createElement('option');
-                option.value = share.id;
-                option.textContent = `${share.name} (${new Date(share.createdAt).toLocaleDateString()})`;
-                select.appendChild(option);
-            });
-            
-            // 검색 결과가 없을 때
-            if (filteredShares.length === 0) {
-                select.innerHTML = '<option value="">검색 결과가 없습니다</option>';
-            }
-        };
-        
-        // 초기 렌더링
-        renderOptions(shares);
-        
-        // 검색 기능
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
-                const filtered = window.allShares.filter(share => {
-                    const name = share.name.toLowerCase();
-                    const date = new Date(share.createdAt).toLocaleDateString();
-                    return name.includes(searchTerm) || date.includes(searchTerm);
-                });
-                renderOptions(filtered);
-            });
-        }
-        
-        // Featured 목록 렌더링
-        count.textContent = featured.length;
-        
-        if (featured.length === 0) {
-            list.innerHTML = '<p class="text-sm text-gray-400">Featured 항목이 없습니다</p>';
-        } else {
-            list.innerHTML = featured.map(item => `
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
-                    <div class="flex-1">
-                        <p class="font-medium text-sm text-gray-800">${item.name}</p>
-                        <p class="text-xs text-gray-500">ID: ${item.id} • ${new Date(item.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <button 
-                        onclick="removeFeatured('${item.id}')" 
-                        class="ml-4 px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition">
-                        제거
-                    </button>
-                </div>
-            `).join('');
-        }
-    }
-
-    async function addFeatured() {
-        const select = document.getElementById('featuredShareSelect');
-        const shareId = select.value;
-        
-        if (!shareId) {
-            showToast('공유 페이지를 선택해주세요.');
-            return;
-        }
-        
-        try {
-            const response = await fetch(`/api/admin/featured/${shareId}`, {
-                method: 'POST',
-                credentials: 'include'
-            });
-            
-            const result = await response.json();
-            
-            if (!response.ok) {
-                showToast(result.error || 'Featured 추가에 실패했습니다.');
-                return;
-            }
-            
-            showToast('✅ Featured로 추가되었습니다!');
-            await loadFeaturedData(); // 새로고침
-        } catch (error) {
-            console.error('Featured 추가 오류:', error);
-            showToast('Featured 추가에 실패했습니다.');
-        }
-    }
-
-    async function removeFeatured(id) {
-        try {
-            const response = await fetch(`/api/admin/featured/${id}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
-            
-            const result = await response.json();
-            
-            if (!response.ok) {
-                showToast(result.error || 'Featured 제거에 실패했습니다.');
-                return;
-            }
-            
-            showToast('✅ Featured에서 제거되었습니다!');
-            await loadFeaturedData(); // 새로고침
-        } catch (error) {
-            console.error('Featured 제거 오류:', error);
-            showToast('Featured 제거에 실패했습니다.');
-        }
-    }
-    
-    // Global 함수로 등록 (HTML onclick에서 호출 가능하도록)
-    window.addFeatured = addFeatured;
-    window.removeFeatured = removeFeatured;
-    
     function resetSpeechState() {
         utteranceQueue = [];
         isSpeaking = false;
@@ -1614,58 +1470,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ⚡ Featured Gallery 백그라운드 로딩 함수
-    async function loadFeaturedGallery() {
-        try {
-            console.log('⏱️ [7] Featured API 호출 시작');
-            const apiStartTime = performance.now();
-            const response = await fetch('/api/share/featured/list');
-            console.log(`⏱️ [8] Featured API 응답 (${(performance.now() - apiStartTime).toFixed(0)}ms)`);
-            if (!response.ok) return;
-            
-            const data = await response.json();
-            const featuredPages = data.pages || [];
-            
-            if (featuredPages.length > 0) {
-                console.log('⏱️ [9] Featured Gallery 렌더링 시작');
-                featuredGallery.classList.remove('hidden');
-                featuredGrid.innerHTML = featuredPages.map(page => {
-                    const thumbnail = page.thumbnail || '';
-                    const shareUrl = `${window.location.origin}/s/${page.id}`;
-                    return `
-                        <a href="${shareUrl}" target="_blank" 
-                           class="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                           data-testid="featured-${page.id}">
-                            ${thumbnail ? `
-                                <img src="${thumbnail}" alt="${page.name}" 
-                                     class="w-full aspect-square object-cover">
-                            ` : `
-                                <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                                    <span class="text-4xl">📍</span>
-                                </div>
-                            `}
-                        </a>
-                    `;
-                }).join('');
-                console.log('⏱️ [10] Featured Gallery 렌더링 완료');
-            } else {
-                featuredGallery.classList.add('hidden');
-            }
-        } catch (error) {
-            console.warn('Featured gallery load failed:', error);
-            featuredGallery?.classList.add('hidden');
-        }
-    }
-
     async function renderArchive() {
         try {
             console.log('⏱️ [1] renderArchive 시작');
             const startTime = performance.now();
-            
-            // ⚡ Featured Gallery 먼저 숨기기 (로딩 중)
-            if (featuredGallery) {
-                featuredGallery.classList.add('hidden');
-            }
             
             console.log('⏱️ [2] getAllItems 호출 전');
             const items = await getAllItems();
@@ -1703,12 +1511,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `).join('');
                 console.log(`⏱️ [5] 내 보관함 렌더링 완료 (${(performance.now() - startTime).toFixed(0)}ms)`);
-            }
-            
-            // ⚡ Featured Gallery 백그라운드 로드 (비차단)
-            if (featuredGallery && featuredGrid) {
-                console.log('⏱️ [6] Featured Gallery 백그라운드 로드 시작');
-                loadFeaturedGallery();
             }
 
         } catch (error) {
@@ -1954,7 +1756,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 인증 성공
                 authSection.classList.add('hidden');
                 promptSettingsSection.classList.remove('hidden');
-                await loadFeaturedData(); // Featured 데이터 로드
                 showToast('관리자 인증 성공');
             } else {
                 // 인증 실패

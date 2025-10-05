@@ -65,47 +65,6 @@ async function* streamResponseFromServer(body) {
     }
 }
 
-/**
- * 스트림 응답을 성능 추적으로 래핑하는 함수
- * @param {AsyncGenerator} stream - 원본 스트림
- * @param {number} startTime - 시작 시간
- * @param {object} requestBody - 요청 본문
- * @param {string} base64Image - 이미지 데이터 (선택사항)
- */
-async function* wrapStreamWithPerformanceTracking(stream, startTime, requestBody, base64Image = null) {
-    let fullResponse = '';
-    let hasError = false;
-    
-    try {
-        for await (const chunk of stream) {
-            if (chunk.text) {
-                fullResponse += chunk.text;
-                yield chunk;
-            }
-        }
-    } catch (error) {
-        hasError = true;
-        console.error('🚨 [API오류]', error);
-        throw error;
-    } finally {
-        const endTime = Date.now();
-        const processingTime = endTime - startTime;
-        
-        if (!hasError && window.performanceMonitor) {
-            const inputText = requestBody.prompt + (requestBody.systemInstruction || '');
-            const imageSize = base64Image ? Math.round((base64Image.length * 3/4) / 1024) : 0;
-            
-            window.performanceMonitor.recordApiCall(
-                inputText, 
-                fullResponse, 
-                processingTime, 
-                imageSize
-            );
-            
-            console.log(`⚡ [API완료] ${processingTime}ms, 응답: ${fullResponse.length}자, 이미지: ${imageSize}KB`);
-        }
-    }
-}
 
 
 /**
@@ -117,15 +76,13 @@ export function generateDescriptionStream(base64Image) {
     const systemInstruction = localStorage.getItem('customImagePrompt') || DEFAULT_IMAGE_PROMPT;
     console.log('🔍 [프롬프트확인] 사용중인 이미지 프롬프트:', systemInstruction.substring(0, 50) + '...');
     
-    const startTime = Date.now();
     const requestBody = {
         base64Image,
         prompt: "이 이미지를 분석하고 한국어로 생생하게 설명해주세요.",
         systemInstruction
     };
     
-    // 🔍 성능 추적이 포함된 스트림 반환
-    return wrapStreamWithPerformanceTracking(streamResponseFromServer(requestBody), startTime, requestBody, base64Image);
+    return streamResponseFromServer(requestBody);
 }
 
 /**
@@ -137,12 +94,10 @@ export function generateTextStream(prompt) {
     const systemInstruction = localStorage.getItem('customTextPrompt') || DEFAULT_TEXT_PROMPT;
     console.log('🔍 [프롬프트확인] 사용중인 텍스트 프롬프트:', systemInstruction.substring(0, 50) + '...');
     
-    const startTime = Date.now();
     const requestBody = {
         prompt,
         systemInstruction
     };
     
-    // 🔍 성능 추적이 포함된 스트림 반환
-    return wrapStreamWithPerformanceTracking(streamResponseFromServer(requestBody), startTime, requestBody);
+    return streamResponseFromServer(requestBody);
 }
