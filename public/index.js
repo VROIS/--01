@@ -792,7 +792,6 @@ document.addEventListener('DOMContentLoaded', () => {
         authSection.classList.remove('hidden');
         promptSettingsSection.classList.add('hidden');
         populatePromptTextareas(); // Load saved or default prompts
-        await loadFeaturedData(); // Load Featured management data
         showPage(settingsPage);
     }
 
@@ -1897,14 +1896,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (textPromptTextarea) textPromptTextarea.value = savedTextPrompt;
     }
 
-    function handleAuth(event) {
+    async function handleAuth(event) {
         event.preventDefault();
         const password = authPassword.value;
         
         // Simple password check - in production, this should be more secure
-        if (password === 'admin123') {
+        if (password === '1234') {
             authSection.classList.add('hidden');
             promptSettingsSection.classList.remove('hidden');
+            await loadFeaturedData(); // Featured 데이터 로드 (인증 후에만)
             showToast('인증되었습니다.');
         } else {
             showToast('잘못된 비밀번호입니다.');
