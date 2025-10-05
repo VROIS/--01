@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+import { storage } from "./storage";
 import fs from 'fs';
 import path from 'path';
 
@@ -26,6 +27,22 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // 🔧 Ensure temp-user-id exists for share functionality
+  try {
+    const tempUser = await storage.getUser('temp-user-id');
+    if (!tempUser) {
+      await storage.upsertUser({
+        id: 'temp-user-id',
+        email: 'temp@example.com',
+        firstName: '임시',
+        lastName: '사용자',
+      });
+      log('Created temp-user-id for share functionality');
+    }
+  } catch (error) {
+    log('Warning: Could not create temp-user-id: ' + error);
+  }
+  
   // 🔧 [공유링크 수정] 정적 파일 서빙을 라우트 등록보다 먼저 설정
   const publicDir = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
   app.use(express.static(publicDir));
