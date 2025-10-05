@@ -1545,6 +1545,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ${pageName}
                                 </h3>
                             </div>
+                            <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 shadow-lg" data-testid="download-count-${page.id}">
+                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                <span class="text-xs font-bold text-gray-700">${page.downloadCount || 0}</span>
+                            </div>
                         </a>
                     `;
                 }).join('');
