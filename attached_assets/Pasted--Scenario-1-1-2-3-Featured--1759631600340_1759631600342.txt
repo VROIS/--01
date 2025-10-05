@@ -1,0 +1,301 @@
+👤 사용자 워크플로우
+Scenario 1: 신규 유저 (비로그인)
+1. 앱 접속
+   ↓
+2. 보관함 페이지 표시
+   - 상단 3칸: Featured 갤러리 (루브르 20선, 오르세 명작, 베르사유)
+   - 하단: 내 보관함 (비어있음)
+   ↓
+3. "루브르 20선" 클릭
+   ↓
+4. 🔒 인증 모달 표시
+   ┌─────────────────────────────────┐
+   │ 손안에 가이드에 오신 걸 환영합니다 │
+   ├─────────────────────────────────┤
+   │ 이름: [________]                │
+   │                                 │
+   │ 인증 방법:                      │
+   │ ○ Google 로그인                 │
+   │ ○ 전화번호 SMS 인증             │
+   │                                 │
+   │ 언어 선택:                      │
+   │ [한국어 ▼]                      │
+   │ (영어/프랑스어/스페인어/...)    │
+   │                                 │
+   │ [시작하기] 버튼                 │
+   └─────────────────────────────────┘
+   ↓
+5. Google 로그인 완료
+   → DB 저장: name, email, language
+   ↓
+6. 상세 뷰 재생 (보관함과 동일 UX)
+   - 배경: 루브르 사진
+   - 음성: 자동 재생 (선택한 언어로)
+   - 텍스트: 오버레이 하이라이트
+   - 하단 버튼:
+     [🏠 홈] [▶ 재생/일시정지] [⬇️ 다운로드]
+   ↓
+7. "다운로드" 버튼 클릭
+   → HTML 파일 다운로드 (공유 페이지처럼)
+Scenario 2: 기존 유저 (로그인 완료)
+1. 앱 접속 (이미 로그인됨)
+   ↓
+2. 보관함 페이지
+   - Featured 갤러리: 루브르 20선, 오르세 명작, 베르사유
+   - 내 보관함: 내가 저장한 가이드들
+   ↓
+3. "오르세 명작 20" 클릭
+   ↓
+4. 바로 상세 뷰 재생 (인증 모달 없음)
+   - 음성: 내가 설정한 언어로 자동 재생
+   - 텍스트: 하이라이트
+   - 하단: [홈] [재생] [다운로드]
+   ↓
+5. 다운로드 버튼 클릭
+   → HTML 파일 다운로드
+Scenario 3: 관리자 (Featured 설정)
+1. 관리자 로그인 (isAdmin=true)
+   ↓
+2. 내가 "루브르 20선" 공유 페이지 생성
+   → DB 저장: sharedHtmlPages (id: "CteVkdGo")
+   ↓
+3. 설정 페이지 이동
+   ↓
+4. [관리자 전용] Featured 관리 섹션
+   ┌─────────────────────────────────┐
+   │ Featured 갤러리 관리            │
+   ├─────────────────────────────────┤
+   │ 공유 링크 ID: [CteVkdGo_____]  │
+   │ [추가] 버튼                     │
+   │                                 │
+   │ 현재 Featured (3개):            │
+   │ 1. CteVkdGo - 루브르 20선      │
+   │    [제거]                       │
+   │ 2. xyz12345 - 오르세 명작      │
+   │    [제거]                       │
+   │ 3. abc67890 - 베르사유         │
+   │    [제거]                       │
+   └─────────────────────────────────┘
+   ↓
+5. "CteVkdGo" 입력 → [추가] 클릭
+   → DB 업데이트: featured = true
+   ↓
+6. 모든 사용자의 보관함에 표시됨
+📊 DB 설계 검토
+기존 테이블 (변경 없음)
+users 테이블
+id (varchar, 기존)
+email (varchar, 기존)
+name (varchar, 기존)
+preferredLanguage (varchar, 기존) ← 활용!
+isAdmin (boolean) ← 새로 추가
+createdAt (timestamp)
+sharedHtmlPages 테이블
+id (varchar 8자, 기존)
+userId (varchar, 기존)
+name (varchar, 기존)
+htmlContent (text, 기존)
+guideIds (text[], 기존)
+thumbnail (text, 기존)
+sender (varchar, 기존)
+location (varchar, 기존)
+featured (boolean, 기존) ← 활용!
+isActive (boolean, 기존)
+downloadCount (integer, 기존)
+createdAt (timestamp, 기존)
+새 테이블 필요 없음! ✅
+🔄 정보 흐름 분석
+1. 인증 프로세스
+[프론트엔드]
+인증 모달 표시
+  ↓
+사용자 입력:
+- 이름: "홍길동"
+- 인증: Google 선택
+- 언어: "한국어" 선택
+  ↓
+[Replit Auth]
+Google OAuth 처리
+  ↓
+[백엔드] POST /api/auth/complete
+{
+  name: "홍길동",
+  email: "hong@gmail.com",
+  language: "ko"
+}
+  ↓
+[DB] users 테이블 저장/업데이트
+UPDATE users SET
+  name = "홍길동",
+  preferredLanguage = "ko"
+WHERE email = "hong@gmail.com"
+  ↓
+[응답] 세션 생성 → 로그인 완료
+2. Featured 재생 프로세스
+[프론트엔드]
+Featured 갤러리 클릭 (id: "CteVkdGo")
+  ↓
+로그인 체크
+  ↓ (비로그인)
+인증 모달 표시 → 로그인
+  ↓ (로그인 완료)
+GET /api/share/CteVkdGo
+  ↓
+[백엔드]
+const page = await storage.getSharedHtmlPage("CteVkdGo")
+return {
+  id: "CteVkdGo",
+  htmlContent: "...",
+  guideIds: [...],
+  featured: true
+}
+  ↓
+[프론트엔드]
+상세 뷰 표시 (보관함과 동일 로직)
+- htmlContent 파싱
+- 첫 번째 가이드 자동 재생
+- 하단 [홈] [재생] [다운로드] 버튼
+3. 다운로드 프로세스
+[프론트엔드]
+다운로드 버튼 클릭
+  ↓
+const htmlContent = currentPage.htmlContent
+downloadHTML(htmlContent, "루브르 20선")
+  ↓
+const blob = new Blob([htmlContent], { type: 'text/html' })
+const url = URL.createObjectURL(blob)
+<a download="루브르 20선-손안에가이드.html" href={url}>
+  ↓
+파일 다운로드 완료
+🛠️ 단계별 세부 계획
+Phase 1: DB 스키마 수정 (10분)
+// shared/schema.ts
+export const users = pgTable("users", {
+  // ... 기존 필드
+  isAdmin: boolean("is_admin").default(false), // 추가
+});
+// sharedHtmlPages 테이블은 변경 없음 (featured 이미 있음)
+실행: npm run db:push --force
+
+Phase 2: 인증 모달 구현 (2-3시간)
+2-1. 모달 UI (public/index.html)
+<!-- 새 모달 추가 -->
+<div id="authModal" class="modal hidden">
+  <div class="modal-content">
+    <h2>손안에 가이드에 오신 걸 환영합니다</h2>
+    
+    <input id="authName" placeholder="이름" />
+    
+    <div>인증 방법:</div>
+    <label><input type="radio" name="auth" value="google" checked> Google</label>
+    <label><input type="radio" name="auth" value="sms"> 전화번호 SMS</label>
+    
+    <select id="authLanguage">
+      <option value="ko">한국어</option>
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+      <option value="es">Español</option>
+      <option value="pt">Português</option>
+      <option value="zh">中文</option>
+      <option value="ja">日本語</option>
+    </select>
+    
+    <button onclick="startAuth()">시작하기</button>
+  </div>
+</div>
+2-2. 인증 로직 (public/index.js)
+async function startAuth() {
+  const name = document.getElementById('authName').value;
+  const authMethod = document.querySelector('input[name="auth"]:checked').value;
+  const language = document.getElementById('authLanguage').value;
+  
+  // localStorage에 임시 저장
+  localStorage.setItem('pendingAuth', JSON.stringify({ name, language }));
+  
+  if (authMethod === 'google') {
+    // Replit Auth Google 로그인
+    window.location.href = '/api/auth/login?provider=google';
+  } else {
+    // SMS 인증 (추후 구현)
+    showSMSAuth();
+  }
+}
+2-3. 인증 완료 처리 (server/routes.ts)
+app.get('/api/auth/callback', async (req, res) => {
+  // Replit Auth 완료 후
+  const { name, language } = req.query; // 프론트엔드에서 전달
+  
+  await storage.updateUser(req.user.id, {
+    name,
+    preferredLanguage: language
+  });
+  
+  res.redirect('/'); // 앱으로 돌아가기
+});
+Phase 3: Featured 재생 구현 (2시간)
+3-1. 클릭 핸들러 (public/index.js)
+async function playFeaturedGuide(shareId) {
+  // 로그인 체크
+  if (!currentUser) {
+    showAuthModal();
+    // 모달 닫힌 후 이 가이드 재생
+    pendingShareId = shareId;
+    return;
+  }
+  
+  // 공유 페이지 데이터 가져오기
+  const response = await fetch(`/api/share/${shareId}`);
+  const page = await response.json();
+  
+  // 상세 뷰 표시 (보관함 로직 재활용)
+  showDetailPageFromShare(page);
+}
+3-2. 상세 뷰 수정
+function showDetailPageFromShare(page) {
+  // HTML 파싱하여 가이드 추출
+  const guides = parseShareHTML(page.htmlContent);
+  
+  // 상세 뷰 표시 (기존 viewArchiveItem 로직 활용)
+  currentGuides = guides;
+  currentIndex = 0;
+  
+  // 하단 버튼만 변경: [저장] → [다운로드]
+  document.getElementById('saveBtn').style.display = 'none';
+  document.getElementById('downloadBtn').style.display = 'block';
+  document.getElementById('downloadBtn').onclick = () => {
+    downloadShareHTML(page.htmlContent, page.name);
+  };
+  
+  // 재생 시작
+  playGuide(guides[0]);
+}
+Phase 4: 관리자 기능 구현 (1시간)
+4-1. 설정 페이지 UI (public/index.html)
+<!-- 관리자만 보임 -->
+<div id="adminSection" class="hidden">
+  <h3>Featured 갤러리 관리</h3>
+  
+  <input id="featuredId" placeholder="공유 링크 ID (예: CteVkdGo)" />
+  <button onclick="addFeatured()">추가</button>
+  
+  <div id="featuredList"></div>
+</div>
+4-2. 관리자 API (server/routes.ts)
+// Featured 추가
+app.post('/api/admin/featured/:id', requireAdmin, async (req, res) => {
+  await storage.setFeatured(req.params.id, true);
+  res.json({ success: true });
+});
+// Featured 제거
+app.delete('/api/admin/featured/:id', requireAdmin, async (req, res) => {
+  await storage.setFeatured(req.params.id, false);
+  res.json({ success: true });
+});
+❓ 확인 사항
+SMS 인증: 지금 단계에서 구현? 아니면 Google만?
+관리자 설정 방법: ID 입력 방식이 불편하다면, 어떤 방식이 좋을까요?
+Option A: 내 공유 목록에서 토글?
+Option B: 드래그 앤 드롭?
+Option C: 다른 아이디어?
+언어별 콘텐츠: Featured 콘텐츠는 모든 언어로 미리 생성? 아니면 사용자 언어에 맞춰 실시간 번역?
+피드백 주시면 최종 계획 확정하겠습니다! 📝
