@@ -1617,45 +1617,38 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const items = await getAllItems();
             
-            // ✅ Featured Gallery (추천 갤러리) 로직 - 2025.10.02 확보됨
-            // 핵심: 최신 3개 공유링크를 상단 고정 영역에 표시 (사진만, 타이틀/다운로드 버튼 제거)
+            // ✅ Featured Gallery (추천 갤러리) 로직 - 서버 API에서 조회
+            // 핵심: Featured로 지정된 공유 페이지를 상단 고정 영역에 표시
             if (featuredGallery && featuredGrid) {
-                let featuredLinks = [];
+                let featuredPages = [];
                 try {
-                    featuredLinks = await getFeaturedShareLinks();
+                    const response = await fetch('/api/share/featured/list');
+                    if (response.ok) {
+                        const data = await response.json();
+                        featuredPages = data.pages || [];
+                    }
                 } catch (error) {
                     console.warn('Featured gallery not available yet:', error);
-                    featuredLinks = [];
                 }
                 
-                // 임시 샘플 데이터 (테스트용)
-                if (featuredLinks.length === 0) {
-                    const sampleImages = items.slice(0, 3);
-                    if (sampleImages.length > 0) {
-                        featuredLinks = sampleImages.map(item => ({
-                            id: item.id,
-                            title: '샘플',
-                            guideItems: [{ imageDataUrl: item.imageDataUrl }]
-                        }));
-                    }
-                }
-                
-                if (featuredLinks.length > 0) {
+                if (featuredPages.length > 0) {
                     featuredGallery.classList.remove('hidden');
-                    featuredGrid.innerHTML = featuredLinks.map(link => {
-                        const thumbnail = link.guideItems[0]?.imageDataUrl || '';
+                    featuredGrid.innerHTML = featuredPages.map(page => {
+                        const thumbnail = page.thumbnail || '';
+                        const shareUrl = `${window.location.origin}/s/${page.id}`;
                         return `
-                            <div class="relative bg-white rounded-lg overflow-hidden shadow-sm"
-                                 data-testid="featured-${link.id}">
+                            <a href="${shareUrl}" target="_blank" 
+                               class="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                               data-testid="featured-${page.id}">
                                 ${thumbnail ? `
-                                    <img src="${thumbnail}" alt="${link.title}" 
+                                    <img src="${thumbnail}" alt="${page.name}" 
                                          class="w-full aspect-square object-cover">
                                 ` : `
                                     <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
                                         <span class="text-4xl">📍</span>
                                     </div>
                                 `}
-                            </div>
+                            </a>
                         `;
                     }).join('');
                 } else {

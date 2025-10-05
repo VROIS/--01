@@ -76,7 +76,7 @@ export interface IStorage {
   // Shared HTML page operations
   createSharedHtmlPage(userId: string, page: InsertSharedHtmlPage): Promise<SharedHtmlPage>;
   getSharedHtmlPage(id: string): Promise<SharedHtmlPage | undefined>;
-  getUserSharedHtmlPages(userId: string): Promise<SharedHtmlPage[]>;
+  getUserSharedHtmlPages(userId: string): Promise<Omit<SharedHtmlPage, 'htmlContent'>[]>;
   getFeaturedHtmlPages(): Promise<SharedHtmlPage[]>;
   setFeatured(id: string, featured: boolean): Promise<void>;
   incrementDownloadCount(id: string): Promise<void>;
@@ -614,11 +614,26 @@ export class DatabaseStorage implements IStorage {
    * 목적: 관리자 설정 페이지에서 사용자의 공유 페이지 목록 표시
    * 
    * @param userId - 사용자 ID
-   * @returns 사용자의 모든 공유 페이지 (최신순)
+   * @returns 사용자의 모든 공유 페이지 (최신순, htmlContent 제외)
+   * 
+   * ⚡ 성능 최적화: htmlContent 제외 (3MB × 37개 = 111MB 절약)
    */
-  async getUserSharedHtmlPages(userId: string): Promise<SharedHtmlPage[]> {
+  async getUserSharedHtmlPages(userId: string): Promise<Omit<SharedHtmlPage, 'htmlContent'>[]> {
     return await db
-      .select()
+      .select({
+        id: sharedHtmlPages.id,
+        userId: sharedHtmlPages.userId,
+        name: sharedHtmlPages.name,
+        guideIds: sharedHtmlPages.guideIds,
+        thumbnail: sharedHtmlPages.thumbnail,
+        sender: sharedHtmlPages.sender,
+        location: sharedHtmlPages.location,
+        featured: sharedHtmlPages.featured,
+        downloadCount: sharedHtmlPages.downloadCount,
+        isActive: sharedHtmlPages.isActive,
+        createdAt: sharedHtmlPages.createdAt,
+        updatedAt: sharedHtmlPages.updatedAt,
+      })
       .from(sharedHtmlPages)
       .where(eq(sharedHtmlPages.userId, userId))
       .orderBy(desc(sharedHtmlPages.createdAt));
