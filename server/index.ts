@@ -27,16 +27,17 @@ app.use((req, res, next) => {
 
 (async () => {
   // 🔧 [공유링크 수정] 정적 파일 서빙을 라우트 등록보다 먼저 설정
-  app.use(express.static('public'));
+  const publicDir = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
+  app.use(express.static(publicDir));
   
   // Route for root page
   app.get('/', (req, res) => {
-    res.sendFile('index.html', { root: 'public' });
+    res.sendFile('index.html', { root: publicDir });
   });
   
   // Route for share page - 명시적 라우트 추가
   app.get('/share.html', (req, res) => {
-    res.sendFile('share.html', { root: 'public' });
+    res.sendFile('share.html', { root: publicDir });
   });
   
   // 🔧 [공유링크 임시 비활성화] SEO 친화적 URL은 추후 구현 예정
