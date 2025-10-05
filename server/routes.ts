@@ -1146,15 +1146,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * - Zod 검증 실패 시 400 에러
    * - ID 생성 실패 시 500 에러
    */
-  // ⭐ 관리자 체크 미들웨어
+  // ⭐ 관리자 체크 미들웨어 (비밀번호 또는 Replit 로그인 지원)
   const requireAdmin = (req: any, res: any, next: any) => {
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-      return res.status(401).json({ error: '인증이 필요합니다.' });
+    // 방법 1: 비밀번호 기반 인증 (세션에 저장됨)
+    if (req.session?.adminAuthenticated) {
+      return next();
     }
-    if (!req.user?.isAdmin) {
-      return res.status(403).json({ error: '관리자 권한이 필요합니다.' });
+    
+    // 방법 2: Replit 로그인 + is_admin 확인
+    if (req.isAuthenticated && req.isAuthenticated() && req.user?.isAdmin) {
+      return next();
     }
-    next();
+    
+    // 둘 다 안 되면 401
+    return res.status(401).json({ error: '관리자 인증이 필요합니다.' });
   };
 
   app.post('/api/share/create', async (req, res) => {
@@ -1200,10 +1205,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * 🔐 관리자 API - Featured 갤러리 관리
    */
   
+  // POST /api/admin/auth - 비밀번호 기반 관리자 인증
+  app.post('/api/admin/auth', (req: any, res) => {
+    const { password } = req.body;
+    
+    // 비밀번호 확인 (프로덕션에서는 환경변수 사용 권장)
+    if (password === '1234') {
+      req.session.adminAuthenticated = true;
+      req.session.adminUserId = 'temp-user-id'; // 관리자 userId 저장
+      res.json({ success: true, message: '관리자 인증 성공' });
+    } else {
+      res.status(401).json({ error: '잘못된 비밀번호입니다.' });
+    }
+  });
+  
   // GET /api/admin/shares - 관리자의 모든 공유 페이지 목록
   app.get('/api/admin/shares', requireAdmin, async (req: any, res) => {
     try {
-      const shares = await storage.getUserSharedHtmlPages(req.user.id);
+      // 비밀번호 인증 사용자는 세션의 adminUserId 사용
+      const userId = req.session?.adminUserId || req.user?.id || 'temp-user-id';
+      const shares = await storage.getUserSharedHtmlPages(userId);
       res.json(shares);
     } catch (error) {
       console.error('공유 페이지 목록 조회 오류:', error);
