@@ -1539,9 +1539,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <span class="text-4xl">📍</span>
                                 </div>
                             `}
-                            <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/20 flex items-start justify-center pt-3 px-3">
-                                <h3 class="text-white font-bold text-center leading-snug line-clamp-2" 
-                                    style="font-size: clamp(0.875rem, 4vw, 1.125rem); text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.8);">
+                            <div class="absolute inset-0 bg-gradient-to-b from-black/85 via-black/50 to-black/20 flex items-start justify-center pt-4 px-4">
+                                <h3 class="text-white font-extrabold text-center leading-tight line-clamp-2" 
+                                    style="font-size: clamp(1.125rem, 6vw, 1.75rem); text-shadow: 0 3px 15px rgba(0,0,0,1), 0 2px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.8);">
                                     ${pageName}
                                 </h3>
                             </div>
