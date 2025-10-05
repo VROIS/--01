@@ -773,6 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ⚠️ CRITICAL: DO NOT MODIFY WITHOUT USER APPROVAL
     // 사용자 승인 없이 절대 수정 금지 - AI 및 모든 개발자 주의
     // Verified: 2025-10-02 | Status: Production-Ready ✅
+    // ⚡ 성능 최적화: 화면 먼저 표시, 데이터는 백그라운드 로드 (2025-10-05)
     // ═══════════════════════════════════════════════════════════════
     async function showArchivePage() {
         pauseCamera();
@@ -781,8 +782,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isSelectionMode) { 
             toggleSelectionMode(false);
         }
-        await renderArchive();
-        showPage(archivePage);
+        showPage(archivePage); // ⚡ 화면 먼저 표시 (즉시)
+        renderArchive(); // ⚡ 데이터 백그라운드 로드 (비차단)
     }
 
     async function showSettingsPage() {
