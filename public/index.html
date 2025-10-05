@@ -617,19 +617,20 @@
             <h1 id="selectionCount" class="text-xl font-bold text-gray-800">0개 선택</h1>
         </header>
         
-        <!-- ✅ 존 2: 추천 갤러리 (고정) - 2025.10.02 확보된 로직 -->
-        <!-- 핵심: flex-shrink:0으로 크기 고정 -->
-        <div id="featuredGallery" class="px-4 py-3 bg-white border-b border-gray-100" style="flex-shrink: 0;">
-            <div id="featuredGrid" class="grid grid-cols-3 gap-3"></div>
-        </div>
-        
-        <!-- ✅ 존 3: 내 보관함 (스크롤 영역) - 2025.10.02 확보된 로직 -->
+        <!-- ✅ 존 2: 내 보관함 (스크롤 영역) - 2025.10.02 확보된 로직 -->
         <!-- 핵심: flex:1 + overflow-y:scroll + min-height:0 조합으로 스크롤 활성화 -->
+        <!-- ⚡ 2025-10-05: 내 보관함을 먼저 표시 (즉시 렌더링) -->
         <div id="archiveScrollZone" style="flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch; min-height: 0; position: relative; background: #f9fafb;">
             <div id="archiveGridContainer" class="px-4 py-4" style="min-height: 150vh;">
                 <div id="archiveGrid"></div>
                 <p id="emptyArchiveMessage" class="text-slate-500 text-center mt-10 hidden">저장된 항목이 없습니다.</p>
             </div>
+        </div>
+        
+        <!-- ✅ 존 3: 추천 갤러리 (하단 고정) - 2025.10.05 이동 -->
+        <!-- 핵심: 내 보관함 아래에 배치하여 레이아웃 시프트 방지 -->
+        <div id="featuredGallery" class="px-4 py-3 bg-white border-t border-gray-100" style="flex-shrink: 0;">
+            <div id="featuredGrid" class="grid grid-cols-3 gap-3"></div>
         </div>
         
         <!-- ✅ 존 4: 하단 Footer (고정) - 2025.10.02 확보된 로직 -->
