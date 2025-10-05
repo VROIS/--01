@@ -1856,16 +1856,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadUserShares() {
         try {
-            const response = await fetch('/api/share/user/list');
+            const response = await fetch('/api/admin/shares', {
+                credentials: 'include'
+            });
             if (!response.ok) throw new Error('Failed to load shares');
             
-            const data = await response.json();
-            const shares = data.shares || [];
+            const shares = await response.json();
             
             const select = document.getElementById('featuredShareSelect');
             if (!select) return;
             
-            if (shares.length === 0) {
+            if (!shares || shares.length === 0) {
                 select.innerHTML = '<option value="">공유 페이지가 없습니다</option>';
                 return;
             }
@@ -1894,11 +1895,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadFeaturedList() {
         try {
-            const response = await fetch('/api/share/featured/list');
+            const response = await fetch('/api/admin/featured', {
+                credentials: 'include'
+            });
             if (!response.ok) throw new Error('Failed to load featured');
             
-            const data = await response.json();
-            const featured = data.pages || [];
+            const featured = await response.json();
             
             const list = document.getElementById('featuredList');
             const count = document.getElementById('featuredCount');
@@ -1907,7 +1909,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!list) return;
             
-            if (featured.length === 0) {
+            if (!featured || featured.length === 0) {
                 list.innerHTML = '<p class="text-sm text-gray-400">Featured 페이지가 없습니다</p>';
                 return;
             }
@@ -1937,10 +1939,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const shareId = select.value;
         
         try {
-            const response = await fetch('/api/share/featured/add', {
+            const response = await fetch(`/api/admin/featured/${shareId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ shareId })
+                credentials: 'include'
             });
             
             const data = await response.json();
@@ -1961,10 +1963,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('Featured에서 제거하시겠습니까?')) return;
         
         try {
-            const response = await fetch('/api/share/featured/remove', {
-                method: 'POST',
+            const response = await fetch(`/api/admin/featured/${shareId}`, {
+                method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ shareId })
+                credentials: 'include'
             });
             
             const data = await response.json();
