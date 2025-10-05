@@ -626,9 +626,9 @@
         
         <!-- ✅ 존 3: 내 보관함 (스크롤 영역) - 2025.10.02 확보된 로직 -->
         <!-- 핵심: flex:1 + overflow-y:scroll + min-height:0 조합으로 스크롤 활성화 -->
-        <div id="archiveScrollZone" style="flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch; min-height: 0; position: relative; background: #f9fafb;">
-            <div id="archiveGridContainer" class="px-4 py-4" style="min-height: 150vh;">
-                <div id="archiveGrid"></div>
+        <div id="archiveScrollZone" style="flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; position: relative; background: #f9fafb;">
+            <div id="archiveGridContainer" class="px-4 py-4">
+                <div id="archiveGrid" class="grid grid-cols-3 gap-3"></div>
                 <p id="emptyArchiveMessage" class="text-slate-500 text-center mt-10 hidden">저장된 항목이 없습니다.</p>
             </div>
         </div>
