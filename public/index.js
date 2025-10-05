@@ -1654,6 +1654,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderArchive() {
         try {
+            // ⚡ Featured Gallery 먼저 숨기기 (로딩 중)
+            if (featuredGallery) {
+                featuredGallery.classList.add('hidden');
+            }
+            
             const items = await getAllItems();
             
             // ⚡ 내 보관함 먼저 렌더링 (즉시 표시)
