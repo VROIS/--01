@@ -1614,81 +1614,84 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ⚡ Featured Gallery 백그라운드 로딩 함수
+    async function loadFeaturedGallery() {
+        try {
+            const response = await fetch('/api/share/featured/list');
+            if (!response.ok) return;
+            
+            const data = await response.json();
+            const featuredPages = data.pages || [];
+            
+            if (featuredPages.length > 0) {
+                featuredGallery.classList.remove('hidden');
+                featuredGrid.innerHTML = featuredPages.map(page => {
+                    const thumbnail = page.thumbnail || '';
+                    const shareUrl = `${window.location.origin}/s/${page.id}`;
+                    return `
+                        <a href="${shareUrl}" target="_blank" 
+                           class="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                           data-testid="featured-${page.id}">
+                            ${thumbnail ? `
+                                <img src="${thumbnail}" alt="${page.name}" 
+                                     class="w-full aspect-square object-cover">
+                            ` : `
+                                <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                                    <span class="text-4xl">📍</span>
+                                </div>
+                            `}
+                        </a>
+                    `;
+                }).join('');
+            } else {
+                featuredGallery.classList.add('hidden');
+            }
+        } catch (error) {
+            console.warn('Featured gallery load failed:', error);
+            featuredGallery?.classList.add('hidden');
+        }
+    }
+
     async function renderArchive() {
         try {
             const items = await getAllItems();
             
-            // ✅ Featured Gallery (추천 갤러리) 로직 - 서버 API에서 조회
-            // 핵심: Featured로 지정된 공유 페이지를 상단 고정 영역에 표시
-            if (featuredGallery && featuredGrid) {
-                let featuredPages = [];
-                try {
-                    const response = await fetch('/api/share/featured/list');
-                    if (response.ok) {
-                        const data = await response.json();
-                        featuredPages = data.pages || [];
-                    }
-                } catch (error) {
-                    console.warn('Featured gallery not available yet:', error);
-                }
-                
-                if (featuredPages.length > 0) {
-                    featuredGallery.classList.remove('hidden');
-                    featuredGrid.innerHTML = featuredPages.map(page => {
-                        const thumbnail = page.thumbnail || '';
-                        const shareUrl = `${window.location.origin}/s/${page.id}`;
-                        return `
-                            <a href="${shareUrl}" target="_blank" 
-                               class="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                               data-testid="featured-${page.id}">
-                                ${thumbnail ? `
-                                    <img src="${thumbnail}" alt="${page.name}" 
-                                         class="w-full aspect-square object-cover">
-                                ` : `
-                                    <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                                        <span class="text-4xl">📍</span>
-                                    </div>
-                                `}
-                            </a>
-                        `;
-                    }).join('');
-                } else {
-                    featuredGallery.classList.add('hidden');
-                }
-            }
-            
-            // 내 보관함 렌더링
+            // ⚡ 내 보관함 먼저 렌더링 (즉시 표시)
             if (items.length === 0) {
                 archiveGrid.classList.add('hidden');
                 emptyArchiveMessage.classList.remove('hidden');
-                return;
-            }
-
-            emptyArchiveMessage.classList.add('hidden');
-            archiveGrid.classList.remove('hidden');
-            
-            // 3열 그리드에 맞는 컴팩트한 카드 디자인
-            archiveGrid.innerHTML = items.map(item => `
-                <div class="archive-item relative ${selectedItemIds.has(item.id) ? 'selected ring-2 ring-blue-500' : ''}" 
-                     data-id="${item.id}" 
-                     data-testid="card-archive-${item.id}"
-                     tabindex="0">
-                    <div class="selection-checkbox">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    ${item.imageDataUrl ? `
-                        <img src="${item.imageDataUrl}" 
-                             alt="Archive item" 
-                             class="w-full aspect-square object-cover rounded-lg">
-                    ` : `
-                        <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
-                            <span class="text-3xl">💭</span>
+            } else {
+                emptyArchiveMessage.classList.add('hidden');
+                archiveGrid.classList.remove('hidden');
+                
+                // 3열 그리드에 맞는 컴팩트한 카드 디자인
+                archiveGrid.innerHTML = items.map(item => `
+                    <div class="archive-item relative ${selectedItemIds.has(item.id) ? 'selected ring-2 ring-blue-500' : ''}" 
+                         data-id="${item.id}" 
+                         data-testid="card-archive-${item.id}"
+                         tabindex="0">
+                        <div class="selection-checkbox">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
                         </div>
-                    `}
-                </div>
-            `).join('');
+                        ${item.imageDataUrl ? `
+                            <img src="${item.imageDataUrl}" 
+                                 alt="Archive item" 
+                                 class="w-full aspect-square object-cover rounded-lg">
+                        ` : `
+                            <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
+                                <span class="text-3xl">💭</span>
+                            </div>
+                        `}
+                    </div>
+                `).join('');
+            }
+            
+            // ⚡ Featured Gallery 백그라운드 로드 (비차단)
+            if (featuredGallery && featuredGrid) {
+                loadFeaturedGallery();
+            }
 
         } catch (error) {
             console.error('Archive render error:', error);
