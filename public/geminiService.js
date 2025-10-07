@@ -1,14 +1,18 @@
 // geminiservice.js
 
-export const DEFAULT_IMAGE_PROMPT = `가이드.한국어
-야사→연도/한국→상세
-400-500자
-금지:인사,마무리`;
+export const DEFAULT_IMAGE_PROMPT = `전문가이드.한국어.
 
-export const DEFAULT_TEXT_PROMPT = `가이드.한국어
-비화→역사/한국→팁
-400-500자
-금지:인사,마무리`;
+야사→연도한국비교→상세
+400-500자.디테일중요
+
+금지:인사마무리`;
+
+export const DEFAULT_TEXT_PROMPT = `전문가이드.한국어.
+
+비화→역사한국비교→팁
+400-500자.디테일중요
+
+금지:인사마무리`;
 
 /**
  * Netlify 서버 함수로 요청을 보내고 스트리밍 응답을 처리하는 비동기 제너레이터 함수입니다.
