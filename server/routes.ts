@@ -78,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         parts.push({ text: prompt });
       }
 
-      const model = 'gemini-2.5-flash';
+      const model = 'gemini-2.5-flash-lite'; // 2.5x faster than flash!
       const contents = { parts };
 
       const config: any = {
