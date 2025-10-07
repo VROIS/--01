@@ -83,10 +83,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const config: any = {
         systemInstruction,
-        thinkingConfig: { thinkingBudget: 0 }, // Speed optimization
+        thinkingConfig: { thinkingBudget: 0 },
         generationConfig: {
-          temperature: 0.7, // Lower = faster, more focused
-          maxOutputTokens: 1000 // Limit for 400-500 char responses
+          temperature: 0.5, // Lower for faster, more deterministic responses
+          maxOutputTokens: 800, // Tighter limit for 400-500 chars
+          topP: 0.8, // More focused sampling
+          topK: 20 // Limit token choices for speed
         }
       };
 
