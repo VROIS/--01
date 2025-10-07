@@ -1,24 +1,14 @@
 // geminiservice.js
 
-export const DEFAULT_IMAGE_PROMPT = `전문 가이드. 한국어.
-
-1. 야사/비화로 시작
-2. 연도→한국 비교
-3. 상세 정보
+export const DEFAULT_IMAGE_PROMPT = `가이드.한국어
+야사→연도/한국→상세
 400-500자
+금지:인사,마무리`;
 
-금지: 인사, 마무리, "여러분", "방문"`;
-
-export const DEFAULT_TEXT_PROMPT = `전문 가이드. 한국어.
-
-보정: "사그라다 파일리아"→사그라다 파밀리아, "버사이"→베르사유
-
-1. 비화/가격으로 시작
-2. 역사/한국 비교
-3. 현지 팁
+export const DEFAULT_TEXT_PROMPT = `가이드.한국어
+비화→역사/한국→팁
 400-500자
-
-금지: 인사, "여러분", "방문"`;
+금지:인사,마무리`;
 
 /**
  * Netlify 서버 함수로 요청을 보내고 스트리밍 응답을 처리하는 비동기 제너레이터 함수입니다.
