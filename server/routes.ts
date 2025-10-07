@@ -79,18 +79,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       /**
-       * ⚡ Gemini API 최적화 설정 - AI Agent (2025-10-07)
+       * ⚡ Gemini API 모델 비교 테스트 - AI Agent (2025-10-07)
        * 
-       * 🎯 최종 결정: Flash-Lite + 극한 파라미터 튜닝
+       * 🎯 테스트: Flash vs Flash-Lite 프롬프트 준수도 비교
        * 👤 사용자: 25년차 파리 가이드 (80일 독학)
-       * 🤝 완벽한 동의: 대안 API 비교 후 가성비 최고 선택
+       * 🤝 완벽한 동의: 현장 테스트 후 모델 선택
        * 
-       * 📊 모델 선택 과정:
-       * - Gemini 2.5 Flash: 160 tokens/sec (기존)
-       * - Gemini 2.5 Flash-Lite: 735 tokens/sec (2.5배!) ✅
+       * 📊 모델 비교:
+       * - Gemini 2.5 Flash: 160 tokens/sec, 프롬프트 준수도 높음? ✅ (테스트 중)
+       * - Gemini 2.5 Flash-Lite: 735 tokens/sec (2.5배 빠름), 프롬프트 준수도 낮음? ❓
        * - Claude 4 Sonnet: 빠르지만 45배 비쌈 (가성비 ✗)
        * - GPT-4o: 느림, 네트워크 병목 동일
        * - 온디바이스: 1GB+ 용량 (미래 고려)
+       * 
+       * 🔍 발견 사항:
+       * - Flash-Lite: 압축 0.75/0.6에서 환각/허위 정보 발생
+       * - 압축 0.9 복원: 정확성 최우선
+       * - 순서 구조(야사→한국사→상세): Flash vs Flash-Lite 차이 확인 필요
        * 
        * 🔑 최적화 파라미터:
        * - thinkingBudget: 0 (사고 시간 제거, 속도↑)
@@ -99,18 +104,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
        * - topP: 0.8 (집중 샘플링)
        * - topK: 20 (토큰 선택 제한, 속도↑)
        * 
-       * 📈 성능 결과:
-       * - 기존 3초 → 최종 2-2.5초
-       * - 클라우드 API 중 최고속
-       * - 가성비: Flash-Lite가 Claude보다 45배 저렴
-       * 
        * ⚠️ 후임자에게:
-       * - Flash-Lite = 클라우드 최고속 (2025 기준)
+       * - Flash vs Flash-Lite = 속도 vs 품질 트레이드오프
+       * - 현장 테스트 결과로 최종 결정
        * - 네트워크 레이턴시가 근본 병목
-       * - 1초 미만은 온디바이스만 가능 (앱 전환 필요)
        * - Gemini 3.0 출시시 성능 재측정 필요
        */
-      const model = 'gemini-2.5-flash-lite'; // 2.5x faster than flash!
+      const model = 'gemini-2.5-flash'; // Testing: Flash (quality) vs Flash-Lite (speed)
       const contents = { parts };
 
       const config: any = {
