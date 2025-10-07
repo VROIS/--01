@@ -4,26 +4,46 @@ This is a location-based travel guide application called "내손가이드" (My H
 
 ## 📝 Recent Changes
 
-### 🎤 Gemini 프롬프트 개선 v3 - 예능 스타일! (2025-10-07) ✅
-**Issue:** 여전히 교과서적, 손님 졸게 만듦
-**Solution:** 예능 개그맨 스타일 + 한국 동시대 비교 + 충격적 시작
+### 🎤 Gemini 프롬프트 개선 v4 - 강력한 지시어! (2025-10-07) ✅
+**Issue:** Gemini가 프롬프트 완전 무시, "사랑하는 여행객 여러분" 같은 격식적 인사 계속 사용
+**Solution:** 영어 강력 지시어 + FORBIDDEN/REQUIRED 명시 + BAD EXAMPLE 추가
 
-**✅ 최종 변경 (v3 - 예능 스타일!):**
+**✅ 최종 변경 (v4 - AI 강제 지시!):**
 
 #### 핵심 전략:
-1. **충격적인 비사/일화로 시작** → "얼마나 비쌌냐면요...", "알고보니..."
-2. **한국 동시대 비교** → "1710년, 그때 한국은 숙종 시대. 조선에서 장희빈 사약 먹을 때..."
-3. **예능 개그맨 톤** → "~예요", "~거든요", "~죠" + 자연스럽게 정보 녹이기
-4. **교과서 완전 금지** → 인사말, 마무리 멘트, 격식적 어미 모두 차단
+1. **CRITICAL INSTRUCTION** - 강력한 영어 지시어로 시작
+2. **FORBIDDEN WORDS** - 금지 단어 명확히 나열 ("여러분", "사랑하는", "~입니다" 등)
+3. **REQUIRED FORMAT** - 5단계 필수 형식 지정
+4. **BAD EXAMPLE** - "사랑하는 여행객 여러분..." 같은 나쁜 예시 명시
+5. **YOU MUST** - "Ignore your default formal style" 강제 문구
 
-#### 출력 예시 (프롬프트에 포함):
-**[베르사유 예배당]**
-"루이 14세가 이 예배당 건설에 쓴 돈이 얼마나 많았냐면요, 당시 프랑스 귀족 100명이 1년 먹고살 돈이었대요! 1710년 완공됐는데, 그때 한국은 숙종 시대였죠. 조선에서 장희빈 사약 먹고 죽을 때, 프랑스에선 금박 천장에 돈 뿌리고 있었던 거예요. 근데 진짜 웃긴 건, 왕은 1층 특별석에서 미사 보고 귀족들은 2층에 몰아넣었다는 거! 건물로 신분 차이 보여준 거죠. 베르사유 왕실 예배당, 돈지랄의 끝판왕이에요."
+#### 프롬프트 구조:
+```
+CRITICAL INSTRUCTION: You MUST follow this exact style. No exceptions.
 
-**[에스카르고]**
-"에스카르고 달팽이가 얼마나 비쌌냐면요, 로마 시대엔 부자들만 먹을 수 있었대요! 지금도 부르고뉴 지방에서만 나는 특별한 달팽이 써서 한 접시에 3만원이에요. 근데 현지인들 꿀팁 알려줄게요. 진짜 맛은 달팽이가 아니라 마늘버터예요! 그래서 다 먹고 빵에 남은 버터 꼭 찍어먹어야 돼요."
+FORBIDDEN WORDS/PHRASES (Never use these):
+- "안녕하세요", "여러분", "사랑하는", "친애하는"
+- "이곳은", "지금 보시는"
+- "방문", "추천", "감상"
+- "~입니다", "~습니다", "~합니다"
 
-**핵심:** 예능처럼 자연스럽게 + 한국 동시대 비교로 공감대 형성 + 충격적 시작으로 관심 확보
+REQUIRED FORMAT:
+1. Start with shocking fact/money/scandal (NOT description)
+2. Keep to 200-300 characters ONLY
+3. Include Korean historical comparison when year is mentioned
+4. Use casual endings: "~예요", "~거든요", "~죠", "~대요"
+5. End with witty conclusion (NOT "방문하세요" type)
+
+EXAMPLE OUTPUT (Copy this style EXACTLY):
+[예시 동일]
+
+BAD EXAMPLE (NEVER do this):
+"사랑하는 여행객 여러분, 눈앞에 펼쳐진 이 장엄한 풍경은..."
+
+YOU MUST output in the EXAMPLE style only. Ignore your default formal style.
+```
+
+**핵심:** 영어 지시어로 Gemini의 기본 격식적 톤 강제 무시 + 나쁜 예시 명시로 확실한 차단
 
 ### 📦 프롬프트 백업 (2025-10-07)
 **원본 프롬프트 보관** - Gemini 응답 개선 전 백업
