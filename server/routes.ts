@@ -79,23 +79,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       /**
-       * ⚡ Gemini API 모델 비교 테스트 - AI Agent (2025-10-07)
+       * ⚡ Gemini API 최종 결정 - AI Agent (2025-10-07)
        * 
-       * 🎯 테스트: Flash vs Flash-Lite 프롬프트 준수도 비교
+       * 🎯 최종 선택: Flash-Lite (속도 + 정확성 둘 다!)
        * 👤 사용자: 25년차 파리 가이드 (80일 독학)
-       * 🤝 완벽한 동의: 현장 테스트 후 모델 선택
+       * 🤝 완벽한 동의: A/B 테스트 결과로 최종 결정!
        * 
-       * 📊 모델 비교:
-       * - Gemini 2.5 Flash: 160 tokens/sec, 프롬프트 준수도 높음? ✅ (테스트 중)
-       * - Gemini 2.5 Flash-Lite: 735 tokens/sec (2.5배 빠름), 프롬프트 준수도 낮음? ❓
-       * - Claude 4 Sonnet: 빠르지만 45배 비쌈 (가성비 ✗)
-       * - GPT-4o: 느림, 네트워크 병목 동일
-       * - 온디바이스: 1GB+ 용량 (미래 고려)
+       * 📊 테스트 결과:
+       * - Flash-Lite: ✅ 정확 (프랑수아 르무안 맞음!)
+       * - Flash-Lite: ✅ 친근한 표현 ("금빛 찬란", "웅장한")
+       * - Flash-Lite: ✅ 구조 완벽 (야사→한국사→상세)
+       * - Flash: ❌ 작가 틀림 (장 프랑수아 드 트루아)
+       * - Flash: 속도 차이 없음
        * 
-       * 🔍 발견 사항:
-       * - Flash-Lite: 압축 0.75/0.6에서 환각/허위 정보 발생
-       * - 압축 0.9 복원: 정확성 최우선
-       * - 순서 구조(야사→한국사→상세): Flash vs Flash-Lite 차이 확인 필요
+       * 🔍 핵심 발견:
+       * - Flash-Lite가 Flash보다 정확함! (역설!)
+       * - 압축 0.9 + Flash-Lite = 최적 조합
+       * - 속도도 비슷, 품질은 Flash-Lite가 더 좋음
        * 
        * 🔑 최적화 파라미터:
        * - thinkingBudget: 0 (사고 시간 제거, 속도↑)
@@ -105,12 +105,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
        * - topK: 20 (토큰 선택 제한, 속도↑)
        * 
        * ⚠️ 후임자에게:
-       * - Flash vs Flash-Lite = 속도 vs 품질 트레이드오프
-       * - 현장 테스트 결과로 최종 결정
-       * - 네트워크 레이턴시가 근본 병목
-       * - Gemini 3.0 출시시 성능 재측정 필요
+       * - Flash-Lite > Flash (속도, 정확성, 친근감 모두 승리!)
+       * - 압축 0.9 절대 유지!
+       * - A/B 테스트가 편견을 깨뜨림!
        */
-      const model = 'gemini-2.5-flash'; // Testing: Flash (quality) vs Flash-Lite (speed)
+      const model = 'gemini-2.5-flash-lite'; // Winner! Speed + Accuracy + Friendliness
       const contents = { parts };
 
       const config: any = {
