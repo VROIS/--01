@@ -83,7 +83,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const config: any = {
         systemInstruction,
-        thinkingConfig: { thinkingBudget: 0 } // Speed optimization
+        thinkingConfig: { thinkingBudget: 0 }, // Speed optimization
+        generationConfig: {
+          temperature: 0.7, // Lower = faster, more focused
+          maxOutputTokens: 1000 // Limit for 400-500 char responses
+        }
       };
 
       console.log("Gemini API(스트리밍)로 전송할 요청 본문:", JSON.stringify({ model, contents, config }));
