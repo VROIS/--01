@@ -1881,48 +1881,78 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Featured 갤러리 관리 함수들
     async function loadAdminData() {
-        await Promise.all([
-            loadUserShares(),
-            loadFeaturedList()
-        ]);
+        await loadFeaturedList();
+        
+        // 검색창 이벤트 리스너 추가
+        const searchInput = document.getElementById('shareSearchInput');
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchShares(e.target.value);
+                }, 300); // 300ms 디바운스
+            });
+        }
     }
 
-    async function loadUserShares() {
+    async function searchShares(query) {
+        const resultsContainer = document.getElementById('searchResults');
+        if (!resultsContainer) return;
+
+        if (!query || query.trim().length === 0) {
+            resultsContainer.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">검색어를 입력하세요</p>';
+            return;
+        }
+
         try {
-            const response = await fetch('/api/admin/shares', {
+            resultsContainer.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">검색 중...</p>';
+            
+            const response = await fetch(`/api/admin/all-shares?search=${encodeURIComponent(query)}`, {
                 credentials: 'include'
             });
-            if (!response.ok) throw new Error('Failed to load shares');
+            
+            if (!response.ok) throw new Error('검색 실패');
             
             const shares = await response.json();
             
-            const select = document.getElementById('featuredShareSelect');
-            if (!select) return;
-            
             if (!shares || shares.length === 0) {
-                select.innerHTML = '<option value="">공유 페이지가 없습니다</option>';
+                resultsContainer.innerHTML = `
+                    <p class="text-sm text-gray-400 text-center py-4">
+                        "<span class="font-semibold">${query}</span>" 검색 결과가 없습니다
+                    </p>
+                `;
                 return;
             }
             
-            select.innerHTML = shares.map(share => 
-                `<option value="${share.id}">${share.name} (${new Date(share.createdAt).toLocaleDateString()})</option>`
-            ).join('');
+            resultsContainer.innerHTML = shares.map(share => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-yellow-400 transition-colors">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-gray-900 truncate">${share.name}</p>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span class="text-xs text-gray-500">📥 ${share.downloadCount || 0}회</span>
+                            <span class="text-xs text-gray-400">${new Date(share.createdAt).toLocaleDateString()}</span>
+                            ${share.featured ? '<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">⭐ Featured</span>' : ''}
+                        </div>
+                    </div>
+                    ${!share.featured ? `
+                        <button 
+                            onclick="addFeaturedById('${share.id}')" 
+                            class="ml-3 px-3 py-1.5 bg-yellow-500 text-white text-sm font-medium rounded hover:bg-yellow-600 transition-colors whitespace-nowrap"
+                            data-testid="button-add-featured-${share.id}">
+                            ⭐ 추가
+                        </button>
+                    ` : `
+                        <span class="ml-3 px-3 py-1.5 bg-gray-200 text-gray-500 text-sm font-medium rounded cursor-not-allowed whitespace-nowrap">
+                            이미 추가됨
+                        </span>
+                    `}
+                </div>
+            `).join('');
             
-            // 검색 기능
-            const searchInput = document.getElementById('shareSearchInput');
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    const term = e.target.value.toLowerCase();
-                    Array.from(select.options).forEach(opt => {
-                        const text = opt.textContent.toLowerCase();
-                        opt.style.display = text.includes(term) ? '' : 'none';
-                    });
-                });
-            }
         } catch (error) {
-            console.error('공유 페이지 로드 오류:', error);
-            const select = document.getElementById('featuredShareSelect');
-            if (select) select.innerHTML = '<option value="">로드 실패</option>';
+            console.error('공유 페이지 검색 오류:', error);
+            resultsContainer.innerHTML = '<p class="text-sm text-red-400 text-center py-4">검색 중 오류가 발생했습니다</p>';
         }
     }
 
@@ -1962,14 +1992,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    window.addFeatured = async function() {
-        const select = document.getElementById('featuredShareSelect');
-        if (!select || !select.value) {
+    window.addFeaturedById = async function(shareId) {
+        if (!shareId) {
             showToast('공유 페이지를 선택해주세요');
             return;
         }
-        
-        const shareId = select.value;
         
         try {
             const response = await fetch(`/api/admin/featured/${shareId}`, {
@@ -1981,8 +2008,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             if (response.ok) {
-                showToast('Featured에 추가되었습니다');
+                showToast('⭐ Featured에 추가되었습니다!');
                 await loadFeaturedList();
+                // 검색 결과 다시 로드해서 "이미 추가됨" 표시
+                const searchInput = document.getElementById('shareSearchInput');
+                if (searchInput && searchInput.value) {
+                    await searchShares(searchInput.value);
+                }
             } else {
                 showToast(data.error || 'Featured 추가 실패');
             }

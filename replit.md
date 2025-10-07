@@ -4,6 +4,42 @@ This is a location-based travel guide application called "내손가이드" (My H
 
 ## 📝 Recent Changes
 
+### ⭐ Featured Gallery 관리자 UI 개선 (2025-10-07) ✅
+**Issue:** 관리자가 Featured 갤러리에 추가할 공유페이지를 찾기 어려움 (ID 직접 입력 불편)
+**Solution:** 이름 검색 기능 구현 + 실시간 검색 UI
+
+**✅ 완료:**
+
+#### 백엔드
+1. **Storage 추가** (`server/storage.ts`)
+   - `getAllSharedHtmlPages(searchQuery?)` 함수 추가
+   - 검색어로 페이지 이름 필터링 (LIKE %query%)
+   - 다운로드 수 + 최신순 정렬
+   - htmlContent 제외로 성능 최적화
+
+2. **API 엔드포인트 추가** (`server/routes.ts`)
+   - GET `/api/admin/all-shares?search=query` - 모든 공유페이지 검색
+   - 기존 `/api/admin/shares`는 사용자별 페이지 전용으로 유지
+
+#### 프론트엔드
+3. **검색 UI 개선** (`public/index.html`)
+   - Select 박스 제거 → 검색 결과 카드로 변경
+   - 실시간 검색창 (300ms 디바운스)
+   - 검색 결과: 이름, 다운로드 수, 날짜 표시
+   - Featured 상태 표시 + 추가 버튼
+
+4. **JavaScript 로직** (`public/index.js`)
+   - `searchShares()` - 실시간 검색 함수
+   - `addFeaturedById()` - ID로 Featured 추가
+   - 검색 후 Featured 추가 시 자동 UI 업데이트
+
+**사용법:**
+1. 설정 → 관리자 인증 (1234)
+2. Featured 갤러리 관리 섹션에서 검색
+3. 예: "철수아빠 파리3일여행" 입력
+4. 검색 결과에서 "⭐ 추가" 버튼 클릭
+5. Featured 목록에 자동 반영
+
 ### 🔗 Share Feature Implementation (2025-10-03) - 1/5 완료 ✅
 **Issue:** Previous share system was broken by predecessor developer
 **Solution:** Complete reimplementation of share functionality from scratch

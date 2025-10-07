@@ -33,7 +33,7 @@ import {
   type InsertSharedHtmlPage
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, inArray, and, sql } from "drizzle-orm";
+import { eq, desc, inArray, and, sql, like } from "drizzle-orm";
 import crypto from "crypto"; // 🔧 짧은 ID 생성을 위해 추가
 
 export interface IStorage {
@@ -77,6 +77,7 @@ export interface IStorage {
   createSharedHtmlPage(userId: string, page: InsertSharedHtmlPage): Promise<SharedHtmlPage>;
   getSharedHtmlPage(id: string): Promise<SharedHtmlPage | undefined>;
   getUserSharedHtmlPages(userId: string): Promise<Omit<SharedHtmlPage, 'htmlContent'>[]>;
+  getAllSharedHtmlPages(searchQuery?: string): Promise<Omit<SharedHtmlPage, 'htmlContent'>[]>;
   getFeaturedHtmlPages(): Promise<SharedHtmlPage[]>;
   setFeatured(id: string, featured: boolean): Promise<void>;
   incrementDownloadCount(id: string): Promise<void>;
@@ -637,6 +638,41 @@ export class DatabaseStorage implements IStorage {
       .from(sharedHtmlPages)
       .where(eq(sharedHtmlPages.userId, userId))
       .orderBy(desc(sharedHtmlPages.createdAt));
+  }
+
+  /**
+   * 🔍 모든 공유 페이지 조회 (검색 지원)
+   * 
+   * 목적: 관리자가 Featured 갤러리에 추가할 페이지 검색
+   * 
+   * @param searchQuery - 검색어 (페이지 이름에서 검색, 선택사항)
+   * @returns 모든 공유 페이지 (다운로드 순 정렬, htmlContent 제외)
+   */
+  async getAllSharedHtmlPages(searchQuery?: string): Promise<Omit<SharedHtmlPage, 'htmlContent'>[]> {
+    const conditions = [eq(sharedHtmlPages.isActive, true)];
+    
+    if (searchQuery && searchQuery.trim()) {
+      conditions.push(like(sharedHtmlPages.name, `%${searchQuery}%`));
+    }
+
+    return await db
+      .select({
+        id: sharedHtmlPages.id,
+        userId: sharedHtmlPages.userId,
+        name: sharedHtmlPages.name,
+        guideIds: sharedHtmlPages.guideIds,
+        thumbnail: sharedHtmlPages.thumbnail,
+        sender: sharedHtmlPages.sender,
+        location: sharedHtmlPages.location,
+        featured: sharedHtmlPages.featured,
+        downloadCount: sharedHtmlPages.downloadCount,
+        isActive: sharedHtmlPages.isActive,
+        createdAt: sharedHtmlPages.createdAt,
+        updatedAt: sharedHtmlPages.updatedAt,
+      })
+      .from(sharedHtmlPages)
+      .where(and(...conditions))
+      .orderBy(desc(sharedHtmlPages.downloadCount), desc(sharedHtmlPages.createdAt));
   }
 
   /**

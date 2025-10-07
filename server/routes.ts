@@ -1232,6 +1232,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/admin/all-shares - 모든 공유 페이지 목록 (검색 지원)
+  app.get('/api/admin/all-shares', requireAdmin, async (req: any, res) => {
+    try {
+      const searchQuery = req.query.search as string | undefined;
+      const shares = await storage.getAllSharedHtmlPages(searchQuery);
+      res.json(shares);
+    } catch (error) {
+      console.error('전체 공유 페이지 목록 조회 오류:', error);
+      res.status(500).json({ error: '목록 조회에 실패했습니다.' });
+    }
+  });
+
   // GET /api/admin/featured - 현재 Featured 목록
   app.get('/api/admin/featured', requireAdmin, async (req: any, res) => {
     try {
