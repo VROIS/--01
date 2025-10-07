@@ -4,46 +4,35 @@ This is a location-based travel guide application called "내손가이드" (My H
 
 ## 📝 Recent Changes
 
-### 🎤 Gemini 프롬프트 개선 v4 - 강력한 지시어! (2025-10-07) ✅
-**Issue:** Gemini가 프롬프트 완전 무시, "사랑하는 여행객 여러분" 같은 격식적 인사 계속 사용
-**Solution:** 영어 강력 지시어 + FORBIDDEN/REQUIRED 명시 + BAD EXAMPLE 추가
+### 🎤 Gemini 프롬프트 개선 v5 - 10초 집중력 전략! (2025-10-07) ✅
+**Issue:** v4는 너무 짧아서 진정성 0, 로딩 4-5초로 증가, Gemini가 예능 스타일 못함
+**Solution:** 첫 10초 야사/비사로 후킹 → 상세 정보 전달 (400-500자)
 
-**✅ 최종 변경 (v4 - AI 강제 지시!):**
+**✅ 최종 변경 (v5 - 광고 카피 전략!):**
 
-#### 핵심 전략:
-1. **CRITICAL INSTRUCTION** - 강력한 영어 지시어로 시작
-2. **FORBIDDEN WORDS** - 금지 단어 명확히 나열 ("여러분", "사랑하는", "~입니다" 등)
-3. **REQUIRED FORMAT** - 5단계 필수 형식 지정
-4. **BAD EXAMPLE** - "사랑하는 여행객 여러분..." 같은 나쁜 예시 명시
-5. **YOU MUST** - "Ignore your default formal style" 강제 문구
+#### 핵심 전략 (여행객 집중력 10초 고려):
+1. **1단계(첫 10초)**: 충격적인 야사/비사/가격으로 후킹
+2. **2단계**: 한국 동시대 역사 비교로 공감대 형성
+3. **3단계**: 상세한 역사적 배경과 실용적 정보
+4. **총 분량**: 400-500자 (충분한 진정성 + 빠른 로딩)
 
 #### 프롬프트 구조:
 ```
-CRITICAL INSTRUCTION: You MUST follow this exact style. No exceptions.
+[핵심 구조 - 반드시 이 순서로]
+1단계(첫 10초): 충격적인 야사/비사로 시작 - 돈, 스캔들, 숨겨진 이야기
+2단계: 연도 언급시 한국 동시대 역사 비교
+3단계: 상세한 역사적 배경과 건축/예술적 특징 설명
+• 총 400-500자 분량
 
-FORBIDDEN WORDS/PHRASES (Never use these):
-- "안녕하세요", "여러분", "사랑하는", "친애하는"
-- "이곳은", "지금 보시는"
-- "방문", "추천", "감상"
-- "~입니다", "~습니다", "~합니다"
-
-REQUIRED FORMAT:
-1. Start with shocking fact/money/scandal (NOT description)
-2. Keep to 200-300 characters ONLY
-3. Include Korean historical comparison when year is mentioned
-4. Use casual endings: "~예요", "~거든요", "~죠", "~대요"
-5. End with witty conclusion (NOT "방문하세요" type)
-
-EXAMPLE OUTPUT (Copy this style EXACTLY):
-[예시 동일]
-
-BAD EXAMPLE (NEVER do this):
-"사랑하는 여행객 여러분, 눈앞에 펼쳐진 이 장엄한 풍경은..."
-
-YOU MUST output in the EXAMPLE style only. Ignore your default formal style.
+[금지 사항]
+• "안녕하세요", "여러분", "사랑하는 여행객" 같은 인사말
+• "방문해보세요", "추천합니다" 같은 마무리 멘트
 ```
 
-**핵심:** 영어 지시어로 Gemini의 기본 격식적 톤 강제 무시 + 나쁜 예시 명시로 확실한 차단
+#### 예시 (베르사유 예배당):
+"루이 14세가 이 예배당 건설에 쏟아부은 돈이 당시 프랑스 귀족 100명의 연간 생활비였다는 사실, 알고 계셨나요? 1710년 완공 당시 한국은 숙종 시대로, 조선에서 장희빈이 사약을 받던 그 시기에 프랑스에선 천장에 금박을 입히고 있었습니다. 이 왕실 예배당은 1689년 착공해 21년이 걸렸으며, 천장의 프레스코화 '영광의 삼위일체'는 프랑수아 르무안의 걸작입니다. 흥미로운 점은 1층은 왕의 전용 공간, 2층은 귀족들의 자리로, 건축을 통해서도 엄격한 신분 질서를 보여준다는 것입니다."
+
+**핵심:** 광고 카피처럼 첫 10초에 후킹 → Gemini 장점(상세함) 살림 → 진정성 + 흥미 균형
 
 ### 📦 프롬프트 백업 (2025-10-07)
 **원본 프롬프트 보관** - Gemini 응답 개선 전 백업
