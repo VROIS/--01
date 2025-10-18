@@ -31,6 +31,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  provider: varchar("provider").default('replit'), // replit | google | kakao
   preferredLanguage: varchar("preferred_language").default('ko'),
   locationEnabled: boolean("location_enabled").default(true),
   aiContentEnabled: boolean("ai_content_enabled").default(true),
