@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // App State
     let currentContent = { imageDataUrl: null, description: '' };
     let isSelectionMode = false;
-    let selectedItemIds = new Set();
+    let selectedItemIds = []; // ✅ Array로 변경 (클릭 순서 보존!)
     let cameFromArchive = false;
     
     // --- IndexedDB Setup ---
@@ -1167,13 +1167,13 @@ document.addEventListener('DOMContentLoaded', () => {
             archiveGrid.classList.add('selection-mode');
             archiveHeader.classList.add('hidden');
             selectionHeader.classList.remove('hidden');
-            selectedItemIds.clear();
+            selectedItemIds = []; // ✅ Array 초기화
             updateSelectionUI();
         } else {
             archiveGrid.classList.remove('selection-mode');
             archiveHeader.classList.remove('hidden');
             selectionHeader.classList.add('hidden');
-            selectedItemIds.clear();
+            selectedItemIds = []; // ✅ Array 초기화
             
             // Remove selection styling from all items
             document.querySelectorAll('.archive-item').forEach(item => {
@@ -1183,18 +1183,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateSelectionUI() {
-        selectionCount.textContent = `${selectedItemIds.size}개 선택`;
+        selectionCount.textContent = `${selectedItemIds.length}개 선택`; // ✅ .size → .length
     }
 
     async function handleDeleteSelected() {
-        if (selectedItemIds.size === 0) return;
-        if (!confirm(`선택된 ${selectedItemIds.size}개 항목을 삭제하시겠습니까?`)) return;
+        if (selectedItemIds.length === 0) return; // ✅ .size → .length
+        if (!confirm(`선택된 ${selectedItemIds.length}개 항목을 삭제하시겠습니까?`)) return; // ✅ .size → .length
 
         try {
             await deleteItems([...selectedItemIds]);
             await renderArchive();
             toggleSelectionMode(false);
-            showToast(`${selectedItemIds.size}개 항목이 삭제되었습니다.`);
+            showToast(`${selectedItemIds.length}개 항목이 삭제되었습니다.`); // ✅ .size → .length
         } catch (error) {
             console.error('Failed to delete items:', error);
             showToast('삭제 중 오류가 발생했습니다.');
@@ -1271,9 +1271,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const items = await getAllItems();
         if (items.length === 0) return showToast('공유할 항목이 없습니다.');
 
-        // 선택 모드: 선택된 아이템만, 일반 모드: 전체
-        const allItems = isSelectionMode && selectedItemIds.size > 0
-            ? items.filter(item => selectedItemIds.has(item.id))
+        // 선택 모드: 선택된 아이템만 (클릭 순서대로!), 일반 모드: 전체
+        const allItems = isSelectionMode && selectedItemIds.length > 0
+            ? selectedItemIds.map(id => items.find(item => item.id === id)).filter(Boolean) // ✅ 클릭 순서 보존!
             : items;
 
         // 검증
@@ -1598,7 +1598,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 archiveGrid.classList.remove('hidden');
                 
                 archiveGrid.innerHTML = items.map(item => `
-                    <div class="archive-item relative ${selectedItemIds.has(item.id) ? 'selected ring-2 ring-blue-500' : ''}" 
+                    <div class="archive-item relative ${selectedItemIds.includes(item.id) ? 'selected ring-2 ring-blue-500' : ''}" // ✅ .has → .includes 
                          data-id="${item.id}" 
                          data-testid="card-archive-${item.id}"
                          tabindex="0">
@@ -1633,11 +1633,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const itemId = item.dataset.id;
 
         if (isSelectionMode) {
-            if (selectedItemIds.has(itemId)) {
-                selectedItemIds.delete(itemId);
+            // ✅ Array 기반 선택/해제 (클릭 순서 보존!)
+            const index = selectedItemIds.indexOf(itemId);
+            if (index > -1) {
+                // 이미 선택됨 → 제거
+                selectedItemIds.splice(index, 1);
                 item.classList.remove('selected');
             } else {
-                selectedItemIds.add(itemId);
+                // 선택 안됨 → 추가 (클릭 순서대로!)
+                selectedItemIds.push(itemId);
                 item.classList.add('selected');
             }
             updateSelectionUI();
@@ -2122,7 +2126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            if (selectedItemIds.size === 0) {
+            if (selectedItemIds.length === 0) { // ✅ .size → .length
                 showToast('이미지를 선택해주세요');
                 return;
             }
@@ -2141,7 +2145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            if (selectedItemIds.size === 0) {
+            if (selectedItemIds.length === 0) { // ✅ .size → .length
                 showToast('이미지를 선택해주세요');
                 return;
             }
