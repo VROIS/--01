@@ -18,7 +18,10 @@ The backend is an **Express.js** server written in **TypeScript**. **Drizzle ORM
 **PostgreSQL** serves as the primary database. **Drizzle ORM** defines the schema, which includes tables for users (with preferences), travel guides (content, images, location), share links, and authentication sessions.
 
 ## AI Integration
-**Google Gemini AI** is central to content generation, analyzing images and location data to create descriptions, tips, and cultural information. It supports multi-language content generation based on user preferences and enhances travel recommendations with location-based context. Recent optimizations include using Gemini 2.5 Flash-Lite for speed and cost efficiency, and a refined 38-character prompt for balancing response speed and content quality, aiming for 2-2.5 second response times.
+**Google Gemini AI** is central to content generation, analyzing images and location data to create descriptions, tips, and cultural information. It supports multi-language content generation based on user preferences and enhances travel recommendations with location-based context. Recent optimizations include:
+- **Final Model Selection (2025-10-18):** Gemini 2.5 Flash for optimal balance of image recognition, prompt adherence, and cost efficiency (6.4x cheaper than Claude Haiku 4.5)
+- **Image Compression:** 0.9 quality maintained (0.6 or below causes AI hallucinations and false information)
+- **Prompt Engineering:** Refined 38-character prompt balancing response speed and content quality, targeting 2-2.5 second response times
 
 ## Authentication & Authorization
 **Replit Auth** with OpenID Connect is integrated via **Passport.js**. A session middleware with PostgreSQL backing store manages user sessions. A soft-delete subscription system preserves user data upon subscription cancellation and reactivation.
@@ -32,8 +35,14 @@ The system features a **RESTful API** built with Express, using shared TypeScrip
 ## System Design Choices
 - **UI/UX:** Mobile-first approach with responsive design, touch-friendly interfaces, and camera/GPS integration.
 - **Performance:** Focus on optimizing AI response times (current target 2-2.5 seconds) through prompt engineering, AI model selection, and image compression.
-- **Share Feature:** Comprehensive re-implementation of sharing functionality, including short URLs, offline support via Service Worker (Cache-First strategy, with specific fixes for iOS Safari), and a robust, responsive shared page UI with z-index hierarchy and HTML escaping bug fixes.
-- **Admin UI:** Improved administrator interface for managing featured galleries with search functionality for shared pages.
+- **Share Feature:** Comprehensive re-implementation of sharing functionality, including:
+  - Short URLs (8-character IDs, 67% length reduction)
+  - **Item Selection Order Preservation (2025-10-18):** User's click order in archive is preserved in shared pages (like shopping cart functionality)
+  - Offline support via Service Worker (Cache-First strategy, iOS Safari fixes)
+  - Responsive shared page UI with z-index hierarchy and HTML escaping fixes
+- **Admin UI:** Improved administrator interface for managing featured galleries with:
+  - Search functionality for shared pages by name
+  - **Automatic Featured Ordering (2025-10-18):** Click order automatically assigned (1, 2, 3...) via `featuredOrder` column for consistent display
 
 # External Dependencies
 
