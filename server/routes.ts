@@ -79,23 +79,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       /**
-       * ⚡ Gemini API 최종 결정 - AI Agent (2025-10-07)
+       * ⚡ Gemini API 최종 결정 - AI Agent (2025-10-18)
        * 
-       * 🎯 최종 선택: Flash-Lite (속도 + 정확성 둘 다!)
+       * 🎯 최종 선택: Flash (이미지 인식 + 프롬프트 준수!)
        * 👤 사용자: 25년차 파리 가이드 (80일 독학)
-       * 🤝 완벽한 동의: A/B 테스트 결과로 최종 결정!
+       * 🤝 최종 결정: 배포 후 현장 테스트 결과 반영!
        * 
-       * 📊 테스트 결과:
-       * - Flash-Lite: ✅ 정확 (프랑수아 르무안 맞음!)
-       * - Flash-Lite: ✅ 친근한 표현 ("금빛 찬란", "웅장한")
-       * - Flash-Lite: ✅ 구조 완벽 (야사→한국사→상세)
-       * - Flash: ❌ 작가 틀림 (장 프랑수아 드 트루아)
-       * - Flash: 속도 차이 없음
+       * 📊 최종 테스트 결과:
+       * - Flash-Lite: ❌ 이미지 추측 (안 보고 답변!)
+       * - Flash-Lite: ❌ 멀티모달 약함
+       * - Flash: ✅ 이미지 정확히 인식
+       * - Flash: ✅ 프롬프트 준수도 높음
+       * - Flash: ✅ 멀티모달 강함 (이미지+비디오+오디오)
        * 
-       * 🔍 핵심 발견:
-       * - Flash-Lite가 Flash보다 정확함! (역설!)
-       * - 압축 0.9 + Flash-Lite = 최적 조합
-       * - 속도도 비슷, 품질은 Flash-Lite가 더 좋음
+       * 🔍 벤치마크 비교:
+       * - Flash vs Claude Haiku 4.5:
+       *   → Flash가 멀티모달 더 강함
+       *   → Flash가 6.4배 저렴 ($0.3/$2.5)
+       *   → 속도 비슷
+       * - Flash vs Flash-Lite:
+       *   → Flash가 이미지 인식 훨씬 좋음
+       *   → Flash가 프롬프트 준수도 높음
+       *   → 속도 차이 미미
        * 
        * 🔑 최적화 파라미터:
        * - thinkingBudget: 0 (사고 시간 제거, 속도↑)
@@ -105,11 +110,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
        * - topK: 20 (토큰 선택 제한, 속도↑)
        * 
        * ⚠️ 후임자에게:
-       * - Flash-Lite > Flash (속도, 정확성, 친근감 모두 승리!)
+       * - Flash = 최적 균형점 (이미지+속도+가격)
+       * - Flash-Lite는 이미지 인식 약함!
        * - 압축 0.9 절대 유지!
-       * - A/B 테스트가 편견을 깨뜨림!
+       * - 현장 테스트가 벤치마크보다 중요!
        */
-      const model = 'gemini-2.5-flash-lite'; // Winner! Speed + Accuracy + Friendliness
+      const model = 'gemini-2.5-flash'; // Final: Best multimodal + prompt adherence
       const contents = { parts };
 
       const config: any = {
