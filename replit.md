@@ -26,6 +26,17 @@ The backend is an **Express.js** server written in **TypeScript**. **Drizzle ORM
 ## Authentication & Authorization
 **Replit Auth** with OpenID Connect is integrated via **Passport.js**. A session middleware with PostgreSQL backing store manages user sessions. A soft-delete subscription system preserves user data upon subscription cancellation and reactivation.
 
+**Google OAuth Integration (2025-10-18):** Added Google OAuth 2.0 authentication via `passport-google-oauth20`. Users can log in with their Google accounts. The database schema includes a `provider` column (varchar) to distinguish between authentication methods ('replit', 'google', 'kakao'). Kakao OAuth is planned but not yet implemented.
+
+**Authentication Modal (2025-10-18):** Implemented a login modal that appears when unauthenticated users click Featured Gallery items. The modal offers:
+- Google Login button (active, redirects to `/api/auth/google`)
+- Kakao Login button (disabled with "준비 중" badge)
+- Smooth returnTo redirect after successful authentication
+
+**Setup Requirements:**
+- For Google OAuth to work, set environment variables `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from Google Cloud Console
+- OAuth consent screen must be configured with authorized redirect URIs
+
 ## File Upload & Storage
 **Multer** handles image uploads, storing them locally. File type validation restricts uploads to image formats, and size limits are enforced. Image compression to 0.6 quality is applied to optimize upload speed and AI processing.
 

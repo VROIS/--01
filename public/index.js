@@ -14,6 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const shareModalContent = document.getElementById('shareModalContent');
     const closeShareModalBtn = document.getElementById('closeShareModalBtn');
 
+    // Auth Modal Elements
+    const authModal = document.getElementById('authModal');
+    const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+
     // Pages
     const featuresPage = document.getElementById('featuresPage');
     const mainPage = document.getElementById('mainPage');
@@ -1548,8 +1553,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const shareUrl = `${window.location.origin}/s/${page.id}`;
                     const pageName = page.name || '공유 페이지';
                     return `
-                        <a href="${shareUrl}" target="_blank" 
-                           class="relative block bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+                        <div onclick="handleFeaturedClick('${shareUrl}')" 
+                           class="relative block bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:scale-105 cursor-pointer"
                            data-testid="featured-${page.id}">
                             ${thumbnail ? `
                                 <img src="${thumbnail}" alt="${pageName}" 
@@ -1571,7 +1576,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </svg>
                                 <span class="text-xs font-bold text-gray-700">${page.downloadCount || 0}</span>
                             </div>
-                        </a>
+                        </div>
                     `;
                 }).join('');
             } else {
@@ -1582,6 +1587,25 @@ document.addEventListener('DOMContentLoaded', () => {
             featuredGallery?.classList.add('hidden');
         }
     }
+
+    // Featured 갤러리 클릭 핸들러 (전역 함수로 노출)
+    window.handleFeaturedClick = async function(shareUrl) {
+        try {
+            // 인증 상태 확인
+            const response = await fetch('/api/auth/user');
+            if (response.ok) {
+                // 로그인되어 있으면 새 탭에서 페이지 열기
+                window.open(shareUrl, '_blank');
+            } else {
+                // 로그인되어 있지 않으면 인증 모달 표시
+                authModal.classList.remove('hidden');
+            }
+        } catch (error) {
+            // 에러 발생 시에도 인증 모달 표시
+            console.log('Auth check failed, showing auth modal');
+            authModal.classList.remove('hidden');
+        }
+    };
 
     async function renderArchive() {
         try {
@@ -2166,6 +2190,23 @@ document.addEventListener('DOMContentLoaded', () => {
     resetPromptsBtn?.addEventListener('click', resetPrompts);
     generateImageBtn?.addEventListener('click', handleGenerateImageDemo);
     generateVideoBtn?.addEventListener('click', handleGenerateVideoDemo);
+
+    // Auth Modal Event Listeners
+    closeAuthModalBtn?.addEventListener('click', () => {
+        authModal.classList.add('hidden');
+    });
+
+    googleLoginBtn?.addEventListener('click', () => {
+        const currentUrl = window.location.pathname + window.location.search;
+        window.location.href = `/api/auth/google?returnTo=${encodeURIComponent(currentUrl)}`;
+    });
+
+    // Auth Modal Background Click to Close
+    authModal?.addEventListener('click', (e) => {
+        if (e.target === authModal) {
+            authModal.classList.add('hidden');
+        }
+    });
 
     initializeApp();
 
