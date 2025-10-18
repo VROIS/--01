@@ -145,6 +145,7 @@ export const sharedHtmlPages = pgTable("shared_html_pages", {
   sender: text("sender"), // 발신자 이름 (임시: "여행자")
   location: text("location"), // 위치 정보 (임시: "파리, 프랑스")
   featured: boolean("featured").default(false), // 추천 갤러리 표시 여부
+  featuredOrder: integer("featured_order"), // Featured 표시 순서 (클릭 순서대로 1, 2, 3...)
   downloadCount: integer("download_count").default(0), // 조회수 (매 접속마다 +1)
   isActive: boolean("is_active").default(true), // 활성화 상태 (false=만료됨)
   createdAt: timestamp("created_at").defaultNow(), // 생성 시간

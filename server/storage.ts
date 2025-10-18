@@ -630,6 +630,7 @@ export class DatabaseStorage implements IStorage {
         sender: sharedHtmlPages.sender,
         location: sharedHtmlPages.location,
         featured: sharedHtmlPages.featured,
+        featuredOrder: sharedHtmlPages.featuredOrder,
         downloadCount: sharedHtmlPages.downloadCount,
         isActive: sharedHtmlPages.isActive,
         createdAt: sharedHtmlPages.createdAt,
@@ -665,6 +666,7 @@ export class DatabaseStorage implements IStorage {
         sender: sharedHtmlPages.sender,
         location: sharedHtmlPages.location,
         featured: sharedHtmlPages.featured,
+        featuredOrder: sharedHtmlPages.featuredOrder,
         downloadCount: sharedHtmlPages.downloadCount,
         isActive: sharedHtmlPages.isActive,
         createdAt: sharedHtmlPages.createdAt,
@@ -676,18 +678,37 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * ⭐ Featured 설정/해제
+   * ⭐ Featured 설정/해제 (클릭 순서 자동 부여!)
    * 
    * 목적: 관리자가 공유 페이지를 추천 갤러리에 추가/제거
    * 
    * @param id - 공유 페이지 ID
    * @param featured - true=Featured 추가, false=제거
+   * 
+   * 💡 핵심: 클릭 순서대로 featuredOrder 자동 부여!
+   * - Featured 추가 시: 현재 최대값 + 1 (1, 2, 3...)
+   * - Featured 제거 시: featuredOrder = null
    */
   async setFeatured(id: string, featured: boolean): Promise<void> {
-    await db
-      .update(sharedHtmlPages)
-      .set({ featured, updatedAt: new Date() })
-      .where(eq(sharedHtmlPages.id, id));
+    if (featured) {
+      // 📌 Featured 추가: 현재 최대 순서 + 1
+      const currentFeatured = await this.getFeaturedHtmlPages();
+      const maxOrder = currentFeatured.reduce((max, page) => 
+        Math.max(max, page.featuredOrder || 0), 0
+      );
+      const newOrder = maxOrder + 1;
+      
+      await db
+        .update(sharedHtmlPages)
+        .set({ featured: true, featuredOrder: newOrder, updatedAt: new Date() })
+        .where(eq(sharedHtmlPages.id, id));
+    } else {
+      // 🗑️ Featured 제거: featuredOrder 초기화
+      await db
+        .update(sharedHtmlPages)
+        .set({ featured: false, featuredOrder: null, updatedAt: new Date() })
+        .where(eq(sharedHtmlPages.id, id));
+    }
   }
 
   /**
