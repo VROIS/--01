@@ -816,6 +816,13 @@ document.addEventListener('DOMContentLoaded', () => {
         authPassword.value = '';
         authSection.classList.remove('hidden');
         promptSettingsSection.classList.add('hidden');
+        
+        // 🔒 대시보드 링크 숨기기 (관리자 인증 후에만 표시)
+        const dashboardLink = document.getElementById('adminDashboardLink');
+        if (dashboardLink) {
+            dashboardLink.classList.add('hidden');
+        }
+        
         populatePromptTextareas(); // Load saved or default prompts
         showPage(settingsPage);
     }
