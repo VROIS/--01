@@ -978,10 +978,10 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('🎯 Opening pending share URL after auth:', pendingUrl);
             localStorage.removeItem('pendingShareUrl');
             console.log('🗑️ Removed from localStorage');
-            // 약간의 지연 후 새 탭에서 열기 (페이지 로드 완료 대기)
+            // 약간의 지연 후 같은 탭에서 열기 (페이지 로드 완료 대기)
             setTimeout(() => {
-                console.log('🚀 Opening new tab now:', pendingUrl);
-                window.open(pendingUrl, '_blank');
+                console.log('🚀 Opening page now:', pendingUrl);
+                window.location.href = pendingUrl;
             }, 500);
         } else {
             console.log('❌ No pending URL found');
@@ -1026,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pendingUrl) {
                     console.log('🎯 Opening pending share URL:', pendingUrl);
                     localStorage.removeItem('pendingShareUrl');
-                    window.open(pendingUrl, '_blank');
+                    window.location.href = pendingUrl;
                 }
             } else {
                 console.log('⚪ Not authenticated, keeping modal state');
@@ -1947,9 +1947,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/auth/user');
             console.log('🔵 Auth status:', response.ok, response.status);
             if (response.ok) {
-                // 로그인되어 있으면 새 탭에서 페이지 열기
-                console.log('✅ Opening page in new tab:', shareUrl);
-                window.open(shareUrl, '_blank');
+                // 로그인되어 있으면 같은 탭에서 페이지 열기
+                console.log('✅ Opening page in same tab:', shareUrl);
+                window.location.href = shareUrl;
             } else {
                 // 로그인되어 있지 않으면 URL 저장 후 인증 모달 표시
                 console.log('❌ Not authenticated, showing auth modal');
