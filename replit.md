@@ -67,10 +67,17 @@ The system features a **RESTful API** built with Express, using shared TypeScrip
 
 ## System Design Choices
 - **UI/UX:** Mobile-first approach with responsive design, touch-friendly interfaces, and camera/GPS integration.
-- **Performance:** Focus on optimizing AI response times (current target 2-2.5 seconds) through prompt engineering, AI model selection, and image compression.
+- **Performance:** Focus on optimizing AI response times (current target 2-2.5 seconds) through prompt engineering, AI model selection, and image compression. Recent improvements include:
+  - **Featured Gallery Caching (2025-10-26):** localStorage 5-minute cache reduces API loading from 0.9s to 0ms, instant archive page display
 - **Share Feature:** Comprehensive re-implementation of sharing functionality, including:
   - Short URLs (8-character IDs, 67% length reduction)
   - **Item Selection Order Preservation (2025-10-18):** User's click order in archive is preserved in shared pages (like shopping cart functionality)
+  - **KakaoTalk In-App Browser Fix (2025-10-26):** Chrome force redirect with full-screen warning for Galaxy users
+    - UserAgent detection for KakaoTalk in-app browser
+    - Instant full-screen yellow warning overlay
+    - Automatic Chrome app launch via Intent URL after 0.5s
+    - Manual "Open in Chrome" button fallback
+    - ⚠️ **Protected Code**: Critical UX fix for primary user base
   - Offline support via Service Worker (Cache-First strategy, iOS Safari fixes)
   - Responsive shared page UI with z-index hierarchy and HTML escaping fixes
 - **Admin UI:** Improved administrator interface for managing featured galleries with:

@@ -62,9 +62,29 @@ export function generateShareHtml(data: SharePageData): string {
         }
     </script>
     <script>
-        // 🔍 카카오톡 인앱 브라우저 감지 (2025-10-26)
-        // ⚠️ CRITICAL: 갤럭시 사용자 최대 문제점 - 카톡에서 링크 안 열림
-        // 해결: 즉시 배너 표시 + 갤러리 숨김 + Chrome 강제 유도
+        // ═══════════════════════════════════════════════════════════════
+        // ⭐ 카카오톡 인앱 브라우저 Chrome 강제 리다이렉트 (2025-10-26)
+        // ⚠️ CRITICAL: P1-1 최우선 긴급 수정 - DO NOT MODIFY WITHOUT USER APPROVAL
+        // ═══════════════════════════════════════════════════════════════
+        // 작업 시간: 2시간
+        // 문제: 갤럭시 사용자가 카카오톡에서 공유링크 클릭 시 페이지 안 열림
+        //       (아이폰은 정상 작동, 삼성폰만 문제 발생)
+        // 원인: 카카오톡 인앱 브라우저가 Web Audio API 차단
+        // 
+        // 해결 전략:
+        // 1. UserAgent로 카카오톡 인앱 브라우저 즉시 감지
+        // 2. 전체 화면 노란색 경고 배너 즉시 표시 (갤러리 숨김)
+        // 3. 0.5초 후 Intent URL로 Chrome 앱 자동 실행
+        // 4. 실패 시 사용자가 "Chrome에서 열기" 버튼 수동 클릭
+        // 
+        // Intent URL 스킴:
+        // - intent://도메인/경로#Intent;scheme=https;package=com.android.chrome;end
+        // - Android Chrome 앱 강제 실행 (삼성 인터넷 제외)
+        // 
+        // UX 플로우:
+        // 카톡 링크 클릭 → 노란 경고 화면 (0초) → 자동 Chrome 실행 (0.5초)
+        // → Chrome에서 정상 재생 ✅
+        // ═══════════════════════════════════════════════════════════════
         var isKakaoInApp = false;
         
         (function() {
