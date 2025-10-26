@@ -1521,11 +1521,25 @@ self.addEventListener('fetch', (event) => {
       // 📊 조회수 증가 (매 접속마다)
       await storage.incrementDownloadCount(id);
       
-      // ✅ HTML 콘텐츠 직접 반환
+      // ✅ HTML 파일 읽어서 반환
       // Content-Disposition: inline - iOS Safari 다운로드 방지 (브라우저에서 바로 열기)
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Content-Disposition', 'inline');
-      res.send(page.htmlContent);
+      
+      // htmlFilePath가 있으면 파일에서 읽기, 없으면 DB에서 읽기 (하위 호환성)
+      if (page.htmlFilePath) {
+        const fullPath = path.join(process.cwd(), 'public', page.htmlFilePath);
+        if (fs.existsSync(fullPath)) {
+          const htmlContent = fs.readFileSync(fullPath, 'utf8');
+          res.send(htmlContent);
+        } else {
+          console.error(`❌ HTML 파일 없음: ${fullPath}`);
+          res.status(500).send('HTML 파일을 찾을 수 없습니다.');
+        }
+      } else {
+        // 기존 데이터 (htmlContent 사용)
+        res.send(page.htmlContent);
+      }
       
     } catch (error) {
       console.error('공유 페이지 조회 오류:', error);
@@ -1575,11 +1589,20 @@ self.addEventListener('fetch', (event) => {
       // Increment download count
       await storage.incrementDownloadCount(id);
       
+      // htmlFilePath가 있으면 파일에서 읽기, 없으면 DB에서 읽기
+      let htmlContent = page.htmlContent;
+      if (page.htmlFilePath && !htmlContent) {
+        const fullPath = path.join(process.cwd(), 'public', page.htmlFilePath);
+        if (fs.existsSync(fullPath)) {
+          htmlContent = fs.readFileSync(fullPath, 'utf8');
+        }
+      }
+      
       res.json({
         success: true,
         id: page.id,
         name: page.name,
-        htmlContent: page.htmlContent,
+        htmlContent: htmlContent,
         sender: page.sender,
         location: page.location,
         featured: page.featured,

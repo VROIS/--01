@@ -140,7 +140,8 @@ export const sharedHtmlPages = pgTable("shared_html_pages", {
   id: varchar("id").primaryKey(), // 짧은 ID (8자, nanoid 생성) - 예: abc12345
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }), // 생성자 ID
   name: text("name").notNull(), // 사용자가 입력한 링크 이름 (예: "파리 여행 가이드")
-  htmlContent: text("html_content").notNull(), // 완전한 HTML 파일 내용 (독립 실행 가능)
+  htmlContent: text("html_content"), // 완전한 HTML 파일 내용 (구 데이터 호환용, nullable)
+  htmlFilePath: text("html_file_path"), // HTML 파일 경로 (신규: /shared/abc12345.html)
   guideIds: text("guide_ids").array().notNull(), // 포함된 가이드 ID 배열 (추적용)
   thumbnail: text("thumbnail"), // 첫 번째 가이드 이미지 (썸네일용)
   sender: text("sender"), // 발신자 이름 (임시: "여행자")

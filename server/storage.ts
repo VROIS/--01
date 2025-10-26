@@ -35,6 +35,8 @@ import {
 import { db } from "./db";
 import { eq, desc, inArray, and, sql, like } from "drizzle-orm";
 import crypto from "crypto"; // 🔧 짧은 ID 생성을 위해 추가
+import fs from "fs"; // 📁 HTML 파일 저장을 위해 추가
+import path from "path"; // 📂 경로 처리를 위해 추가
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -525,11 +527,34 @@ export class DatabaseStorage implements IStorage {
       try {
         const shortId = generateShortId();
         
+        // 💾 HTML 파일로 저장 (DB 용량 절약!)
+        const htmlFilePath = `/shared/${shortId}.html`;
+        const fullPath = path.join(process.cwd(), 'public', htmlFilePath);
+        
+        // public/shared 폴더 확인 및 생성
+        const sharedDir = path.join(process.cwd(), 'public', 'shared');
+        if (!fs.existsSync(sharedDir)) {
+          fs.mkdirSync(sharedDir, { recursive: true });
+        }
+        
+        // HTML 파일 저장
+        fs.writeFileSync(fullPath, page.htmlContent, 'utf8');
+        console.log(`✅ HTML 파일 저장: ${htmlFilePath}`);
+        
+        // DB에는 경로만 저장 (htmlContent 제외)
+        const { htmlContent, ...pageWithoutHtml } = page;
+        
         const [newPage] = await db
           .insert(sharedHtmlPages)
-          .values({ ...page, id: shortId, userId })
+          .values({ 
+            id: shortId,
+            userId: userId,
+            htmlFilePath: htmlFilePath,
+            ...pageWithoutHtml
+          })
           .returning();
         
+        console.log(`✅ DB 저장 완료: ${shortId} (파일: ${htmlFilePath})`);
         return newPage; // ✅ 성공!
       } catch (error: any) {
         attempts++;
