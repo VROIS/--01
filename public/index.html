@@ -770,17 +770,17 @@
                         인증하기
                     </button>
                 </form>
-                
-                <!-- 대시보드 링크 (관리자 인증 후 표시) -->
-                <div id="adminDashboardLink" class="hidden mt-4 pt-4 border-t border-gray-200">
-                    <a href="/admin-dashboard.html" class="block w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md hover:from-purple-700 hover:to-blue-700 text-center font-semibold shadow-md transition-all">
-                        📊 관리자 대시보드 열기
-                    </a>
-                </div>
             </div>
 
             <!-- Prompt Settings Section (Hidden by default) -->
             <div id="promptSettingsSection" class="hidden space-y-6">
+                <!-- 🔒 대시보드 링크 (관리자 인증 후 표시) -->
+                <div id="adminDashboardLink" class="hidden bg-white p-6 rounded-lg shadow-sm border-l-4 border-purple-600">
+                    <a href="/admin-dashboard.html" class="block w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 text-center font-bold text-lg shadow-lg transition-all transform hover:scale-105">
+                        📊 관리자 대시보드 열기
+                    </a>
+                    <p class="text-xs text-gray-500 mt-2 text-center">실시간 통계 및 분석 대시보드</p>
+                </div>
                 <div class="bg-white p-6 rounded-lg shadow-sm">
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">이미지 설명 프롬프트</h2>
                     <textarea id="imagePromptTextarea" rows="6" class="w-full p-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"></textarea>
