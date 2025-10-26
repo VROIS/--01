@@ -1045,17 +1045,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function capturePhoto() {
+    async function capturePhoto() {
         if (!video.videoWidth || !video.videoHeight) return;
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const context = canvas.getContext('2d');
         if (context) {
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // 📍 브라우저 위치 권한 요청 (2025-10-26)
+            await requestBrowserLocation();
+            
             processImage(canvas.toDataURL('image/jpeg'), shootBtn);
         }
     }
     
+    // ═══════════════════════════════════════════════════════════════
+    // 📍 브라우저 위치 권한 요청 (2025-10-26)
+    // ═══════════════════════════════════════════════════════════════
+    // 목적: EXIF GPS 없을 때 브라우저 Geolocation API 사용
+    // 기능: 현재 위치 가져오기 → 랜드마크 검색
+    // ═══════════════════════════════════════════════════════════════
+    async function requestBrowserLocation() {
+        if (!navigator.geolocation) {
+            console.warn('⚠️ 브라우저가 위치 정보를 지원하지 않습니다');
+            return;
+        }
+
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            });
+
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            window.currentGPS = {
+                latitude: latitude,
+                longitude: longitude,
+                locationName: null
+            };
+            console.log('📍 브라우저 위치 추출 성공:', window.currentGPS);
+
+            // 🗺️ 주변 유명 랜드마크 찾기
+            loadGoogleMapsAPI(async () => {
+                const landmark = await getNearbyLandmark(latitude, longitude);
+                if (landmark) {
+                    window.currentGPS.locationName = landmark;
+                    console.log('🎯 유명 장소:', landmark);
+                }
+            });
+        } catch (error) {
+            if (error.code === 1) {
+                console.log('ℹ️ 사용자가 위치 권한을 거부했습니다');
+            } else {
+                console.error('위치 정보 오류:', error);
+            }
+            window.currentGPS = null;
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // 📍 사진 업로드 + GPS 자동 추출 (2025-10-26)
     // ═══════════════════════════════════════════════════════════════
@@ -1076,7 +1129,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             longitude: gpsData.longitude,
                             locationName: null
                         };
-                        console.log('📍 GPS 추출 성공:', window.currentGPS);
+                        console.log('📍 EXIF GPS 추출 성공:', window.currentGPS);
                         
                         // 🗺️ Step 1.5: 주변 유명 랜드마크 찾기 (GPS → "에펠탑" 등)
                         loadGoogleMapsAPI(async () => {
@@ -1090,16 +1143,25 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         });
                     } else {
-                        console.log('ℹ️ GPS 정보 없음');
+                        console.log('ℹ️ EXIF GPS 정보 없음 → 브라우저 위치 요청');
                         window.currentGPS = null;
+                        
+                        // 📍 EXIF GPS 없으면 브라우저 위치 사용
+                        await requestBrowserLocation();
                     }
                 } else {
-                    console.warn('⚠️ exifr 라이브러리 로딩 실패');
+                    console.warn('⚠️ exifr 라이브러리 로딩 실패 → 브라우저 위치 요청');
                     window.currentGPS = null;
+                    
+                    // 📍 브라우저 위치 요청
+                    await requestBrowserLocation();
                 }
             } catch (error) {
                 console.error('GPS 추출 오류:', error);
                 window.currentGPS = null;
+                
+                // 📍 오류 시에도 브라우저 위치 요청
+                await requestBrowserLocation();
             }
             
             // 📷 Step 2: 이미지 처리 (기존 로직)
