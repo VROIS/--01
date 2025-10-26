@@ -992,16 +992,21 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 인증 상태 확인 및 모달 자동 닫기
     async function checkAuthStatusAndCloseModal() {
+        console.log('🟡 Checking auth status...');
         try {
             const response = await fetch('/api/auth/user');
+            console.log('🟡 Auth response:', response.ok, response.status);
             if (response.ok) {
                 // 로그인되어 있으면 authModal 닫기
+                console.log('🟡 Modal element:', authModal);
                 authModal?.classList.add('hidden');
                 console.log('✅ Auth modal closed - user is authenticated');
+            } else {
+                console.log('⚪ Not authenticated, keeping modal state');
             }
         } catch (error) {
             // 에러 발생 시 무시 (모달 상태 유지)
-            console.log('Auth check skipped:', error);
+            console.log('⚠️ Auth check error:', error);
         }
     }
     
@@ -1867,19 +1872,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Featured 갤러리 클릭 핸들러 (전역 함수로 노출)
     window.handleFeaturedClick = async function(shareUrl) {
+        console.log('🔵 Featured Gallery clicked:', shareUrl);
         try {
             // 인증 상태 확인
             const response = await fetch('/api/auth/user');
+            console.log('🔵 Auth status:', response.ok, response.status);
             if (response.ok) {
                 // 로그인되어 있으면 새 탭에서 페이지 열기
+                console.log('✅ Opening page in new tab');
                 window.open(shareUrl, '_blank');
             } else {
                 // 로그인되어 있지 않으면 인증 모달 표시
+                console.log('❌ Not authenticated, showing auth modal');
                 authModal.classList.remove('hidden');
             }
         } catch (error) {
             // 에러 발생 시에도 인증 모달 표시
-            console.log('Auth check failed, showing auth modal');
+            console.log('❌ Auth check failed, showing auth modal:', error);
             authModal.classList.remove('hidden');
         }
     };
