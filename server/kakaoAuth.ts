@@ -86,36 +86,53 @@ export async function setupKakaoAuth(app: Express) {
 
   app.get(
     "/api/auth/kakao/callback",
-    passport.authenticate("kakao", {
-      failureRedirect: "/?auth=failed",
-    }),
-    (req, res) => {
-      // 항상 popup 방식으로 처리 (간단하고 안정적)
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>인증 완료</title>
-        </head>
-        <body>
-          <script>
-            // 부모 창에 메시지 전송
-            if (window.opener) {
-              window.opener.postMessage('auth-success', '*');
-              window.close();
-            } else {
-              // Popup이 아닌 경우 메인 페이지로 리다이렉트
-              window.location.href = '/';
-            }
-          </script>
-          <p style="text-align: center; font-family: sans-serif; margin-top: 50px;">
-            ✅ 인증이 완료되었습니다!<br>
-            잠시 후 자동으로 닫힙니다...
-          </p>
-        </body>
-        </html>
-      `);
+    (req, res, next) => {
+      passport.authenticate("kakao", (err: any, user: any) => {
+        if (err) {
+          console.error('카카오 인증 콜백 오류:', err);
+          return res.redirect("/?auth=failed");
+        }
+        
+        if (!user) {
+          console.error('카카오 인증 실패: 사용자 없음');
+          return res.redirect("/?auth=failed");
+        }
+        
+        // 로그인 처리
+        req.logIn(user, (loginErr) => {
+          if (loginErr) {
+            console.error('카카오 로그인 오류:', loginErr);
+            return res.redirect("/?auth=failed");
+          }
+          
+          // 항상 popup 방식으로 처리 (간단하고 안정적)
+          res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <title>인증 완료</title>
+            </head>
+            <body>
+              <script>
+                // 부모 창에 메시지 전송
+                if (window.opener) {
+                  window.opener.postMessage('auth-success', '*');
+                  window.close();
+                } else {
+                  // Popup이 아닌 경우 메인 페이지로 리다이렉트
+                  window.location.href = '/';
+                }
+              </script>
+              <p style="text-align: center; font-family: sans-serif; margin-top: 50px;">
+                ✅ 인증이 완료되었습니다!<br>
+                잠시 후 자동으로 닫힙니다...
+              </p>
+            </body>
+            </html>
+          `);
+        });
+      })(req, res, next);
     }
   );
 }
