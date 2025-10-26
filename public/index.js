@@ -970,6 +970,17 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("데이터베이스를 열 수 없습니다. 앱이 정상적으로 작동하지 않을 수 있습니다.");
         }
         
+        // 인증 완료 후 대기 중인 공유 URL 확인
+        const pendingUrl = localStorage.getItem('pendingShareUrl');
+        if (pendingUrl) {
+            console.log('🎯 Opening pending share URL after auth:', pendingUrl);
+            localStorage.removeItem('pendingShareUrl');
+            // 약간의 지연 후 새 탭에서 열기 (페이지 로드 완료 대기)
+            setTimeout(() => {
+                window.open(pendingUrl, '_blank');
+            }, 500);
+        }
+        
         // The landing page animation will handle showing the features page initially.
         if (recognition) {
             recognition.continuous = false;
@@ -2537,40 +2548,14 @@ document.addEventListener('DOMContentLoaded', () => {
         authModal.classList.remove('pointer-events-auto');
     });
 
-    // Popup 인증 완료 메시지 수신
-    window.addEventListener('message', (event) => {
-        if (event.data === 'auth-success') {
-            console.log('🎉 Auth success message received from popup');
-            checkAuthStatusAndCloseModal();
-        }
-    });
-
     googleLoginBtn?.addEventListener('click', () => {
-        const currentUrl = window.location.pathname + window.location.search;
-        const authUrl = `/api/auth/google?returnTo=${encodeURIComponent(currentUrl)}&popup=true`;
-        const popup = window.open(authUrl, 'Google Login', 'width=600,height=700');
-        
-        // Popup이 닫히면 인증 상태 확인 (fallback)
-        const checkPopup = setInterval(() => {
-            if (popup && popup.closed) {
-                clearInterval(checkPopup);
-                checkAuthStatusAndCloseModal();
-            }
-        }, 500);
+        // 전체 페이지 리다이렉트 방식 (세션 공유 보장)
+        window.location.href = '/api/auth/google';
     });
 
     kakaoLoginBtn?.addEventListener('click', () => {
-        const currentUrl = window.location.pathname + window.location.search;
-        const authUrl = `/api/auth/kakao?returnTo=${encodeURIComponent(currentUrl)}&popup=true`;
-        const popup = window.open(authUrl, 'Kakao Login', 'width=600,height=700');
-        
-        // Popup이 닫히면 인증 상태 확인 (fallback)
-        const checkPopup = setInterval(() => {
-            if (popup && popup.closed) {
-                clearInterval(checkPopup);
-                checkAuthStatusAndCloseModal();
-            }
-        }, 500);
+        // 전체 페이지 리다이렉트 방식 (세션 공유 보장)
+        window.location.href = '/api/auth/kakao';
     });
 
     // Auth Modal Background Click to Close
