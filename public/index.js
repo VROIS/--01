@@ -977,6 +977,23 @@ document.addEventListener('DOMContentLoaded', () => {
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
         }
+        
+        // 인증 성공 후 authModal 자동 닫기 (2025-10-26)
+        checkAuthStatusAndCloseModal();
+    }
+    
+    // 인증 상태 확인 및 모달 자동 닫기
+    async function checkAuthStatusAndCloseModal() {
+        try {
+            const response = await fetch('/api/auth/user');
+            if (response.ok) {
+                // 로그인되어 있으면 authModal 닫기
+                authModal?.classList.add('hidden');
+            }
+        } catch (error) {
+            // 에러 발생 시 무시 (모달 상태 유지)
+            console.log('Auth check skipped:', error);
+        }
     }
     
     async function handleStartFeaturesClick() {
