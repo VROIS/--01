@@ -59,6 +59,32 @@ export function generateShareHtml(data: SharePageData): string {
             }
         }
     </script>
+    <script>
+        // 🔍 카카오톡 인앱 브라우저 감지 (2025-10-26)
+        // 목적: 삼성폰 사용자에게 Chrome에서 열기 유도 (Web Audio API 제한 우회)
+        function isKakaoTalkBrowser() {
+            return /KAKAOTALK/i.test(navigator.userAgent);
+        }
+        
+        // 🌐 Chrome에서 열기 (Intent URL)
+        function openInChrome() {
+            const currentUrl = window.location.href;
+            // Android Intent URL 스킴
+            const intentUrl = 'intent://' + currentUrl.replace(/https?:\\/\\//, '') + 
+                              '#Intent;scheme=https;package=com.android.chrome;end';
+            window.location.href = intentUrl;
+        }
+        
+        // 📱 페이지 로딩 시 배너 표시
+        window.addEventListener('DOMContentLoaded', function() {
+            if (isKakaoTalkBrowser()) {
+                const banner = document.getElementById('kakao-browser-warning');
+                if (banner) {
+                    banner.style.display = 'block';
+                }
+            }
+        });
+    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -217,9 +243,73 @@ export function generateShareHtml(data: SharePageData): string {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(66, 133, 244, 0.4);
         }
+        
+        /* 🔔 카카오톡 브라우저 경고 배너 */
+        #kakao-browser-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #FEE500 0%, #FFD700 100%);
+            color: #3C1E1E;
+            padding: 16px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 9999;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.6;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+        
+        #kakao-browser-warning .chrome-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 24px;
+            background: #3C1E1E;
+            color: #FEE500;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        #kakao-browser-warning .chrome-btn:hover {
+            background: #2A1515;
+            transform: scale(1.05);
+        }
+        
+        #kakao-browser-warning .chrome-btn:active {
+            transform: scale(0.98);
+        }
+        
+        /* 배너 표시 시 body에 패딩 추가 */
+        body.kakao-browser {
+            padding-top: 120px;
+        }
     </style>
 </head>
 <body>
+    <!-- 🔔 카카오톡 인앱 브라우저 경고 배너 -->
+    <div id="kakao-browser-warning">
+        <div style="font-weight: 700; font-size: 16px; margin-bottom: 6px;">
+            🎵 음성 재생을 위해 Chrome이 필요해요
+        </div>
+        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">
+            카카오톡 브라우저에서는 음성이 재생되지 않습니다
+        </div>
+        <button onclick="openInChrome()" class="chrome-btn">
+            🌐 Chrome에서 열기
+        </button>
+    </div>
     <!-- 헤더 (메타데이터) -->
     <div class="header">
         <h1>${title}</h1>
