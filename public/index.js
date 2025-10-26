@@ -1003,6 +1003,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 authModal?.classList.add('pointer-events-none');
                 authModal?.classList.remove('pointer-events-auto');
                 console.log('✅ Auth modal closed - user is authenticated');
+                
+                // 대기 중인 공유 URL이 있으면 자동으로 열기
+                const pendingUrl = localStorage.getItem('pendingShareUrl');
+                if (pendingUrl) {
+                    console.log('🎯 Opening pending share URL:', pendingUrl);
+                    localStorage.removeItem('pendingShareUrl');
+                    window.open(pendingUrl, '_blank');
+                }
             } else {
                 console.log('⚪ Not authenticated, keeping modal state');
             }
@@ -1873,11 +1881,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Featured 갤러리 클릭 핸들러 (전역 함수로 노출)
-    // 추천 갤러리는 공유 페이지이므로 인증 없이 누구나 볼 수 있음
-    window.handleFeaturedClick = function(shareUrl) {
+    window.handleFeaturedClick = async function(shareUrl) {
         console.log('🔵 Featured Gallery clicked:', shareUrl);
-        console.log('✅ Opening shared page in new tab (no auth required)');
-        window.open(shareUrl, '_blank');
+        try {
+            // 인증 상태 확인
+            const response = await fetch('/api/auth/user');
+            console.log('🔵 Auth status:', response.ok, response.status);
+            if (response.ok) {
+                // 로그인되어 있으면 새 탭에서 페이지 열기
+                console.log('✅ Opening page in new tab');
+                window.open(shareUrl, '_blank');
+            } else {
+                // 로그인되어 있지 않으면 URL 저장 후 인증 모달 표시
+                console.log('❌ Not authenticated, showing auth modal');
+                localStorage.setItem('pendingShareUrl', shareUrl);
+                authModal.classList.remove('hidden');
+                authModal.classList.remove('pointer-events-none');
+                authModal.classList.add('pointer-events-auto');
+            }
+        } catch (error) {
+            // 에러 발생 시 URL 저장 후 인증 모달 표시
+            console.log('❌ Auth check failed, showing auth modal:', error);
+            localStorage.setItem('pendingShareUrl', shareUrl);
+            authModal.classList.remove('hidden');
+            authModal.classList.remove('pointer-events-none');
+            authModal.classList.add('pointer-events-auto');
+        }
     };
 
     async function renderArchive() {
