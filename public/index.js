@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const authModal = document.getElementById('authModal');
     const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
     const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const kakaoLoginBtn = document.getElementById('kakaoLoginBtn');
 
     // Pages
     const featuresPage = document.getElementById('featuresPage');
@@ -2199,6 +2200,11 @@ document.addEventListener('DOMContentLoaded', () => {
     googleLoginBtn?.addEventListener('click', () => {
         const currentUrl = window.location.pathname + window.location.search;
         window.location.href = `/api/auth/google?returnTo=${encodeURIComponent(currentUrl)}`;
+    });
+
+    kakaoLoginBtn?.addEventListener('click', () => {
+        const currentUrl = window.location.pathname + window.location.search;
+        window.location.href = `/api/auth/kakao?returnTo=${encodeURIComponent(currentUrl)}`;
     });
 
     // Auth Modal Background Click to Close
