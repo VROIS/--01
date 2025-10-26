@@ -538,6 +538,9 @@ export class DatabaseStorage implements IStorage {
         }
         
         // HTML 파일 저장
+        if (!page.htmlContent) {
+          throw new Error('htmlContent가 없습니다.');
+        }
         fs.writeFileSync(fullPath, page.htmlContent, 'utf8');
         console.log(`✅ HTML 파일 저장: ${htmlFilePath}`);
         
@@ -650,6 +653,7 @@ export class DatabaseStorage implements IStorage {
         id: sharedHtmlPages.id,
         userId: sharedHtmlPages.userId,
         name: sharedHtmlPages.name,
+        htmlFilePath: sharedHtmlPages.htmlFilePath,
         guideIds: sharedHtmlPages.guideIds,
         thumbnail: sharedHtmlPages.thumbnail,
         sender: sharedHtmlPages.sender,
@@ -686,6 +690,7 @@ export class DatabaseStorage implements IStorage {
         id: sharedHtmlPages.id,
         userId: sharedHtmlPages.userId,
         name: sharedHtmlPages.name,
+        htmlFilePath: sharedHtmlPages.htmlFilePath,
         guideIds: sharedHtmlPages.guideIds,
         thumbnail: sharedHtmlPages.thumbnail,
         sender: sharedHtmlPages.sender,

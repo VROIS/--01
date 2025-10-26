@@ -1,6 +1,8 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupGoogleAuth } from "./googleAuth";
 import { setupKakaoAuth } from "./kakaoAuth";
@@ -1637,6 +1639,169 @@ self.addEventListener('fetch', (event) => {
     } catch (error) {
       console.error('추천 페이지 조회 오류:', error);
       res.status(500).json({ error: '추천 페이지 조회에 실패했습니다.' });
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 📊 관리자 대시보드 API (Admin Dashboard API)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 목적: 사용자 통계, 가이드 통계, 공유 링크 통계 제공
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /**
+   * 📊 GET /api/admin/stats - 전체 통계 요약
+   * 
+   * 반환 데이터:
+   * - totalUsers: 전체 사용자 수
+   * - totalGuides: 전체 가이드 수
+   * - totalSharedPages: 전체 공유 페이지 수
+   * - totalViews: 전체 조회수 합계
+   * - usersByProvider: Provider별 사용자 수 (Google, Kakao, Replit)
+   * - recentUsers: 최근 7일 신규 사용자 수
+   * - topSharedPages: 조회수 상위 10개 공유 페이지
+   */
+  app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+    try {
+      // 전체 사용자 수
+      const totalUsersResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM users
+      `);
+      const totalUsers = Number(totalUsersResult.rows[0]?.count || 0);
+
+      // Provider별 사용자 수
+      const usersByProviderResult = await db.execute(sql`
+        SELECT provider, COUNT(*) as count 
+        FROM users 
+        GROUP BY provider
+      `);
+      const usersByProvider = usersByProviderResult.rows.map((row: any) => ({
+        provider: row.provider,
+        count: Number(row.count)
+      }));
+
+      // 최근 7일 신규 사용자
+      const recentUsersResult = await db.execute(sql`
+        SELECT COUNT(*) as count 
+        FROM users 
+        WHERE created_at >= NOW() - INTERVAL '7 days'
+      `);
+      const recentUsers = Number(recentUsersResult.rows[0]?.count || 0);
+
+      // 전체 가이드 수
+      const totalGuidesResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM guides
+      `);
+      const totalGuides = Number(totalGuidesResult.rows[0]?.count || 0);
+
+      // 전체 공유 페이지 수
+      const totalSharedPagesResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM shared_html_pages WHERE is_active = true
+      `);
+      const totalSharedPages = Number(totalSharedPagesResult.rows[0]?.count || 0);
+
+      // 전체 조회수 합계
+      const totalViewsResult = await db.execute(sql`
+        SELECT COALESCE(SUM(download_count), 0) as total 
+        FROM shared_html_pages 
+        WHERE is_active = true
+      `);
+      const totalViews = Number(totalViewsResult.rows[0]?.total || 0);
+
+      // 조회수 상위 10개 공유 페이지
+      const topSharedPagesResult = await db.execute(sql`
+        SELECT id, name, download_count, created_at, featured
+        FROM shared_html_pages 
+        WHERE is_active = true
+        ORDER BY download_count DESC 
+        LIMIT 10
+      `);
+      const topSharedPages = topSharedPagesResult.rows;
+
+      // DB 크기 정보
+      const dbSizeResult = await db.execute(sql`
+        SELECT 
+          pg_size_pretty(pg_total_relation_size('shared_html_pages')) as shared_pages_size,
+          pg_size_pretty(pg_database_size(current_database())) as total_db_size
+      `);
+      const dbSize = dbSizeResult.rows[0];
+
+      res.json({
+        success: true,
+        stats: {
+          totalUsers,
+          totalGuides,
+          totalSharedPages,
+          totalViews,
+          usersByProvider,
+          recentUsers,
+          topSharedPages,
+          database: {
+            sharedPagesSize: dbSize?.shared_pages_size || 'N/A',
+            totalSize: dbSize?.total_db_size || 'N/A'
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('관리자 통계 조회 오류:', error);
+      res.status(500).json({ error: '통계 조회에 실패했습니다.' });
+    }
+  });
+
+  /**
+   * 📈 GET /api/admin/analytics - 상세 분석 데이터
+   * 
+   * Query Parameters:
+   * - period: 'week' | 'month' (기본값: 'week')
+   * 
+   * 반환 데이터:
+   * - dailyUsers: 일별 신규 사용자 수
+   * - dailyGuides: 일별 가이드 생성 수
+   * - dailyShares: 일별 공유 링크 생성 수
+   */
+  app.get('/api/admin/analytics', requireAdmin, async (req, res) => {
+    try {
+      const period = req.query.period === 'month' ? 30 : 7;
+
+      // 일별 신규 사용자
+      const dailyUsersResult = await db.execute(sql`
+        SELECT DATE(created_at) as date, COUNT(*) as count
+        FROM users
+        WHERE created_at >= NOW() - INTERVAL '${sql.raw(period.toString())} days'
+        GROUP BY DATE(created_at)
+        ORDER BY date DESC
+      `);
+
+      // 일별 가이드 생성
+      const dailyGuidesResult = await db.execute(sql`
+        SELECT DATE(created_at) as date, COUNT(*) as count
+        FROM guides
+        WHERE created_at >= NOW() - INTERVAL '${sql.raw(period.toString())} days'
+        GROUP BY DATE(created_at)
+        ORDER BY date DESC
+      `);
+
+      // 일별 공유 링크 생성
+      const dailySharesResult = await db.execute(sql`
+        SELECT DATE(created_at) as date, COUNT(*) as count
+        FROM shared_html_pages
+        WHERE created_at >= NOW() - INTERVAL '${sql.raw(period.toString())} days'
+        GROUP BY DATE(created_at)
+        ORDER BY date DESC
+      `);
+
+      res.json({
+        success: true,
+        analytics: {
+          dailyUsers: dailyUsersResult.rows,
+          dailyGuides: dailyGuidesResult.rows,
+          dailyShares: dailySharesResult.rows
+        }
+      });
+
+    } catch (error) {
+      console.error('분석 데이터 조회 오류:', error);
+      res.status(500).json({ error: '분석 데이터 조회에 실패했습니다.' });
     }
   });
 
