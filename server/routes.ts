@@ -460,6 +460,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Logout endpoint
+  app.get('/api/auth/logout', (req: any, res) => {
+    console.log('🔓 Logging out user...');
+    req.logout((err: any) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({ error: 'Failed to logout' });
+      }
+      req.session.destroy((err: any) => {
+        if (err) {
+          console.error('Session destroy error:', err);
+          return res.status(500).json({ error: 'Failed to destroy session' });
+        }
+        res.clearCookie('connect.sid');
+        console.log('✅ Logged out successfully');
+        res.redirect('/');
+      });
+    });
+  });
+
   // User preferences
   app.patch('/api/user/preferences', isAuthenticated, async (req: any, res) => {
     try {
@@ -1550,8 +1570,14 @@ self.addEventListener('fetch', (event) => {
           const htmlContent = fs.readFileSync(fullPath, 'utf8');
           res.send(htmlContent);
         } else {
-          console.error(`❌ HTML 파일 없음: ${fullPath}`);
-          res.status(500).send('HTML 파일을 찾을 수 없습니다.');
+          // ⚠️ 파일이 없으면 DB의 htmlContent 사용 (fallback)
+          console.warn(`⚠️ HTML 파일 없음, DB 콘텐츠 사용: ${fullPath}`);
+          if (page.htmlContent) {
+            res.send(page.htmlContent);
+          } else {
+            console.error(`❌ HTML 파일도 없고 DB 콘텐츠도 없음: ${id}`);
+            res.status(500).send('HTML 콘텐츠를 찾을 수 없습니다.');
+          }
         }
       } else {
         // 기존 데이터 (htmlContent 사용)
