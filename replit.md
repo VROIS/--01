@@ -6,10 +6,32 @@ This project is a location-based travel guide application named "내손가이드
 
 Preferred communication style: Simple, everyday language.
 
+# Design System
+
+## Brand Colors
+- **Primary Color (Gemini Blue)**: `#4285F4` (CSS variable: `--gemini-blue`)
+- **Background**: `#FFFEFA` (크림색/Cream)
+- **Accent (Yellow Dot)**: `#FBBF24`
+
+## Typography
+- **Primary Font**: `MaruBuri` (마루부리) - 네이버 한글 폰트
+- **Fallback**: `sans-serif`
+- **Import**: `https://hangeul.pstatic.net/maruburi/maruburi.css`
+
+## UI Guidelines
+- **Mobile-first**: 모든 UI는 터치 친화적으로 설계
+- **PWA**: 오프라인 지원, Service Worker 활용
+- **Interactive Elements**: Gemini Blue 기본 사용
+- **Buttons**: 둥근 모서리, 그림자 효과
+- **Admin Pages**: 예외적으로 다른 컬러/폰트 허용 (영업 비밀)
+
+## Important Note
+**모든 사용자 대면 UI는 Gemini Blue + MaruBuri 사용 필수!** 관리자 전용 페이지는 예외.
+
 # System Architecture
 
 ## Frontend Architecture
-The frontend is built with **React 18** and **TypeScript**, using **Vite** for building and serving. **Wouter** handles client-side routing, and **TanStack Query** manages server state. Forms are handled with **React Hook Form** and Zod validation. UI components are from **Shadcn/ui** (built on Radix UI primitives), styled using **Tailwind CSS**. Internationalization is provided by **React i18next**, supporting Korean, English, Japanese, and Chinese. The design emphasizes mobile responsiveness and touch-friendly interactions, with PWA features for enhanced mobile experience.
+The frontend is built with **Vanilla JavaScript** (not React). The app uses a single-page architecture with manual DOM manipulation and IndexedDB for local storage. **Tailwind CSS** is used for styling via CDN. The design emphasizes mobile responsiveness and touch-friendly interactions, with PWA features for enhanced mobile experience. All UI follows the brand design system (Gemini Blue + MaruBuri font).
 
 ## Backend Architecture
 The backend is an **Express.js** server written in **TypeScript**. **Drizzle ORM** is used for interacting with a **PostgreSQL** database. User authentication is managed via **Replit Authentication** (OpenID Connect) with session-based storage in PostgreSQL. **Multer** handles image file uploads. **ESBuild** is used for server-side bundling.
@@ -54,6 +76,11 @@ The system features a **RESTful API** built with Express, using shared TypeScrip
 - **Admin UI:** Improved administrator interface for managing featured galleries with:
   - Search functionality for shared pages by name
   - **Automatic Featured Ordering (2025-10-18):** Click order automatically assigned (1, 2, 3...) via `featuredOrder` column for consistent display
+  - **Admin Dashboard (2025-10-26):** Real-time statistics dashboard with KPIs, analytics, and top shares
+    - 📊 Core metrics: Total users, guides, shared pages, views
+    - 📈 Daily trends: User/guide/share creation over 7 days
+    - 🔒 Password-protected access (비밀번호: 1234)
+    - 💾 DB optimization tracking: HTML file storage reduced DB from 184MB to 39MB (78% reduction)
 
 # External Dependencies
 
@@ -63,13 +90,10 @@ The system features a **RESTful API** built with Express, using shared TypeScrip
 - **PostgreSQL Database**: Primary data storage, typically a managed service like Neon.
 
 ## Frontend Libraries
-- **React 18 ecosystem**: Core UI framework.
-- **Wouter**: Lightweight client-side router.
-- **TanStack React Query**: Server state management.
-- **React Hook Form**: Form management with Zod validation.
-- **Shadcn/ui & Radix UI**: UI component libraries.
-- **Tailwind CSS**: Utility-first CSS framework.
-- **React i18next**: Internationalization.
+- **Vanilla JavaScript**: No framework, manual DOM manipulation
+- **IndexedDB**: Local storage for guides and user data
+- **Tailwind CSS**: Utility-first CSS framework (CDN)
+- **Web APIs**: Speech Synthesis, Media Recorder, Geolocation, Camera
 
 ## Backend Dependencies
 - **Express.js**: Web application framework.
