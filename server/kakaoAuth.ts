@@ -83,6 +83,7 @@ export async function setupKakaoAuth(app: Express) {
     "/api/auth/kakao",
     (req, res, next) => {
       (req.session as any).returnTo = req.query.returnTo as string || '/';
+      (req.session as any).isPopup = req.query.popup === 'true';
       next();
     },
     passport.authenticate("kakao")
@@ -95,10 +96,12 @@ export async function setupKakaoAuth(app: Express) {
     }),
     (req, res) => {
       const returnTo = (req.session as any).returnTo || '/';
+      const isPopup = (req.session as any).isPopup || false;
       delete (req.session as any).returnTo;
+      delete (req.session as any).isPopup;
       
       // Popup 인증인 경우 창 닫기
-      if (req.query.popup === 'true') {
+      if (isPopup) {
         res.send(`
           <!DOCTYPE html>
           <html>
