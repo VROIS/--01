@@ -62,13 +62,30 @@ export function generateShareHtml(data: SharePageData): string {
         }
     </script>
     <script>
-        // 🔍 카카오톡 인앱 브라우저 감지 (2025-10-26)
-        // 목적: 삼성폰 사용자에게 Chrome에서 열기 유도 (Web Audio API 제한 우회)
-        function isKakaoTalkBrowser() {
-            return /KAKAOTALK/i.test(navigator.userAgent);
-        }
+        // 🔍 카카오톡 인앱 브라우저 감지 및 자동 리다이렉트 (2025-10-26)
+        // 목적: 삼성폰 사용자에게 외부 브라우저로 자동 이동 (Web Audio API 제한 우회)
+        // 검증: burndogfather.com/271 (2023.09 최신)
+        (function() {
+            var userAgent = navigator.userAgent.toLowerCase();
+            var targetUrl = window.location.href;
+            
+            // 카카오톡 인앱 브라우저 감지
+            if (userAgent.match(/kakaotalk/i)) {
+                // 🔄 자동 리다이렉트: 카카오톡 외부 브라우저 스킴
+                window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(targetUrl);
+                
+                // 실패 대비: 1초 후에도 페이지에 남아있으면 배너 표시
+                setTimeout(function() {
+                    var banner = document.getElementById('kakao-browser-warning');
+                    if (banner) {
+                        banner.style.display = 'block';
+                        document.body.classList.add('kakao-browser');
+                    }
+                }, 1000);
+            }
+        })();
         
-        // 🌐 Chrome에서 열기 (Intent URL)
+        // 🌐 수동 버튼: Chrome에서 열기 (Intent URL)
         function openInChrome() {
             const currentUrl = window.location.href;
             // Android Intent URL 스킴
@@ -76,16 +93,6 @@ export function generateShareHtml(data: SharePageData): string {
                               '#Intent;scheme=https;package=com.android.chrome;end';
             window.location.href = intentUrl;
         }
-        
-        // 📱 페이지 로딩 시 배너 표시
-        window.addEventListener('DOMContentLoaded', function() {
-            if (isKakaoTalkBrowser()) {
-                const banner = document.getElementById('kakao-browser-warning');
-                if (banner) {
-                    banner.style.display = 'block';
-                }
-            }
-        });
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
