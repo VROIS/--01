@@ -2539,12 +2539,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     googleLoginBtn?.addEventListener('click', () => {
         const currentUrl = window.location.pathname + window.location.search;
-        window.location.href = `/api/auth/google?returnTo=${encodeURIComponent(currentUrl)}`;
+        const authUrl = `/api/auth/google?returnTo=${encodeURIComponent(currentUrl)}`;
+        const popup = window.open(authUrl, 'Google Login', 'width=600,height=700');
+        
+        // Popup이 닫히면 인증 상태 확인
+        const checkPopup = setInterval(() => {
+            if (popup && popup.closed) {
+                clearInterval(checkPopup);
+                checkAuthStatusAndCloseModal();
+            }
+        }, 500);
     });
 
     kakaoLoginBtn?.addEventListener('click', () => {
         const currentUrl = window.location.pathname + window.location.search;
-        window.location.href = `/api/auth/kakao?returnTo=${encodeURIComponent(currentUrl)}`;
+        const authUrl = `/api/auth/kakao?returnTo=${encodeURIComponent(currentUrl)}`;
+        const popup = window.open(authUrl, 'Kakao Login', 'width=600,height=700');
+        
+        // Popup이 닫히면 인증 상태 확인
+        const checkPopup = setInterval(() => {
+            if (popup && popup.closed) {
+                clearInterval(checkPopup);
+                checkAuthStatusAndCloseModal();
+            }
+        }, 500);
     });
 
     // Auth Modal Background Click to Close
