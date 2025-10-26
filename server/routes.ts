@@ -314,7 +314,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: guide.title,
           description: guide.aiGeneratedContent || guide.description || `${guide.title}에 대한 설명입니다.`,
           imageBase64: await imageToBase64(guide.imageUrl || ''),
-          location: shareLink.includeLocation ? (guide.locationName || undefined) : undefined
+          location: shareLink.includeLocation ? (guide.locationName || undefined) : undefined,
+          locationName: shareLink.includeLocation ? (guide.locationName || undefined) : undefined // 🗺️ GPS 위치 (2025-10-26)
         }))
       );
 
@@ -411,7 +412,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: guide.title,
           description: guide.aiGeneratedContent || guide.description || `${guide.title}에 대한 설명입니다.`,
           imageBase64: await imageToBase64(guide.imageUrl || ''),
-          location: includeLocation ? (guide.locationName || undefined) : undefined
+          location: includeLocation ? (guide.locationName || undefined) : undefined,
+          locationName: includeLocation ? (guide.locationName || undefined) : undefined // 🗺️ GPS 위치 (2025-10-26)
         }))
       );
 
@@ -1048,7 +1050,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: guide.title || "제목 없음",
           description: guide.description || "",
           imageBase64,
-          location: includeLocation ? (guide.locationName || undefined) : undefined
+          location: includeLocation ? (guide.locationName || undefined) : undefined,
+          locationName: includeLocation ? (guide.locationName || undefined) : undefined // 🗺️ GPS 위치 (2025-10-26)
         };
       });
 

@@ -1886,6 +1886,16 @@ document.addEventListener('DOMContentLoaded', () => {
             resetSpeechState();
             descriptionText.innerHTML = '';
             
+            // 📍 위치 정보 표시 (2025-10-26)
+            const locationInfo = document.getElementById('locationInfo');
+            const locationName = document.getElementById('locationName');
+            if (item.locationName && locationInfo && locationName) {
+                locationName.textContent = item.locationName;
+                locationInfo.classList.remove('hidden');
+            } else if (locationInfo) {
+                locationInfo.classList.add('hidden');
+            }
+            
             const description = item.description || '';
             const sentences = description.match(/[^.?!]+[.?!]+/g) || [description];
             sentences.forEach(sentence => {

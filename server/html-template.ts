@@ -4,6 +4,7 @@ interface ShareItem {
   description: string;
   imageBase64: string;
   location?: string;
+  locationName?: string; // 🗺️ GPS 위치 이름 (2025-10-26)
 }
 
 interface SharePageData {
@@ -32,7 +33,8 @@ export function generateShareHtml(data: SharePageData): string {
   const dataJSON = JSON.stringify(limitedItems.map((item, index) => ({
     id: index,
     imageDataUrl: `data:image/jpeg;base64,${item.imageBase64}`,
-    description: item.description
+    description: item.description,
+    locationName: item.locationName || null // 🗺️ GPS 위치 이름 (2025-10-26)
   })));
 
   // 앱 origin (현재 호스트 기반)
@@ -347,6 +349,13 @@ export function generateShareHtml(data: SharePageData): string {
         </header>
         <div class="content-safe-area">
             <div id="detail-text" class="text-content hidden">
+                <!-- 📍 위치 정보 표시 (2025-10-26) -->
+                <div id="detail-location-info" class="hidden mb-4 flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gemini-blue flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                    </svg>
+                    <span id="detail-location-name" class="text-base font-semibold text-gray-800"></span>
+                </div>
                 <p id="detail-description" class="readable-on-image text-xl leading-relaxed"></p>
             </div>
         </div>
@@ -437,6 +446,16 @@ export function generateShareHtml(data: SharePageData): string {
                 
                 // 배경 이미지 설정
                 document.getElementById('detail-bg').src = itemData.imageDataUrl;
+                
+                // 📍 위치 정보 표시 (2025-10-26)
+                const locationInfo = document.getElementById('detail-location-info');
+                const locationName = document.getElementById('detail-location-name');
+                if (itemData.locationName && locationInfo && locationName) {
+                    locationName.textContent = itemData.locationName;
+                    locationInfo.classList.remove('hidden');
+                } else if (locationInfo) {
+                    locationInfo.classList.add('hidden');
+                }
                 
                 // 텍스트 설정
                 document.getElementById('detail-description').textContent = itemData.description;
