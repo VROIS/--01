@@ -184,8 +184,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 📍 주변 유명 랜드마크 찾기 (GPS → "에펠탑", "루브르 박물관" 등)
     async function getNearbyLandmark(lat, lng) {
+        console.log('🔍 랜드마크 검색 시작:', lat, lng);
+        
         if (!googleMapsLoaded || !window.google) {
-            console.warn('Google Maps가 로드되지 않음');
+            console.warn('⚠️ Google Maps가 로드되지 않음');
+            return null;
+        }
+        
+        if (!geocoder) {
+            console.warn('⚠️ Geocoder가 초기화되지 않음');
             return null;
         }
         
@@ -200,7 +207,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 type: ['tourist_attraction', 'point_of_interest', 'museum', 'church', 'park']
             };
             
+            console.log('🔍 Places API 호출 중...');
             service.nearbySearch(request, (results, status) => {
+                console.log('📡 Places API 응답:', status, results?.length || 0, '개 장소');
+                
                 if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
                     // 가장 인기 있는 장소 선택 (rating × user_ratings_total)
                     const topPlace = results.reduce((best, place) => {
@@ -209,21 +219,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         return score > bestScore ? place : best;
                     }, results[0]);
                     
-                    console.log('🎯 유명 장소:', topPlace.name);
+                    console.log('🎯 유명 장소 찾음:', topPlace.name);
                     resolve(topPlace.name);
                 } else {
+                    console.log('ℹ️ Places API 실패, Geocoding 시도...');
                     // 유명 장소 없으면 Geocoding으로 주소 추출
                     geocoder.geocode({ location: { lat, lng } }, (geoResults, geoStatus) => {
+                        console.log('📡 Geocoder 응답:', geoStatus);
+                        
                         if (geoStatus === 'OK' && geoResults[0]) {
                             // 도시 이름 추출
                             const address = geoResults[0].formatted_address;
                             const city = geoResults[0].address_components.find(
                                 c => c.types.includes('locality')
                             )?.long_name || address.split(',')[0];
-                            console.log('📍 도시:', city);
+                            console.log('📍 도시 찾음:', city);
                             resolve(city);
                         } else {
-                            console.warn('위치 정보 찾기 실패');
+                            console.warn('⚠️ 위치 정보 찾기 실패:', geoStatus);
                             resolve(null);
                         }
                     });
@@ -1093,10 +1106,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 🗺️ 주변 유명 랜드마크 찾기
             loadGoogleMapsAPI(async () => {
+                console.log('🗺️ callback 실행됨 (브라우저 GPS)');
                 const landmark = await getNearbyLandmark(latitude, longitude);
+                console.log('🔎 랜드마크 검색 결과:', landmark);
                 if (landmark) {
                     window.currentGPS.locationName = landmark;
-                    console.log('🎯 유명 장소:', landmark);
+                    console.log('✅ 위치 이름 저장 완료:', landmark);
                 }
             });
         } catch (error) {
@@ -1133,13 +1148,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         // 🗺️ Step 1.5: 주변 유명 랜드마크 찾기 (GPS → "에펠탑" 등)
                         loadGoogleMapsAPI(async () => {
+                            console.log('🗺️ callback 실행됨 (EXIF GPS)');
                             const landmark = await getNearbyLandmark(
                                 gpsData.latitude,
                                 gpsData.longitude
                             );
+                            console.log('🔎 랜드마크 검색 결과:', landmark);
                             if (landmark) {
                                 window.currentGPS.locationName = landmark;
-                                console.log('🎯 유명 장소:', landmark);
+                                console.log('✅ 위치 이름 저장 완료:', landmark);
                             }
                         });
                     } else {
