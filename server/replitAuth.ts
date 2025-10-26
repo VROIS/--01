@@ -39,6 +39,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax', // OAuth 리다이렉트 시 쿠키 유지
       maxAge: sessionTtl,
     },
   });
