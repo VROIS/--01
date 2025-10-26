@@ -1045,7 +1045,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function capturePhoto() {
+    function capturePhoto() {
         if (!video.videoWidth || !video.videoHeight) return;
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
@@ -1053,8 +1053,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (context) {
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // 📍 브라우저 위치 권한 요청 (2025-10-26)
-            await requestBrowserLocation();
+            // 📍 브라우저 위치 권한 요청 (백그라운드 실행)
+            requestBrowserLocation();
             
             processImage(canvas.toDataURL('image/jpeg'), shootBtn);
         }
@@ -1146,22 +1146,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log('ℹ️ EXIF GPS 정보 없음 → 브라우저 위치 요청');
                         window.currentGPS = null;
                         
-                        // 📍 EXIF GPS 없으면 브라우저 위치 사용
-                        await requestBrowserLocation();
+                        // 📍 EXIF GPS 없으면 브라우저 위치 사용 (백그라운드)
+                        requestBrowserLocation();
                     }
                 } else {
                     console.warn('⚠️ exifr 라이브러리 로딩 실패 → 브라우저 위치 요청');
                     window.currentGPS = null;
                     
-                    // 📍 브라우저 위치 요청
-                    await requestBrowserLocation();
+                    // 📍 브라우저 위치 요청 (백그라운드)
+                    requestBrowserLocation();
                 }
             } catch (error) {
                 console.error('GPS 추출 오류:', error);
                 window.currentGPS = null;
                 
-                // 📍 오류 시에도 브라우저 위치 요청
-                await requestBrowserLocation();
+                // 📍 오류 시에도 브라우저 위치 요청 (백그라운드)
+                requestBrowserLocation();
             }
             
             // 📷 Step 2: 이미지 처리 (기존 로직)
