@@ -214,8 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     );
                     
                     if (poiResult) {
-                        // POI 이름 추출
-                        const poiName = poiResult.address_components[0].long_name;
+                        // POI 이름 추출 (formatted_address 사용)
+                        const poiName = poiResult.formatted_address.split(',')[0];
                         console.log('🎯 유명 장소 찾음:', poiName);
                         resolve(poiName);
                     } else {
