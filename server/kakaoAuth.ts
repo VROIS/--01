@@ -4,8 +4,8 @@ import type { Express } from "express";
 import { storage } from "./storage";
 
 export async function setupKakaoAuth(app: Express) {
-  const kakaoClientId = process.env.KAKAO_CLIENT_ID;
-  const kakaoClientSecret = process.env.KAKAO_CLIENT_SECRET;
+  const kakaoClientId = process.env.KAKAO_CLIENT_ID?.trim();
+  const kakaoClientSecret = process.env.KAKAO_CLIENT_SECRET?.trim();
   
   if (!kakaoClientId || !kakaoClientSecret) {
     console.warn('⚠️  카카오 OAuth 환경변수가 설정되지 않았습니다. 카카오 로그인을 사용하려면 KAKAO_CLIENT_ID와 KAKAO_CLIENT_SECRET을 설정하세요.');
@@ -30,7 +30,12 @@ export async function setupKakaoAuth(app: Express) {
   const protocol = domain.includes('replit.dev') || domain.includes('replit.app') ? 'https' : 'http';
   const callbackURL = `${protocol}://${domain}/api/auth/kakao/callback`;
   
-  console.log('🟡 Kakao OAuth Callback URL:', callbackURL);
+  console.log('🟡 Kakao OAuth 설정:');
+  console.log('  - Client ID 길이:', kakaoClientId.length, '글자');
+  console.log('  - Client ID 앞 10자:', kakaoClientId.substring(0, 10));
+  console.log('  - Client Secret 길이:', kakaoClientSecret.length, '글자');
+  console.log('  - Client Secret 앞 10자:', kakaoClientSecret.substring(0, 10));
+  console.log('  - Callback URL:', callbackURL);
 
   passport.use(
     new KakaoStrategy(
