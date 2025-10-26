@@ -62,26 +62,42 @@ export function generateShareHtml(data: SharePageData): string {
         }
     </script>
     <script>
-        // 🔍 카카오톡 인앱 브라우저 감지 및 자동 리다이렉트 (2025-10-26)
-        // 목적: 삼성폰 사용자에게 외부 브라우저로 자동 이동 (Web Audio API 제한 우회)
-        // 검증: burndogfather.com/271 (2023.09 최신)
+        // 🔍 카카오톡 인앱 브라우저 감지 (2025-10-26)
+        // ⚠️ CRITICAL: 갤럭시 사용자 최대 문제점 - 카톡에서 링크 안 열림
+        // 해결: 즉시 배너 표시 + 갤러리 숨김 + Chrome 강제 유도
+        var isKakaoInApp = false;
+        
         (function() {
             var userAgent = navigator.userAgent.toLowerCase();
             var targetUrl = window.location.href;
             
             // 카카오톡 인앱 브라우저 감지
             if (userAgent.match(/kakaotalk/i)) {
-                // 🔄 자동 리다이렉트: 카카오톡 외부 브라우저 스킴
-                window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(targetUrl);
+                isKakaoInApp = true;
                 
-                // 실패 대비: 1초 후에도 페이지에 남아있으면 배너 표시
+                // 1. 즉시 경고 배너 표시 (갤러리 숨김)
+                var banner = document.getElementById('kakao-browser-warning');
+                var galleryView = document.getElementById('gallery-view');
+                var header = document.querySelector('.header');
+                
+                if (banner) {
+                    banner.style.display = 'block';
+                    document.body.classList.add('kakao-browser');
+                }
+                if (galleryView) {
+                    galleryView.style.display = 'none';
+                }
+                if (header) {
+                    header.style.display = 'none';
+                }
+                
+                // 2. 자동 리다이렉트 시도 (실패해도 배너는 이미 표시됨)
                 setTimeout(function() {
-                    var banner = document.getElementById('kakao-browser-warning');
-                    if (banner) {
-                        banner.style.display = 'block';
-                        document.body.classList.add('kakao-browser');
-                    }
-                }, 1000);
+                    // Intent URL로 Chrome 강제 열기
+                    var intentUrl = 'intent://' + targetUrl.replace(/https?:\\/\\//, '') + 
+                                  '#Intent;scheme=https;package=com.android.chrome;end';
+                    window.location.href = intentUrl;
+                }, 500); // 0.5초 후 자동 리다이렉트
             }
         })();
         
@@ -253,71 +269,110 @@ export function generateShareHtml(data: SharePageData): string {
             box-shadow: 0 6px 16px rgba(66, 133, 244, 0.4);
         }
         
-        /* 🔔 카카오톡 브라우저 경고 배너 */
+        /* 🔔 카카오톡 브라우저 전체 화면 경고 */
         #kakao-browser-warning {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
+            height: 100%;
             background: linear-gradient(135deg, #FEE500 0%, #FFD700 100%);
             color: #3C1E1E;
-            padding: 16px 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
             text-align: center;
-            font-size: 14px;
-            line-height: 1.6;
-            animation: slideDown 0.3s ease-out;
+            animation: fadeIn 0.3s ease-out;
         }
         
-        @keyframes slideDown {
-            from { transform: translateY(-100%); }
-            to { transform: translateY(0); }
+        #kakao-browser-warning[style*="display: block"] {
+            display: flex !important;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        #kakao-browser-warning .warning-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        #kakao-browser-warning .warning-title {
+            font-weight: 900;
+            font-size: 28px;
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+        
+        #kakao-browser-warning .warning-message {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            max-width: 400px;
         }
         
         #kakao-browser-warning .chrome-btn {
             display: inline-block;
-            margin-top: 10px;
-            padding: 10px 24px;
+            padding: 18px 40px;
             background: #3C1E1E;
             color: #FEE500;
             border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 15px;
+            border-radius: 16px;
+            font-weight: 900;
+            font-size: 20px;
             cursor: pointer;
             text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
         }
         
-        #kakao-browser-warning .chrome-btn:hover {
-            background: #2A1515;
-            transform: scale(1.05);
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
         }
         
         #kakao-browser-warning .chrome-btn:active {
-            transform: scale(0.98);
+            transform: scale(0.95);
         }
         
-        /* 배너 표시 시 body에 패딩 추가 */
-        body.kakao-browser {
-            padding-top: 120px;
+        #kakao-browser-warning .helper-text {
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+            max-width: 350px;
         }
     </style>
 </head>
 <body>
-    <!-- 🔔 카카오톡 인앱 브라우저 경고 배너 -->
+    <!-- 🔔 카카오톡 인앱 브라우저 전체 화면 경고 -->
     <div id="kakao-browser-warning">
-        <div style="font-weight: 700; font-size: 16px; margin-bottom: 6px;">
-            🎵 음성 재생을 위해 Chrome이 필요해요
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-title">
+            카카오톡에서는<br>이 페이지를 볼 수 없어요
         </div>
-        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">
-            카카오톡 브라우저에서는 음성이 재생되지 않습니다
+        <div class="warning-message">
+            음성과 이미지가 제대로 작동하지 않습니다.<br>
+            아래 버튼을 눌러 Chrome에서 열어주세요!
         </div>
         <button onclick="openInChrome()" class="chrome-btn">
             🌐 Chrome에서 열기
         </button>
+        <div class="helper-text">
+            버튼을 누르면 자동으로 Chrome 브라우저로 이동합니다
+        </div>
     </div>
     <!-- 헤더 (메타데이터) -->
     <div class="header">
