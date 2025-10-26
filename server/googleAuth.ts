@@ -77,11 +77,6 @@ export async function setupGoogleAuth(app: Express) {
 
   app.get(
     "/api/auth/google",
-    (req, res, next) => {
-      (req.session as any).returnTo = req.query.returnTo as string || '/';
-      (req.session as any).isPopup = req.query.popup === 'true';
-      next();
-    },
     passport.authenticate("google", {
       scope: ["profile", "email"],
     })
@@ -93,29 +88,32 @@ export async function setupGoogleAuth(app: Express) {
       failureRedirect: "/?auth=failed",
     }),
     (req, res) => {
-      const returnTo = (req.session as any).returnTo || '/';
-      const isPopup = (req.session as any).isPopup || false;
-      delete (req.session as any).returnTo;
-      delete (req.session as any).isPopup;
-      
-      // Popup 인증인 경우 창 닫기
-      if (isPopup) {
-        res.send(`
-          <!DOCTYPE html>
-          <html>
-          <head><title>인증 완료</title></head>
-          <body>
-            <script>
-              window.opener?.postMessage('auth-success', '*');
+      // 항상 popup 방식으로 처리 (간단하고 안정적)
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>인증 완료</title>
+        </head>
+        <body>
+          <script>
+            // 부모 창에 메시지 전송
+            if (window.opener) {
+              window.opener.postMessage('auth-success', '*');
               window.close();
-            </script>
-            <p>인증이 완료되었습니다. 이 창을 닫아주세요.</p>
-          </body>
-          </html>
-        `);
-      } else {
-        res.redirect(returnTo);
-      }
+            } else {
+              // Popup이 아닌 경우 메인 페이지로 리다이렉트
+              window.location.href = '/';
+            }
+          </script>
+          <p style="text-align: center; font-family: sans-serif; margin-top: 50px;">
+            ✅ 인증이 완료되었습니다!<br>
+            잠시 후 자동으로 닫힙니다...
+          </p>
+        </body>
+        </html>
+      `);
     }
   );
 }
