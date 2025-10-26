@@ -2537,12 +2537,20 @@ document.addEventListener('DOMContentLoaded', () => {
         authModal.classList.remove('pointer-events-auto');
     });
 
+    // Popup 인증 완료 메시지 수신
+    window.addEventListener('message', (event) => {
+        if (event.data === 'auth-success') {
+            console.log('🎉 Auth success message received from popup');
+            checkAuthStatusAndCloseModal();
+        }
+    });
+
     googleLoginBtn?.addEventListener('click', () => {
         const currentUrl = window.location.pathname + window.location.search;
-        const authUrl = `/api/auth/google?returnTo=${encodeURIComponent(currentUrl)}`;
+        const authUrl = `/api/auth/google?returnTo=${encodeURIComponent(currentUrl)}&popup=true`;
         const popup = window.open(authUrl, 'Google Login', 'width=600,height=700');
         
-        // Popup이 닫히면 인증 상태 확인
+        // Popup이 닫히면 인증 상태 확인 (fallback)
         const checkPopup = setInterval(() => {
             if (popup && popup.closed) {
                 clearInterval(checkPopup);
@@ -2553,10 +2561,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     kakaoLoginBtn?.addEventListener('click', () => {
         const currentUrl = window.location.pathname + window.location.search;
-        const authUrl = `/api/auth/kakao?returnTo=${encodeURIComponent(currentUrl)}`;
+        const authUrl = `/api/auth/kakao?returnTo=${encodeURIComponent(currentUrl)}&popup=true`;
         const popup = window.open(authUrl, 'Kakao Login', 'width=600,height=700');
         
-        // Popup이 닫히면 인증 상태 확인
+        // Popup이 닫히면 인증 상태 확인 (fallback)
         const checkPopup = setInterval(() => {
             if (popup && popup.closed) {
                 clearInterval(checkPopup);

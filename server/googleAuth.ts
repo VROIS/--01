@@ -94,7 +94,25 @@ export async function setupGoogleAuth(app: Express) {
     (req, res) => {
       const returnTo = (req.session as any).returnTo || '/';
       delete (req.session as any).returnTo;
-      res.redirect(returnTo);
+      
+      // Popup 인증인 경우 창 닫기
+      if (req.query.popup === 'true') {
+        res.send(`
+          <!DOCTYPE html>
+          <html>
+          <head><title>인증 완료</title></head>
+          <body>
+            <script>
+              window.opener?.postMessage('auth-success', '*');
+              window.close();
+            </script>
+            <p>인증이 완료되었습니다. 이 창을 닫아주세요.</p>
+          </body>
+          </html>
+        `);
+      } else {
+        res.redirect(returnTo);
+      }
     }
   );
 }
