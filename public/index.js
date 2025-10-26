@@ -1894,6 +1894,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 promptSettingsSection.classList.remove('hidden');
                 showToast('관리자 인증 성공');
                 
+                // 대시보드 링크 표시
+                const dashboardLink = document.getElementById('adminDashboardLink');
+                if (dashboardLink) {
+                    dashboardLink.classList.remove('hidden');
+                }
+                
                 // Featured 갤러리 관리 데이터 로드
                 await loadAdminData();
             } else {

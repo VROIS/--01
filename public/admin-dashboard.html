@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 관리자 대시보드 - 손안에 가이드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .stat-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- 헤더 -->
+        <div class="flex justify-between items-center mb-8 fade-in">
+            <h1 class="text-4xl font-bold text-white drop-shadow-lg">📊 관리자 대시보드</h1>
+            <a href="/" class="bg-white/20 hover:bg-white/30 text-white px-6 py-2 rounded-lg backdrop-blur-md transition-all">
+                ← 메인으로
+            </a>
+        </div>
+
+        <!-- 로딩 상태 -->
+        <div id="loading" class="text-center text-white text-xl">
+            <div class="inline-block animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent"></div>
+            <p class="mt-4">데이터 로딩 중...</p>
+        </div>
+
+        <!-- 통계 카드 -->
+        <div id="statsCards" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 fade-in">
+            <div class="stat-card bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-gray-600 text-sm font-medium">전체 사용자</h3>
+                    <span class="text-3xl">👥</span>
+                </div>
+                <p id="totalUsers" class="text-4xl font-bold text-gray-800">-</p>
+                <p class="text-sm text-gray-500 mt-2">최근 7일: <span id="recentUsers" class="font-semibold text-blue-600">-</span>명</p>
+            </div>
+
+            <div class="stat-card bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-gray-600 text-sm font-medium">전체 가이드</h3>
+                    <span class="text-3xl">📝</span>
+                </div>
+                <p id="totalGuides" class="text-4xl font-bold text-gray-800">-</p>
+                <p class="text-sm text-gray-500 mt-2">업로드된 콘텐츠</p>
+            </div>
+
+            <div class="stat-card bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-gray-600 text-sm font-medium">공유 페이지</h3>
+                    <span class="text-3xl">🔗</span>
+                </div>
+                <p id="totalSharedPages" class="text-4xl font-bold text-gray-800">-</p>
+                <p class="text-sm text-gray-500 mt-2">생성된 공유 링크</p>
+            </div>
+
+            <div class="stat-card bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-gray-600 text-sm font-medium">전체 조회수</h3>
+                    <span class="text-3xl">👀</span>
+                </div>
+                <p id="totalViews" class="text-4xl font-bold text-gray-800">-</p>
+                <p class="text-sm text-gray-500 mt-2">누적 페이지 뷰</p>
+            </div>
+        </div>
+
+        <!-- 탭 -->
+        <div id="mainContent" class="hidden fade-in">
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-2 mb-6">
+                <div class="flex gap-2">
+                    <button onclick="showTab('overview')" id="tab-overview" class="flex-1 py-3 px-6 rounded-lg font-semibold transition-all bg-white text-purple-600">
+                        개요
+                    </button>
+                    <button onclick="showTab('shares')" id="tab-shares" class="flex-1 py-3 px-6 rounded-lg font-semibold transition-all text-white hover:bg-white/10">
+                        인기 공유
+                    </button>
+                    <button onclick="showTab('analytics')" id="tab-analytics" class="flex-1 py-3 px-6 rounded-lg font-semibold transition-all text-white hover:bg-white/10">
+                        분석
+                    </button>
+                </div>
+            </div>
+
+            <!-- 개요 탭 -->
+            <div id="content-overview" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Provider별 사용자 -->
+                    <div class="bg-white rounded-xl p-6 shadow-lg">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">로그인 방식별 사용자</h2>
+                        <div id="usersByProvider" class="space-y-3">
+                            <!-- 동적 생성 -->
+                        </div>
+                    </div>
+
+                    <!-- DB 크기 -->
+                    <div class="bg-white rounded-xl p-6 shadow-lg">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">데이터베이스 크기</h2>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span class="text-gray-600">공유 페이지 테이블</span>
+                                <span id="sharedPagesSize" class="font-mono font-bold text-gray-800">-</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span class="text-gray-600">전체 DB 크기</span>
+                                <span id="totalDbSize" class="font-mono font-bold text-gray-800">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 인기 공유 탭 -->
+            <div id="content-shares" class="hidden">
+                <div class="bg-white rounded-xl p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">조회수 Top 10</h2>
+                    <div id="topShares" class="space-y-3">
+                        <!-- 동적 생성 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 분석 탭 -->
+            <div id="content-analytics" class="hidden">
+                <div class="bg-white rounded-xl p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">일별 활동 추이 (최근 7일)</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="text-left py-3 px-4 font-semibold text-gray-700">날짜</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-gray-700">신규 사용자</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-gray-700">가이드</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-gray-700">공유</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyticsTable">
+                                <!-- 동적 생성 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'overview';
+        let stats = null;
+        let analytics = null;
+
+        // 탭 전환
+        function showTab(tab) {
+            currentTab = tab;
+            
+            // 탭 버튼 스타일
+            ['overview', 'shares', 'analytics'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const content = document.getElementById(`content-${t}`);
+                
+                if (t === tab) {
+                    btn.classList.add('bg-white', 'text-purple-600');
+                    btn.classList.remove('text-white', 'hover:bg-white/10');
+                    content.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('bg-white', 'text-purple-600');
+                    btn.classList.add('text-white', 'hover:bg-white/10');
+                    content.classList.add('hidden');
+                }
+            });
+        }
+
+        // 데이터 로드
+        async function loadData() {
+            try {
+                // 통계 데이터 로드
+                const statsRes = await fetch('/api/admin/stats');
+                if (!statsRes.ok) {
+                    throw new Error('통계 데이터 로드 실패');
+                }
+                const statsData = await statsRes.json();
+                stats = statsData.stats;
+
+                // 분석 데이터 로드
+                const analyticsRes = await fetch('/api/admin/analytics');
+                if (!analyticsRes.ok) {
+                    throw new Error('분석 데이터 로드 실패');
+                }
+                const analyticsData = await analyticsRes.json();
+                analytics = analyticsData.analytics;
+
+                // UI 렌더링
+                renderStats();
+                renderOverview();
+                renderShares();
+                renderAnalytics();
+
+                // 로딩 숨기고 콘텐츠 표시
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('statsCards').classList.remove('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('데이터 로드 오류:', error);
+                document.getElementById('loading').innerHTML = `
+                    <p class="text-red-200">❌ 데이터 로드 실패</p>
+                    <p class="text-sm text-white/70 mt-2">${error.message}</p>
+                    <a href="/" class="inline-block mt-4 bg-white/20 hover:bg-white/30 text-white px-6 py-2 rounded-lg">메인으로 돌아가기</a>
+                `;
+            }
+        }
+
+        function renderStats() {
+            document.getElementById('totalUsers').textContent = stats.totalUsers.toLocaleString();
+            document.getElementById('recentUsers').textContent = stats.recentUsers.toLocaleString();
+            document.getElementById('totalGuides').textContent = stats.totalGuides.toLocaleString();
+            document.getElementById('totalSharedPages').textContent = stats.totalSharedPages.toLocaleString();
+            document.getElementById('totalViews').textContent = stats.totalViews.toLocaleString();
+        }
+
+        function renderOverview() {
+            // Provider별 사용자
+            const providerHtml = stats.usersByProvider.map(item => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span class="capitalize font-medium text-gray-700">${item.provider || 'Unknown'}</span>
+                    <span class="font-bold text-gray-800">${item.count}명</span>
+                </div>
+            `).join('');
+            document.getElementById('usersByProvider').innerHTML = providerHtml;
+
+            // DB 크기
+            document.getElementById('sharedPagesSize').textContent = stats.database.sharedPagesSize;
+            document.getElementById('totalDbSize').textContent = stats.database.totalSize;
+        }
+
+        function renderShares() {
+            const sharesHtml = stats.topSharedPages.map((page, index) => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 text-white rounded-full font-bold text-lg">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <div class="font-semibold text-gray-800">${page.name}</div>
+                            <div class="text-xs text-gray-500">
+                                ${new Date(page.created_at).toLocaleDateString('ko-KR')}
+                                ${page.featured ? '<span class="ml-2 text-yellow-600">⭐ Featured</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full">
+                        <span class="text-gray-500">👀</span>
+                        <span class="font-bold text-blue-600">${(page.download_count || 0).toLocaleString()}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('topShares').innerHTML = sharesHtml || '<p class="text-center text-gray-500 py-8">아직 공유 페이지가 없습니다.</p>';
+        }
+
+        function renderAnalytics() {
+            const rows = analytics.dailyUsers.map(user => {
+                const guide = analytics.dailyGuides.find(g => g.date === user.date);
+                const share = analytics.dailyShares.find(s => s.date === user.date);
+                const date = new Date(user.date);
+                
+                return `
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="py-3 px-4 text-gray-700">
+                            ${date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                        </td>
+                        <td class="text-center py-3 px-4">
+                            <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold">
+                                +${user.count}
+                            </span>
+                        </td>
+                        <td class="text-center py-3 px-4">
+                            <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full font-semibold">
+                                ${guide ? guide.count : 0}
+                            </span>
+                        </td>
+                        <td class="text-center py-3 px-4">
+                            <span class="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded-full font-semibold">
+                                ${share ? share.count : 0}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('analyticsTable').innerHTML = rows || '<tr><td colspan="4" class="text-center py-8 text-gray-500">데이터가 없습니다.</td></tr>';
+        }
+
+        // 페이지 로드 시 데이터 불러오기
+        loadData();
+    </script>
+</body>
+</html>
