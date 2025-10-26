@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>루브르 테스트 - 손안에 가이드</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        .hidden { display: none !important; }
+        
+        /* 헤더 (메타데이터) */
+        .header {
+            padding: 20px;
+            background-color: #343a40;
+            color: #fff;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 15px 0;
+            font-size: 28px;
+        }
+        .metadata {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .metadata p {
+            margin: 5px 0;
+        }
+        
+        /* 갤러리 뷰 */
+        #gallery-view {
+            padding: 15px;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .gallery-item {
+            cursor: pointer;
+            text-align: center;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            background-color: #e9e9e9;
+        }
+        .gallery-item:hover img {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+        .gallery-item p {
+            margin: 8px 0 0;
+            font-weight: 700;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        /* 갤러리 하단 버튼 */
+        .gallery-footer {
+            text-align: center;
+            padding: 30px 15px;
+        }
+        .app-button {
+            display: inline-block;
+            background: #4285F4;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+            transition: all 0.3s;
+        }
+        .app-button:hover {
+            background: #3367D6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(66, 133, 244, 0.4);
+        }
+        
+        /* 상세 뷰 */
+        #detail-view {
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 40px);
+            box-sizing: border-box;
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+        .back-button {
+            padding: 10px 15px;
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .home-button {
+            padding: 10px 15px;
+            background-color: #4285F4;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #detail-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1c2b33;
+            margin: 0;
+            flex-grow: 1;
+            text-align: center;
+        }
+        .detail-image-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .detail-image {
+            width: 100%;
+            max-width: 500px;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+        .audio-button, .text-toggle-button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0 10px;
+        }
+        .audio-button {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .audio-button.playing {
+            background-color: #dc3545;
+        }
+        .text-toggle-button {
+            background-color: #f0f2f5;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+        #detail-text {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            line-height: 1.8;
+            margin-top: 20px;
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 (메타데이터) -->
+    <div class="header">
+        <h1>루브르 테스트</h1>
+        <div class="metadata">
+            <p>👤 여행자 님이 보냄</p>
+            <p>📍 파리, 프랑스</p>
+            <p>📅 2025년 10월 2일</p>
+        </div>
+    </div>
+    
+    <!-- 갤러리 뷰 -->
+    <div id="gallery-view">
+        <div class="gallery-grid">
+            
+            <div class="gallery-item" data-id="0">
+                <img src="data:image/jpeg;base64,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" alt="가이드 1">
+                <p>가이드 1</p>
+            </div>
+        
+        </div>
+        <div class="gallery-footer">
+            <a href="https://6e9c1b21-2f71-4aa0-88c6-6094bd29a083-00-2nko28mxcvtbi.riker.replit.dev" class="app-button">🏠 손안에 가이드 시작하기</a>
+        </div>
+    </div>
+    
+    <!-- 상세 뷰 (숨김) -->
+    <div id="detail-view" class="hidden">
+        <div class="detail-header">
+            <button class="back-button">&larr; 목록으로</button>
+            <h2 id="detail-title"></h2>
+            <a href="https://6e9c1b21-2f71-4aa0-88c6-6094bd29a083-00-2nko28mxcvtbi.riker.replit.dev" class="home-button" title="앱으로 이동">🏠</a>
+        </div>
+        <div class="detail-image-container">
+            <img id="detail-image" src="">
+        </div>
+        <div class="controls">
+            <button id="detail-audio-button" class="audio-button">▶ 재생</button>
+            <button id="detail-text-toggle" class="text-toggle-button">해설 보기</button>
+        </div>
+        <div id="detail-text" class="hidden"></div>
+    </div>
+    
+    <!-- 데이터 저장소 (숨김) -->
+    <div id="data-storage" class="hidden">
+        
+            <div data-id="0">여러분, 드디어 이 작품 앞에서 숨을 고르실 차례입니다. 우리가 지금 보고 있는 이 그림은 레오나르도 다빈치의 불후의 명작, 바로 "모나리자"입니다. 16세기 초 르네상스 시대에 그려진 이 작품은, 그 신비로운 미소 하나만으로 전 세계 수많은 사람들의 마음을 사로잡았죠.
+
+작품 속 여성은 피렌체의 부유한 상인 프란체스코 델 지오콘도의 아내, 리자 델 지오콘도로 알려져 있습니다. 다빈치는 이 초상화를 무려 4년이 넘는 시간 동안 그렸고, 심지어 생의 마지막 순간까지 이 그림을 놓지 않았다고 전해집니다.
+
+모나리자의 가장 큰 특징은 바로 '스푸마토' 기법입니다. 이는 색과 색 사이의 경계를 흐릿하게 만들어 부드럽고 몽환적인 분위기를 연출하는 다빈치만의 독특한 화법인데요. 특히 모나리자의 입꼬리와 눈가에 스푸마토 기법이 적용되어, 보는 각도에 따라 미소가 달라 보이는 신비로운 효과를 줍니다. 때로는 환하게 웃는 듯하다가도, 어느 순간 차분하고 고요한 표정으로 바뀌는 듯 느껴지시죠? 이것이 바로 모나리자가 가진 마법 같은 매력입니다.
+
+이 작품을 감상하실 때는 모나리자의 미소뿐만 아니라 배경에 펼쳐진 몽환적인 풍경도 놓치지 마세요. 다빈치는 인물과 배경을 조화롭게 연결하며 그림 전체에 깊이감과 생동감을 불어넣었습니다. 수백 년이 지난 지금도 수많은 화가와 연구자들이 모나리자의 비밀을 파헤치기 위해 노력하고 있습니다. 여러분도 잠시 그림 앞에서 그녀의 신비로운 매력에 푹 빠져보는 시간을 가져보시기 바랍니다.</div>
+        
+    </div>
+    
+    <script>
+        const galleryView = document.getElementById('gallery-view');
+        const detailView = document.getElementById('detail-view');
+        const header = document.querySelector('.header');
+        const works = [];
+        
+        // 데이터 로드
+        document.querySelectorAll('#data-storage > div').forEach(el => {
+            const id = el.dataset.id;
+            const galleryItem = document.querySelector('.gallery-item[data-id="' + id + '"]');
+            works.push({
+                id: id,
+                title: galleryItem.querySelector('p').textContent,
+                imgSrc: galleryItem.querySelector('img').src,
+                text: el.innerHTML
+            });
+        });
+        
+        // Web Speech API
+        const synth = window.speechSynthesis;
+        let voices = [];
+        
+        function populateVoiceList() {
+            voices = synth.getVoices().filter(v => v.lang.startsWith('ko'));
+        }
+        
+        function stopAudio() {
+            if (synth.speaking) synth.cancel();
+        }
+        
+        function playAudio(text) {
+            stopAudio();
+            const utterance = new SpeechSynthesisUtterance(text.replace(new RegExp('<br\\s*/?>', 'gi'), ' '));
+            const koVoice = voices.find(v => v.lang.startsWith('ko'));
+            if (koVoice) utterance.voice = koVoice;
+            utterance.lang = 'ko-KR';
+            utterance.rate = 1.0;
+            
+            const audioBtn = document.getElementById('detail-audio-button');
+            utterance.onstart = () => {
+                audioBtn.textContent = '❚❚ 일시정지';
+                audioBtn.classList.add('playing');
+            };
+            utterance.onend = () => {
+                audioBtn.textContent = '▶ 다시듣기';
+                audioBtn.classList.remove('playing');
+            };
+            synth.speak(utterance);
+        }
+        
+        populateVoiceList();
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = populateVoiceList;
+        }
+        
+        // 갤러리 아이템 클릭
+        document.querySelectorAll('.gallery-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const work = works.find(w => w.id === item.dataset.id);
+                document.getElementById('detail-title').textContent = work.title;
+                document.getElementById('detail-image').src = work.imgSrc;
+                document.getElementById('detail-text').innerHTML = work.text;
+                document.getElementById('detail-text').classList.add('hidden');
+                document.getElementById('detail-text-toggle').textContent = '해설 보기';
+                
+                galleryView.classList.add('hidden');
+                header.classList.add('hidden');
+                detailView.classList.remove('hidden');
+                
+                playAudio(work.text);
+            });
+        });
+        
+        // 뒤로 가기
+        document.querySelector('.back-button').addEventListener('click', () => {
+            stopAudio();
+            detailView.classList.add('hidden');
+            header.classList.remove('hidden');
+            galleryView.classList.remove('hidden');
+        });
+        
+        // 음성 재생/정지
+        document.getElementById('detail-audio-button').addEventListener('click', () => {
+            const btn = document.getElementById('detail-audio-button');
+            if (synth.speaking) {
+                stopAudio();
+                btn.textContent = '▶ 다시듣기';
+                btn.classList.remove('playing');
+            } else {
+                const work = works.find(w => w.title === document.getElementById('detail-title').textContent);
+                playAudio(work.text);
+            }
+        });
+        
+        // 해설 텍스트 토글
+        document.getElementById('detail-text-toggle').addEventListener('click', () => {
+            const textDiv = document.getElementById('detail-text');
+            const btn = document.getElementById('detail-text-toggle');
+            if (textDiv.classList.contains('hidden')) {
+                textDiv.classList.remove('hidden');
+                btn.textContent = '해설 숨기기';
+            } else {
+                textDiv.classList.add('hidden');
+                btn.textContent = '해설 보기';
+            }
+        });
+    </script>
+</body>
+</html>
