@@ -2488,6 +2488,16 @@ document.addEventListener('DOMContentLoaded', () => {
     archiveBackBtn?.addEventListener('click', showMainPage);
     settingsBackBtn?.addEventListener('click', showArchivePage);
     
+    // 🔓 테스트용 로그아웃 버튼
+    const testLogoutBtn = document.getElementById('testLogoutBtn');
+    testLogoutBtn?.addEventListener('click', () => {
+        console.log('🔓 Test logout clicked');
+        if (confirm('로그아웃하시겠습니까? (테스트용)')) {
+            console.log('✅ User confirmed, logging out...');
+            window.location.href = '/api/auth/logout';
+        }
+    });
+    
     audioBtn?.addEventListener('click', onAudioBtnClick);
     saveBtn?.addEventListener('click', () => debounceClick('save', handleSaveClick, 500));
     textToggleBtn?.addEventListener('click', () => textOverlay.classList.toggle('hidden'));
