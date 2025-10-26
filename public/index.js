@@ -124,7 +124,88 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentContent = { imageDataUrl: null, description: '' };
     let isSelectionMode = false;
     let selectedItemIds = []; // ✅ Array로 변경 (클릭 순서 보존!)
+    
+    // ═══════════════════════════════════════════════════════════════
+    // 🗺️ Google Maps 상태 (2025-10-26)
+    // ═══════════════════════════════════════════════════════════════
+    let googleMapsLoaded = false;
+    let googleMapsApiKey = '';
+    let geocoder = null;
     let cameFromArchive = false;
+    
+    // ═══════════════════════════════════════════════════════════════
+    // 🗺️ Google Maps API 동적 로딩 (2025-10-26)
+    // ═══════════════════════════════════════════════════════════════
+    
+    // API 키 가져오기
+    async function loadGoogleMapsApiKey() {
+        if (googleMapsApiKey) return googleMapsApiKey;
+        
+        try {
+            const response = await fetch('/api/config');
+            const config = await response.json();
+            googleMapsApiKey = config.googleMapsApiKey;
+            return googleMapsApiKey;
+        } catch (error) {
+            console.error('Google Maps API 키 로드 실패:', error);
+            return '';
+        }
+    }
+    
+    // Google Maps API 동적 로드
+    function loadGoogleMapsAPI(callback) {
+        if (googleMapsLoaded) {
+            if (callback) callback();
+            return;
+        }
+        
+        loadGoogleMapsApiKey().then(apiKey => {
+            if (!apiKey) {
+                console.error('Google Maps API 키가 없습니다.');
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+            script.async = true;
+            script.defer = true;
+            script.onload = () => {
+                googleMapsLoaded = true;
+                geocoder = new google.maps.Geocoder();
+                console.log('🗺️ Google Maps API 로드 완료');
+                if (callback) callback();
+            };
+            script.onerror = () => {
+                console.error('Google Maps API 로드 실패');
+            };
+            document.head.appendChild(script);
+        });
+    }
+    
+    // 📍 Reverse Geocoding: GPS → 주소 변환
+    async function getAddressFromCoords(lat, lng) {
+        if (!geocoder) {
+            console.warn('Geocoder가 준비되지 않음');
+            return null;
+        }
+        
+        return new Promise((resolve) => {
+            geocoder.geocode(
+                { location: { lat, lng } },
+                (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                        // 가장 구체적인 주소 반환
+                        const address = results[0].formatted_address;
+                        console.log('📍 주소 변환 성공:', address);
+                        resolve(address);
+                    } else {
+                        console.warn('Geocoding 실패:', status);
+                        resolve(null);
+                    }
+                }
+            );
+        });
+    }
     
     // --- IndexedDB Setup ---
     const DB_NAME = 'TravelGuideDB';
@@ -968,9 +1049,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         window.currentGPS = {
                             latitude: gpsData.latitude,
                             longitude: gpsData.longitude,
-                            locationName: null // 추후 Reverse Geocoding으로 주소 변환
+                            locationName: null
                         };
                         console.log('📍 GPS 추출 성공:', window.currentGPS);
+                        
+                        // 🗺️ Step 1.5: Reverse Geocoding (GPS → 주소)
+                        loadGoogleMapsAPI(async () => {
+                            const address = await getAddressFromCoords(
+                                gpsData.latitude,
+                                gpsData.longitude
+                            );
+                            if (address) {
+                                window.currentGPS.locationName = address;
+                                console.log('📍 주소:', address);
+                            }
+                        });
                     } else {
                         console.log('ℹ️ GPS 정보 없음');
                         window.currentGPS = null;
