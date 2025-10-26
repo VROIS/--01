@@ -1000,6 +1000,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 로그인되어 있으면 authModal 닫기
                 console.log('🟡 Modal element:', authModal);
                 authModal?.classList.add('hidden');
+                authModal?.classList.add('pointer-events-none');
+                authModal?.classList.remove('pointer-events-auto');
                 console.log('✅ Auth modal closed - user is authenticated');
             } else {
                 console.log('⚪ Not authenticated, keeping modal state');
@@ -1885,11 +1887,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 로그인되어 있지 않으면 인증 모달 표시
                 console.log('❌ Not authenticated, showing auth modal');
                 authModal.classList.remove('hidden');
+                authModal.classList.remove('pointer-events-none');
+                authModal.classList.add('pointer-events-auto');
             }
         } catch (error) {
             // 에러 발생 시에도 인증 모달 표시
             console.log('❌ Auth check failed, showing auth modal:', error);
             authModal.classList.remove('hidden');
+            authModal.classList.remove('pointer-events-none');
+            authModal.classList.add('pointer-events-auto');
         }
     };
 
@@ -2517,6 +2523,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auth Modal Event Listeners
     closeAuthModalBtn?.addEventListener('click', () => {
         authModal.classList.add('hidden');
+        authModal.classList.add('pointer-events-none');
+        authModal.classList.remove('pointer-events-auto');
     });
 
     googleLoginBtn?.addEventListener('click', () => {
@@ -2533,6 +2541,8 @@ document.addEventListener('DOMContentLoaded', () => {
     authModal?.addEventListener('click', (e) => {
         if (e.target === authModal) {
             authModal.classList.add('hidden');
+            authModal.classList.add('pointer-events-none');
+            authModal.classList.remove('pointer-events-auto');
         }
     });
 
