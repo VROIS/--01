@@ -197,49 +197,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         return new Promise((resolve) => {
-            const location = new google.maps.LatLng(lat, lng);
-            const map = new google.maps.Map(document.createElement('div')); // 임시 맵
+            console.log('🔍 Geocoding API 호출 중...');
             
-            const service = new google.maps.places.PlacesService(map);
-            const request = {
-                location: location,
-                radius: 100, // 100m 반경
-                type: ['tourist_attraction', 'point_of_interest', 'museum', 'church', 'park']
-            };
-            
-            console.log('🔍 Places API 호출 중...');
-            service.nearbySearch(request, (results, status) => {
-                console.log('📡 Places API 응답:', status, results?.length || 0, '개 장소');
+            // Places API는 deprecated되어 바로 Geocoding 사용
+            geocoder.geocode({ location: { lat, lng } }, (geoResults, geoStatus) => {
+                console.log('📡 Geocoder 응답:', geoStatus);
                 
-                if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-                    // 가장 인기 있는 장소 선택 (rating × user_ratings_total)
-                    const topPlace = results.reduce((best, place) => {
-                        const score = (place.rating || 0) * (place.user_ratings_total || 0);
-                        const bestScore = (best.rating || 0) * (best.user_ratings_total || 0);
-                        return score > bestScore ? place : best;
-                    }, results[0]);
+                if (geoStatus === 'OK' && geoResults[0]) {
+                    // POI (point_of_interest) 우선 찾기
+                    const poiResult = geoResults.find(result => 
+                        result.types.includes('point_of_interest') ||
+                        result.types.includes('tourist_attraction') ||
+                        result.types.includes('museum') ||
+                        result.types.includes('church') ||
+                        result.types.includes('park')
+                    );
                     
-                    console.log('🎯 유명 장소 찾음:', topPlace.name);
-                    resolve(topPlace.name);
+                    if (poiResult) {
+                        // POI 이름 추출
+                        const poiName = poiResult.address_components[0].long_name;
+                        console.log('🎯 유명 장소 찾음:', poiName);
+                        resolve(poiName);
+                    } else {
+                        // POI 없으면 도시 이름
+                        const address = geoResults[0].formatted_address;
+                        const city = geoResults[0].address_components.find(
+                            c => c.types.includes('locality')
+                        )?.long_name || address.split(',')[0];
+                        console.log('📍 도시 찾음:', city);
+                        resolve(city);
+                    }
                 } else {
-                    console.log('ℹ️ Places API 실패, Geocoding 시도...');
-                    // 유명 장소 없으면 Geocoding으로 주소 추출
-                    geocoder.geocode({ location: { lat, lng } }, (geoResults, geoStatus) => {
-                        console.log('📡 Geocoder 응답:', geoStatus);
-                        
-                        if (geoStatus === 'OK' && geoResults[0]) {
-                            // 도시 이름 추출
-                            const address = geoResults[0].formatted_address;
-                            const city = geoResults[0].address_components.find(
-                                c => c.types.includes('locality')
-                            )?.long_name || address.split(',')[0];
-                            console.log('📍 도시 찾음:', city);
-                            resolve(city);
-                        } else {
-                            console.warn('⚠️ 위치 정보 찾기 실패:', geoStatus);
-                            resolve(null);
-                        }
-                    });
+                    console.warn('⚠️ 위치 정보 찾기 실패:', geoStatus);
+                    resolve(null);
                 }
             });
         });
