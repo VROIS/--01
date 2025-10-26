@@ -93,11 +93,11 @@ export function generateShareHtml(data: SharePageData): string {
                 
                 // 2. 자동 리다이렉트 시도 (실패해도 배너는 이미 표시됨)
                 setTimeout(function() {
-                    // Intent URL로 기본 브라우저에서 열기 (Chrome, 삼성 인터넷 등)
+                    // Intent URL로 Chrome 강제 열기
                     var intentUrl = 'intent://' + targetUrl.replace(/https?:\\/\\//, '') + 
-                                  '#Intent;scheme=https;action=android.intent.action.VIEW;end';
+                                  '#Intent;scheme=https;package=com.android.chrome;end';
                     window.location.href = intentUrl;
-                }, 500); // 0.5초 후 자동 리다이렉트
+                }, 500); // 0.5초 후 Chrome으로 자동 리다이렉트
             }
         })();
         
