@@ -980,6 +980,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 인증 성공 후 authModal 자동 닫기 (2025-10-26)
         checkAuthStatusAndCloseModal();
+        
+        // 페이지 포커스 시 인증 상태 재확인 (OAuth 리다이렉트 대응)
+        window.addEventListener('focus', checkAuthStatusAndCloseModal);
+        window.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                checkAuthStatusAndCloseModal();
+            }
+        });
     }
     
     // 인증 상태 확인 및 모달 자동 닫기
@@ -989,6 +997,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 // 로그인되어 있으면 authModal 닫기
                 authModal?.classList.add('hidden');
+                console.log('✅ Auth modal closed - user is authenticated');
             }
         } catch (error) {
             // 에러 발생 시 무시 (모달 상태 유지)
