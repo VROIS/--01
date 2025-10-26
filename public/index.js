@@ -950,9 +950,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function handleFileSelect(event) {
+    // ═══════════════════════════════════════════════════════════════
+    // 📍 사진 업로드 + GPS 자동 추출 (2025-10-26)
+    // ═══════════════════════════════════════════════════════════════
+    // 목적: 콘텐츠 신뢰성 최적화 (Google Maps 연동)
+    // 기능: 사진 업로드 시 GPS EXIF 자동 추출 → 지도 표시
+    // ═══════════════════════════════════════════════════════════════
+    async function handleFileSelect(event) {
         const file = event.target.files?.[0];
         if (file) {
+            // 📸 Step 1: GPS EXIF 데이터 추출 (exifr 라이브러리)
+            try {
+                if (window.exifr) {
+                    const gpsData = await exifr.gps(file);
+                    if (gpsData && gpsData.latitude && gpsData.longitude) {
+                        // GPS 데이터를 전역 객체에 저장
+                        window.currentGPS = {
+                            latitude: gpsData.latitude,
+                            longitude: gpsData.longitude,
+                            locationName: null // 추후 Reverse Geocoding으로 주소 변환
+                        };
+                        console.log('📍 GPS 추출 성공:', window.currentGPS);
+                    } else {
+                        console.log('ℹ️ GPS 정보 없음');
+                        window.currentGPS = null;
+                    }
+                } else {
+                    console.warn('⚠️ exifr 라이브러리 로딩 실패');
+                    window.currentGPS = null;
+                }
+            } catch (error) {
+                console.error('GPS 추출 오류:', error);
+                window.currentGPS = null;
+            }
+            
+            // 📷 Step 2: 이미지 처리 (기존 로직)
             const reader = new FileReader();
             reader.onload = (e) => processImage(e.target?.result, uploadBtn);
             reader.readAsDataURL(file);
@@ -1160,8 +1192,19 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBtn.disabled = true;
 
         try {
+            // 📍 GPS 데이터 포함 (2025-10-26 콘텐츠 신뢰성 최적화)
+            if (window.currentGPS) {
+                currentContent.latitude = window.currentGPS.latitude;
+                currentContent.longitude = window.currentGPS.longitude;
+                currentContent.locationName = window.currentGPS.locationName;
+                console.log('📍 GPS 데이터 저장:', window.currentGPS);
+            }
+            
             await addItem(currentContent);
             showToast("보관함에 저장되었습니다.");
+            
+            // GPS 데이터 초기화
+            window.currentGPS = null;
         } catch(e) {
             console.error("Failed to save to archive:", e);
             showToast("저장에 실패했습니다. 저장 공간이 부족할 수 있습니다.");
