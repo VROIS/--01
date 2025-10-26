@@ -191,60 +191,58 @@ document.addEventListener('DOMContentLoaded', () => {
             return null;
         }
         
-        if (!geocoder) {
-            console.warn('⚠️ Geocoder가 초기화되지 않음');
-            return null;
-        }
-        
         return new Promise((resolve) => {
-            console.log('🔍 Geocoding API 호출 중...');
+            // Places API Nearby Search 사용
+            const map = new google.maps.Map(document.createElement('div'));
+            const service = new google.maps.places.PlacesService(map);
+            const location = new google.maps.LatLng(lat, lng);
             
-            // Places API는 deprecated되어 바로 Geocoding 사용
-            geocoder.geocode({ location: { lat, lng } }, (geoResults, geoStatus) => {
-                console.log('📡 Geocoder 응답:', geoStatus);
+            console.log('🔍 Places Nearby Search 호출 (반경 100m)...');
+            const request = {
+                location: location,
+                radius: 100,
+                rankBy: google.maps.places.RankBy.PROMINENCE
+            };
+            
+            service.nearbySearch(request, (places, status) => {
+                console.log('📡 Places API 응답:', status);
                 
-                if (geoStatus === 'OK' && geoResults[0]) {
-                    // POI (point_of_interest) 우선 찾기
-                    const poiResult = geoResults.find(result => 
-                        result.types.includes('point_of_interest') ||
-                        result.types.includes('tourist_attraction') ||
-                        result.types.includes('museum') ||
-                        result.types.includes('church') ||
-                        result.types.includes('park')
-                    );
+                if (status === google.maps.places.PlacesServiceStatus.OK && places && places.length > 0) {
+                    // 랜드마크/관광지 우선 검색
+                    const nearbyPlace = places.find(place => 
+                        place.types.includes('tourist_attraction') ||
+                        place.types.includes('museum') ||
+                        place.types.includes('church') ||
+                        place.types.includes('park') ||
+                        place.types.includes('lodging') ||
+                        place.types.includes('point_of_interest')
+                    ) || places[0];
                     
-                    if (poiResult) {
-                        // POI 이름 추출: premise(건물명) > establishment > route 순서
-                        const poiComponent = poiResult.address_components.find(
-                            c => c.types.includes('premise') || 
-                                 c.types.includes('establishment') ||
-                                 c.types.includes('point_of_interest')
-                        );
-                        
-                        if (poiComponent) {
-                            const poiName = poiComponent.long_name;
-                            console.log('🎯 유명 장소 찾음:', poiName);
-                            resolve(poiName);
-                        } else {
-                            // POI 컴포넌트 없으면 도시 이름
-                            const city = poiResult.address_components.find(
+                    const placeName = nearbyPlace.name;
+                    console.log('🎯 근처 장소:', placeName, '(타입:', nearbyPlace.types.join(', ') + ')');
+                    resolve(placeName);
+                } else {
+                    // Places API 실패 → Geocoding Fallback
+                    console.log('📍 Places API 실패, Geocoding으로 전환');
+                    
+                    if (!geocoder) {
+                        console.warn('⚠️ Geocoder 초기화 안 됨');
+                        resolve(null);
+                        return;
+                    }
+                    
+                    geocoder.geocode({ location: { lat, lng } }, (geoResults, geoStatus) => {
+                        if (geoStatus === 'OK' && geoResults[0]) {
+                            const city = geoResults[0].address_components.find(
                                 c => c.types.includes('locality')
-                            )?.long_name || poiResult.formatted_address.split(',')[0];
+                            )?.long_name || geoResults[0].formatted_address.split(',')[0];
                             console.log('📍 도시 찾음:', city);
                             resolve(city);
+                        } else {
+                            console.warn('⚠️ 위치 정보 찾기 실패');
+                            resolve(null);
                         }
-                    } else {
-                        // POI 없으면 도시 이름
-                        const address = geoResults[0].formatted_address;
-                        const city = geoResults[0].address_components.find(
-                            c => c.types.includes('locality')
-                        )?.long_name || address.split(',')[0];
-                        console.log('📍 도시 찾음:', city);
-                        resolve(city);
-                    }
-                } else {
-                    console.warn('⚠️ 위치 정보 찾기 실패:', geoStatus);
-                    resolve(null);
+                    });
                 }
             });
         });
