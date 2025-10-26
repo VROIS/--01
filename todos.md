@@ -2,7 +2,118 @@
 
 **생성일**: 2025-09-30  
 **프로젝트**: 내손가이드 (My Hand Guide)  
-**구조**: HTML/CSS/JavaScript 기반 앱
+**구조**: Vanilla JavaScript 기반 PWA 앱
+
+---
+
+## 🎯 2025-10-26 세션: 관리자 대시보드 & DB 최적화 ✅
+
+### 작업 시간: 4시간
+### 담당: Claude Sonnet 4.5
+
+#### ✅ 완료 작업
+
+1. **HTML 파일 저장 시스템 구축** ✅
+   - DB에서 htmlContent 제거, 파일 시스템으로 이동
+   - public/shared/ 폴더에 HTML 파일 저장
+   - DB에는 htmlFilePath만 저장
+   - **결과**: DB 크기 184MB → 39MB (78% 감소!)
+
+2. **기존 데이터 마이그레이션** ✅
+   - 40개 기존 공유 페이지를 파일로 이동
+   - 총 84.13MB 데이터 마이그레이션
+   - DB 스키마 변경 (htmlFilePath 컬럼 추가)
+
+3. **관리자 대시보드 구축** ✅
+   - API 엔드포인트 생성:
+     - GET /api/admin/stats (전체 통계)
+     - GET /api/admin/analytics (일별 분석)
+   - 대시보드 UI 구현 (admin-dashboard.html)
+   - 실시간 KPI 카드 (사용자, 가이드, 공유, 조회수)
+   - Provider별 사용자 분포 차트
+   - 조회수 Top 10 공유 페이지
+   - 일별 활동 추이 (최근 7일)
+
+4. **관리자 인증 시스템** ✅
+   - 비밀번호 기반 인증 (1234)
+   - 설정 페이지 열 때마다 대시보드 링크 숨김
+   - 재인증 필요 (영업 비밀 보호!)
+   - 인증 성공 시 대시보드 링크 표시
+
+5. **핵심 코드 보호 주석 추가** ✅
+   - server/routes.ts - 관리자 대시보드 API
+   - server/storage.ts - HTML 파일 저장 시스템
+   - public/index.js - 관리자 인증 로직
+   - public/admin-dashboard.html - 대시보드 UI
+   - ⚠️ CRITICAL: DO NOT MODIFY WITHOUT USER APPROVAL 표시
+   - 향후 유지보수 및 노력 보호
+
+6. **디자인 시스템 문서화** ✅
+   - replit.md에 공식 디자인 시스템 추가
+   - 브랜드 컬러: Gemini Blue (#4285F4)
+   - 기본 폰트: MaruBuri (사용자용)
+   - 관리자 페이지는 예외 허용
+
+#### 📝 수정된 파일
+1. `server/routes.ts` (lines 1645-1810)
+   - 관리자 대시보드 API 추가
+   - 통계 데이터 수집 로직
+   - 보호 주석 추가
+
+2. `server/storage.ts` (lines 493-574)
+   - HTML 파일 저장 시스템 구현
+   - createSharedHtmlPage 함수 업데이트
+   - 보호 주석 추가
+
+3. `public/index.js` (lines 1889-1945)
+   - 관리자 인증 로직
+   - 대시보드 링크 표시/숨김 로직
+   - 보호 주석 추가
+
+4. `public/admin-dashboard.html` (신규 파일)
+   - 실시간 통계 대시보드 UI
+   - Purple-Blue 그라데이션 디자인
+   - 반응형 레이아웃
+
+5. `public/index.html` (line 780-786)
+   - adminDashboardLink 섹션 추가
+   - promptSettingsSection 안으로 이동
+
+6. `replit.md`
+   - 디자인 시스템 섹션 추가
+   - 관리자 대시보드 정보 업데이트
+   - Frontend Architecture 수정 (React → Vanilla JS)
+
+#### 🎨 핵심 로직 (절대 수정 금지!)
+
+```typescript
+// HTML 파일 저장 시스템
+const htmlFilePath = `/shared/${shortId}.html`;
+const fullPath = path.join(process.cwd(), 'public', htmlFilePath);
+fs.writeFileSync(fullPath, page.htmlContent, 'utf8');
+
+// DB에는 경로만 저장
+const { htmlContent, ...pageWithoutHtml } = page;
+await db.insert(sharedHtmlPages).values({ 
+  id: shortId,
+  htmlFilePath: htmlFilePath,
+  ...pageWithoutHtml
+});
+```
+
+#### 📊 최적화 결과
+- **DB 크기**: 184MB → 39MB (78% 감소)
+- **마이그레이션**: 40개 페이지, 84.13MB
+- **성능**: 300명 사용자 대비 완료
+- **사용자 경험**: 빠른 로딩 속도 ✅
+
+#### 🔒 보호된 핵심 로직 목록
+1. ⚠️ 관리자 대시보드 API (2025.10.26)
+2. ⚠️ HTML 파일 저장 시스템 (2025.10.26)
+3. ⚠️ 관리자 인증 로직 (2025.10.26)
+4. ✅ Featured Gallery 로딩 (2025.10.05)
+5. ✅ 공유/삭제 간편 로직 (2025.10.02)
+6. ✅ 4존 스크롤 레이아웃 (2025.10.02)
 
 ---
 

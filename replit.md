@@ -81,6 +81,7 @@ The system features a **RESTful API** built with Express, using shared TypeScrip
     - 📈 Daily trends: User/guide/share creation over 7 days
     - 🔒 Password-protected access (비밀번호: 1234)
     - 💾 DB optimization tracking: HTML file storage reduced DB from 184MB to 39MB (78% reduction)
+    - ⚠️ **Protected Code**: All critical functions marked with "DO NOT MODIFY WITHOUT USER APPROVAL"
 
 # External Dependencies
 
