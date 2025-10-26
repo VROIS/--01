@@ -214,10 +214,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     );
                     
                     if (poiResult) {
-                        // POI 이름 추출 (formatted_address 사용)
-                        const poiName = poiResult.formatted_address.split(',')[0];
-                        console.log('🎯 유명 장소 찾음:', poiName);
-                        resolve(poiName);
+                        // POI 이름 추출: premise(건물명) > establishment > route 순서
+                        const poiComponent = poiResult.address_components.find(
+                            c => c.types.includes('premise') || 
+                                 c.types.includes('establishment') ||
+                                 c.types.includes('point_of_interest')
+                        );
+                        
+                        if (poiComponent) {
+                            const poiName = poiComponent.long_name;
+                            console.log('🎯 유명 장소 찾음:', poiName);
+                            resolve(poiName);
+                        } else {
+                            // POI 컴포넌트 없으면 도시 이름
+                            const city = poiResult.address_components.find(
+                                c => c.types.includes('locality')
+                            )?.long_name || poiResult.formatted_address.split(',')[0];
+                            console.log('📍 도시 찾음:', city);
+                            resolve(city);
+                        }
                     } else {
                         // POI 없으면 도시 이름
                         const address = geoResults[0].formatted_address;
