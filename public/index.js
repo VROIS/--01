@@ -1909,20 +1909,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('✅ Opening page in new tab:', shareUrl);
                 window.open(shareUrl, '_blank');
             } else {
-                // 로그인되어 있지 않으면 URL 저장 후 바로 카카오 로그인으로 이동
-                console.log('❌ Not authenticated, saving URL and redirecting to Kakao login');
+                // 로그인되어 있지 않으면 URL 저장 후 인증 모달 표시
+                console.log('❌ Not authenticated, showing auth modal');
                 console.log('💾 Saving to localStorage:', shareUrl);
                 localStorage.setItem('pendingShareUrl', shareUrl);
                 console.log('✅ Saved! localStorage value:', localStorage.getItem('pendingShareUrl'));
-                window.location.href = '/api/auth/kakao';
+                
+                // 인증 모달 표시
+                const authModal = document.getElementById('authModal');
+                if (authModal) {
+                    authModal.classList.remove('hidden');
+                    console.log('📱 Auth modal displayed');
+                } else {
+                    console.error('❌ Auth modal not found, falling back to Kakao login');
+                    window.location.href = '/api/auth/kakao';
+                }
             }
         } catch (error) {
-            // 에러 발생 시 URL 저장 후 바로 카카오 로그인으로 이동
-            console.log('❌ Auth check failed, redirecting to Kakao login:', error);
+            // 에러 발생 시 URL 저장 후 인증 모달 표시
+            console.log('❌ Auth check failed, showing auth modal:', error);
             console.log('💾 Saving to localStorage:', shareUrl);
             localStorage.setItem('pendingShareUrl', shareUrl);
             console.log('✅ Saved! localStorage value:', localStorage.getItem('pendingShareUrl'));
-            window.location.href = '/api/auth/kakao';
+            
+            // 인증 모달 표시
+            const authModal = document.getElementById('authModal');
+            if (authModal) {
+                authModal.classList.remove('hidden');
+                console.log('📱 Auth modal displayed');
+            } else {
+                console.error('❌ Auth modal not found, falling back to Kakao login');
+                window.location.href = '/api/auth/kakao';
+            }
         }
     };
 
