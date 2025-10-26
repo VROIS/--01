@@ -971,14 +971,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // 인증 완료 후 대기 중인 공유 URL 확인
+        console.log('🔍 Checking for pending share URL...');
         const pendingUrl = localStorage.getItem('pendingShareUrl');
+        console.log('📦 localStorage.pendingShareUrl:', pendingUrl);
         if (pendingUrl) {
             console.log('🎯 Opening pending share URL after auth:', pendingUrl);
             localStorage.removeItem('pendingShareUrl');
+            console.log('🗑️ Removed from localStorage');
             // 약간의 지연 후 새 탭에서 열기 (페이지 로드 완료 대기)
             setTimeout(() => {
+                console.log('🚀 Opening new tab now:', pendingUrl);
                 window.open(pendingUrl, '_blank');
             }, 500);
+        } else {
+            console.log('❌ No pending URL found');
         }
         
         // The landing page animation will handle showing the features page initially.
@@ -1900,18 +1906,22 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('🔵 Auth status:', response.ok, response.status);
             if (response.ok) {
                 // 로그인되어 있으면 새 탭에서 페이지 열기
-                console.log('✅ Opening page in new tab');
+                console.log('✅ Opening page in new tab:', shareUrl);
                 window.open(shareUrl, '_blank');
             } else {
                 // 로그인되어 있지 않으면 URL 저장 후 바로 카카오 로그인으로 이동
-                console.log('❌ Not authenticated, redirecting to Kakao login');
+                console.log('❌ Not authenticated, saving URL and redirecting to Kakao login');
+                console.log('💾 Saving to localStorage:', shareUrl);
                 localStorage.setItem('pendingShareUrl', shareUrl);
+                console.log('✅ Saved! localStorage value:', localStorage.getItem('pendingShareUrl'));
                 window.location.href = '/api/auth/kakao';
             }
         } catch (error) {
             // 에러 발생 시 URL 저장 후 바로 카카오 로그인으로 이동
             console.log('❌ Auth check failed, redirecting to Kakao login:', error);
+            console.log('💾 Saving to localStorage:', shareUrl);
             localStorage.setItem('pendingShareUrl', shareUrl);
+            console.log('✅ Saved! localStorage value:', localStorage.getItem('pendingShareUrl'));
             window.location.href = '/api/auth/kakao';
         }
     };
