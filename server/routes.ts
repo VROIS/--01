@@ -41,6 +41,19 @@ if (!fs.existsSync('shared_guidebooks')) {
   fs.mkdirSync('shared_guidebooks', { recursive: true });
 }
 
+// Helper function to get userId from req.user (supports both Replit Auth and OAuth)
+function getUserId(user: any): string {
+  // Google/Kakao OAuth: user.id
+  if (user.id) {
+    return user.id;
+  }
+  // Replit Auth: user.claims.sub
+  if (user.claims?.sub) {
+    return user.claims.sub;
+  }
+  throw new Error('Unable to extract user ID from session');
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Vanilla JS App API Routes (No authentication required)
   
@@ -422,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -434,7 +447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User preferences
   app.patch('/api/user/preferences', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const preferences = req.body;
       
       const user = await storage.updateUserPreferences(userId, preferences);
@@ -448,7 +461,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Subscription management
   app.post('/api/subscription/cancel', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const user = await storage.cancelSubscription(userId);
       res.json({ 
         message: "구독이 취소되었습니다. 계정과 모든 데이터는 보존됩니다.",
@@ -462,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/subscription/reactivate', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const user = await storage.reactivateSubscription(userId);
       res.json({ 
         message: "구독이 복원되었습니다. 이전 데이터가 모두 복원되었습니다!",
@@ -477,7 +490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Guide routes
   app.get('/api/guides', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const guides = await storage.getUserGuides(userId);
       res.json(guides);
     } catch (error) {
@@ -488,7 +501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/guides', isAuthenticated, upload.single('image'), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const file = req.file;
       
       if (!file) {
@@ -581,7 +594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/guides/:id', isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       
       const guide = await storage.getGuide(id);
       if (!guide) {
@@ -614,7 +627,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Share link routes
   app.get('/api/share-links', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const shareLinks = await storage.getUserShareLinks(userId);
       res.json(shareLinks);
     } catch (error) {
@@ -636,7 +649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/share-links', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const validatedData = insertShareLinkSchema.parse(req.body);
 
       if (validatedData.guideIds.length === 0 || validatedData.guideIds.length > 30) {
@@ -687,7 +700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/share-links/:id', isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       
       const shareLink = await storage.getShareLink(id);
       if (!shareLink) {
@@ -716,7 +729,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 💳 크레딧 시스템 API
   app.get('/api/credits', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const user = await storage.getUser(userId);
       
       // 🎯 관리자 무제한 크레딧 체크
@@ -734,7 +747,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/credits/history', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const history = await storage.getCreditHistory(userId);
       res.json(history);
     } catch (error) {
@@ -745,7 +758,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/credits/deduct', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const { amount, description } = req.body;
       
       // 🎯 관리자 무제한 크레딧 체크
@@ -769,7 +782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/credits/purchase', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const { amount, paymentIntentId } = req.body;
       
       // TODO: Stripe 결제 검증 후 크레딧 추가
@@ -796,7 +809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/referral/signup-bonus', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const { referrerCode } = req.body;
       
       const result = await storage.awardSignupBonus(userId, referrerCode);
@@ -809,7 +822,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/referral-code', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const referralCode = await storage.generateReferralCode(userId);
       res.json({ referralCode });
     } catch (error) {
@@ -823,7 +836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 영화급 프롬프트 생성
   app.post('/api/dream-studio/generate-prompt', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const { guideId, preferences } = req.body;
       
       // 가이드 조회
@@ -845,7 +858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI 이미지 생성 (Face Swap 포함)
   app.post('/api/dream-studio/generate-image', isAuthenticated, upload.single('userPhoto'), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const userPhoto = req.file;
       const { guideId, imagePrompt, mood, lighting, angle } = req.body;
 
@@ -922,7 +935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create share link with URL (instead of HTML download)
   app.post('/api/create-share-link', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const { name, guideIds, includeLocation, includeAudio } = req.body;
       
       if (!name || !Array.isArray(guideIds) || guideIds.length === 0) {
@@ -965,7 +978,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // HTML 공유 페이지 생성
   app.post('/api/generate-share-html', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const { name, guideIds, includeLocation, includeAudio } = req.body;
 
       if (!name || !guideIds || !Array.isArray(guideIds) || guideIds.length === 0) {
@@ -1072,7 +1085,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     { name: 'audioFile', maxCount: 1 }
   ]), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req.user);
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const baseImage = files['baseImage']?.[0];
       const audioFile = files['audioFile']?.[0];
