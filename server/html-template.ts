@@ -406,6 +406,15 @@ export function generateShareHtml(data: SharePageData): string {
     
     <!-- 갤러리 뷰 -->
     <div id="gallery-view">
+        <!-- 🔙 보관함으로 돌아가기 버튼 (2025-10-26) -->
+        <div style="position: sticky; top: 0; z-index: 100; background: linear-gradient(to bottom, #343a40 0%, #343a40 80%, transparent 100%); padding: 15px; padding-bottom: 30px;">
+            <button id="gallery-back-btn" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(66, 133, 244, 0.9); color: white; padding: 12px 24px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3); transition: all 0.3s; backdrop-filter: blur(10px);">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+                보관함으로 돌아가기
+            </button>
+        </div>
         <div class="gallery-grid">
             ${galleryItemsHtml}
         </div>
@@ -558,7 +567,16 @@ export function generateShareHtml(data: SharePageData): string {
             });
         });
         
-        // 뒤로 가기
+        // 🔙 보관함으로 돌아가기 (갤러리 뷰)
+        const galleryBackBtn = document.getElementById('gallery-back-btn');
+        if (galleryBackBtn) {
+            galleryBackBtn.addEventListener('click', () => {
+                // 앱의 보관함 페이지로 이동
+                window.location.href = '${appOrigin}';
+            });
+        }
+        
+        // 뒤로 가기 (디테일 뷰 → 갤러리 뷰)
         document.getElementById('detail-back').addEventListener('click', () => {
             ${includeAudio ? 'stopAudio();' : ''}
             detailView.classList.add('hidden');
