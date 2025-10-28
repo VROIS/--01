@@ -964,6 +964,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- App Initialization ---
     async function initializeApp() {
+        // 🔗 해시 라우팅: 초기 로드 시 해시 확인 (최우선 실행 - 2025-10-28)
+        handleHashRoute();
+        
+        // 🔗 해시 라우팅: 해시 변경 시 자동 페이지 이동 (2025-10-28)
+        window.addEventListener('hashchange', handleHashRoute);
+        
         try {
             await openDB();
         } catch(e) {
@@ -1006,12 +1012,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 checkAuthStatusAndCloseModal();
             }
         });
-        
-        // 🔗 해시 라우팅: 초기 로드 시 해시 확인 (2025-10-28)
-        handleHashRoute();
-        
-        // 🔗 해시 라우팅: 해시 변경 시 자동 페이지 이동 (2025-10-28)
-        window.addEventListener('hashchange', handleHashRoute);
     }
     
     // 🔗 해시 라우팅 핸들러 (2025-10-28)
