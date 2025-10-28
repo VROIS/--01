@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * 3. playAudio에 onboundary 하이라이트 기능 추가
      * 4. 텍스트 초기 표시 로직: 음성과 동시에 표시 (hidden 제거)
      */
-    function generateShareHTML(title, sender, location, date, guideItems, appOrigin) {
+    function generateShareHTML(title, sender, location, date, guideItems, appOrigin, isFeatured = false) {
         // HTML escape 함수 (XSS 방지 및 파싱 에러 방지)
         const escapeHTML = (str) => {
             return str
@@ -602,14 +602,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     <!-- 갤러리 뷰 -->
     <div id="gallery-view">
-        <!-- 🔙 헤더: 리턴 버튼 (앱 디자인과 통일) -->
+        ${isFeatured ? `
+        <!-- 🔙 추천 갤러리 전용 리턴 버튼 (왼쪽 상단, 앱과 통일) -->
         <div style="position: sticky; top: 0; z-index: 100; height: 60px; display: flex; align-items: center; padding: 0 1rem; background: #4285F4;">
-            <button id="gallery-back-btn" style="width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(255, 255, 255, 0.95); color: #4285F4; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.3s;" aria-label="보관함으로 돌아가기">
+            <button onclick="window.location.href='${appOrigin}/#archive'" style="width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(255, 255, 255, 0.95); color: #4285F4; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.3s;" aria-label="보관함으로 돌아가기">
                 <svg xmlns="http://www.w3.org/2000/svg" style="width: 1.5rem; height: 1.5rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                 </svg>
             </button>
         </div>
+        ` : ''}
         <div class="gallery-grid">
             ${galleryItemsHTML}
         </div>
