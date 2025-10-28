@@ -1186,63 +1186,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // 📍 사진 업로드 + GPS 자동 추출 (2025-10-26)
+    // 📍 사진 업로드 (GPS 차단 - 개인정보 보호)
     // ═══════════════════════════════════════════════════════════════
-    // 목적: 콘텐츠 신뢰성 최적화 (Google Maps 연동)
-    // 기능: 사진 업로드 시 GPS EXIF 자동 추출 → 지도 표시
+    // 목적: 개인정보 보호 (집 주소 등 노출 방지)
+    // 갤러리 업로드: GPS 수집 안 함 ❌
+    // 촬영 버튼: GPS 수집 함 ✅ (현장 촬영 = 관광지)
     // ═══════════════════════════════════════════════════════════════
     async function handleFileSelect(event) {
         const file = event.target.files?.[0];
         if (file) {
-            // 📸 Step 1: GPS EXIF 데이터 추출 (exifr 라이브러리)
-            try {
-                if (window.exifr) {
-                    const gpsData = await exifr.gps(file);
-                    if (gpsData && gpsData.latitude && gpsData.longitude) {
-                        // GPS 데이터를 전역 객체에 저장
-                        window.currentGPS = {
-                            latitude: gpsData.latitude,
-                            longitude: gpsData.longitude,
-                            locationName: null
-                        };
-                        console.log('📍 EXIF GPS 추출 성공:', window.currentGPS);
-                        
-                        // 🗺️ Step 1.5: 주변 유명 랜드마크 찾기 (GPS → "에펠탑" 등)
-                        loadGoogleMapsAPI(async () => {
-                            console.log('🗺️ callback 실행됨 (EXIF GPS)');
-                            const landmark = await getNearbyLandmark(
-                                gpsData.latitude,
-                                gpsData.longitude
-                            );
-                            console.log('🔎 랜드마크 검색 결과:', landmark);
-                            if (landmark) {
-                                window.currentGPS.locationName = landmark;
-                                console.log('✅ 위치 이름 저장 완료:', landmark);
-                            }
-                        });
-                    } else {
-                        console.log('ℹ️ EXIF GPS 정보 없음 → 브라우저 위치 요청');
-                        window.currentGPS = null;
-                        
-                        // 📍 EXIF GPS 없으면 브라우저 위치 사용 (백그라운드)
-                        requestBrowserLocation();
-                    }
-                } else {
-                    console.warn('⚠️ exifr 라이브러리 로딩 실패 → 브라우저 위치 요청');
-                    window.currentGPS = null;
-                    
-                    // 📍 브라우저 위치 요청 (백그라운드)
-                    requestBrowserLocation();
-                }
-            } catch (error) {
-                console.error('GPS 추출 오류:', error);
-                window.currentGPS = null;
-                
-                // 📍 오류 시에도 브라우저 위치 요청 (백그라운드)
-                requestBrowserLocation();
-            }
+            // 🔒 개인정보 보호: 갤러리 업로드 시 GPS 수집 안 함
+            window.currentGPS = null;
+            console.log('🔒 갤러리 업로드: GPS 차단 (개인정보 보호)');
             
-            // 📷 Step 2: 이미지 처리 (기존 로직)
+            // 📷 이미지 처리
             const reader = new FileReader();
             reader.onload = (e) => processImage(e.target?.result, uploadBtn);
             reader.readAsDataURL(file);
