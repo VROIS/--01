@@ -1038,8 +1038,10 @@ document.addEventListener('DOMContentLoaded', () => {
             showArchivePage();
         } else if (hash === 'settings') {
             showSettingsPage();
+        } else if (hash === '') {
+            // 해시가 없으면 메인 페이지 표시 (2025-10-28)
+            showMainPage();
         }
-        // 메인 페이지는 hash가 없거나 빈 문자열일 때 자동으로 표시됨
     }
     
     // 인증 상태 확인 및 모달 자동 닫기
