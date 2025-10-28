@@ -146,6 +146,7 @@ export const sharedHtmlPages = pgTable("shared_html_pages", {
   thumbnail: text("thumbnail"), // 첫 번째 가이드 이미지 (썸네일용)
   sender: text("sender"), // 발신자 이름 (임시: "여행자")
   location: text("location"), // 위치 정보 (임시: "파리, 프랑스")
+  date: text("date"), // 공유 날짜 (Featured 관리용, YYYY-MM-DD 형식)
   featured: boolean("featured").default(false), // 추천 갤러리 표시 여부
   featuredOrder: integer("featured_order"), // Featured 표시 순서 (클릭 순서대로 1, 2, 3...)
   downloadCount: integer("download_count").default(0), // 조회수 (매 접속마다 +1)

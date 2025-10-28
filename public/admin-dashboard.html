@@ -382,8 +382,8 @@ API Endpoints:
                         <img src="/shared/${page.id}.html" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27%23ccc%27%3E%3Cpath d=%27M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z%27/%3E%3C/svg%3E'" class="w-16 h-16 rounded-lg object-cover" alt="${page.name}">
                         <div>
                             <div class="font-semibold text-gray-800">${page.name}</div>
-                            <div class="text-sm text-gray-500">👤 ${page.sender_name} | 📍 ${page.location}</div>
-                            <div class="text-xs text-gray-400">${new Date(page.created_at).toLocaleDateString('ko-KR')}</div>
+                            <div class="text-sm text-gray-500">👤 ${page.sender || '여행자'} | 📍 ${page.location || '미지정'}</div>
+                            <div class="text-xs text-gray-400">${page.date || new Date(page.createdAt).toISOString().split('T')[0]}</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -411,13 +411,13 @@ API Endpoints:
                 const newTitle = prompt('제목을 수정하세요:', page.name);
                 if (!newTitle) return;
                 
-                const newSender = prompt('발신자 이름을 수정하세요:', page.sender_name);
+                const newSender = prompt('발신자 이름을 수정하세요:', page.sender || '여행자');
                 if (!newSender) return;
                 
-                const newLocation = prompt('위치를 수정하세요:', page.location);
+                const newLocation = prompt('위치를 수정하세요:', page.location || '미지정');
                 if (!newLocation) return;
                 
-                const newDate = prompt('날짜를 수정하세요 (YYYY-MM-DD):', page.date);
+                const newDate = prompt('날짜를 수정하세요 (YYYY-MM-DD):', page.date || new Date(page.createdAt).toISOString().split('T')[0]);
                 if (!newDate) return;
                 
                 if (confirm(`이 콘텐츠를 수정하고 HTML을 재생성하시겠습니까?\n\n제목: ${newTitle}\n발신자: ${newSender}\n위치: ${newLocation}\n날짜: ${newDate}`)) {
