@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>손안에 가이드</title>
+    
+    <!-- ⚡ 해시 라우팅: featuresPage 즉시 숨김 (2025-10-28) -->
+    <style>
+        /* 해시가 있으면 featuresPage 처음부터 숨김 */
+        #featuresPage { display: block; }
+        body:has(#archivePage) #featuresPage,
+        body[data-hash="archive"] #featuresPage { display: none !important; }
+    </style>
+    <script>
+        // 페이지 로드 즉시 해시 확인
+        if (window.location.hash === '#archive') {
+            document.body.setAttribute('data-hash', 'archive');
+        }
+    </script>
+    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234285F4'><path d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/></svg>">
     <meta name="theme-color" content="#FFFEFA"/>
     <link rel="manifest" href="manifest.json">
@@ -493,12 +508,6 @@
 
     <!-- Features Page -->
     <div id="featuresPage" class="ui-layer bg-gray-50 text-gray-800">
-    <script>
-        // ⚡ 해시가 있으면 featuresPage 즉시 숨김 (2025-10-28)
-        if (window.location.hash) {
-            document.currentScript.parentElement.style.display = 'none';
-        }
-    </script>
         <div class="content-safe-area">
             <!-- Features Section -->
             <section class="py-6 md:py-10 bg-white">
