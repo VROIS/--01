@@ -964,18 +964,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- App Initialization ---
     async function initializeApp() {
-        // 🔗 해시 라우팅: 초기 로드 시 해시 확인 (최우선 실행 - 2025-10-28)
-        handleHashRoute();
-        
-        // 🔗 해시 라우팅: 해시 변경 시 자동 페이지 이동 (2025-10-28)
-        window.addEventListener('hashchange', handleHashRoute);
-        
         try {
             await openDB();
         } catch(e) {
             console.error("Failed to open database", e);
             showToast("데이터베이스를 열 수 없습니다. 앱이 정상적으로 작동하지 않을 수 있습니다.");
         }
+        
+        // 🔗 해시 라우팅: DB 준비 후 초기 해시 확인 (2025-10-28)
+        handleHashRoute();
+        
+        // 🔗 해시 라우팅: 해시 변경 시 자동 페이지 이동 (2025-10-28)
+        window.addEventListener('hashchange', handleHashRoute);
         
         // 인증 완료 후 대기 중인 공유 URL 확인
         console.log('🔍 Checking for pending share URL...');
