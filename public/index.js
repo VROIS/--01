@@ -602,6 +602,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     <!-- 갤러리 뷰 -->
     <div id="gallery-view">
+        <!-- 🔙 보관함으로 돌아가기 버튼 -->
+        <div style="position: sticky; top: 0; z-index: 100; background: linear-gradient(to bottom, #4285F4 0%, #4285F4 80%, transparent 100%); padding: 15px; padding-bottom: 30px;">
+            <button id="gallery-back-btn" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.95); color: #4285F4; padding: 12px 24px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.3s; backdrop-filter: blur(10px);">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+                보관함으로 돌아가기
+            </button>
+        </div>
         <div class="gallery-grid">
             ${galleryItemsHTML}
         </div>
@@ -777,6 +786,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 playAudio(itemData.description);
             });
         });
+        
+        // 🔙 보관함으로 돌아가기 버튼 (갤러리 뷰)
+        const galleryBackBtn = document.getElementById('gallery-back-btn');
+        if (galleryBackBtn) {
+            galleryBackBtn.addEventListener('click', () => {
+                window.location.href = '/#archive';
+            });
+        }
         
         // 뒤로 가기
         document.getElementById('detail-back').addEventListener('click', () => {
