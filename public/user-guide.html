@@ -42,10 +42,34 @@
         }
 
         .header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 25px;
             border-bottom: 4px solid #4F46E5;
             padding-bottom: 15px;
+        }
+        
+        .header-content {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .back-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
         }
 
         .header h1 {
@@ -281,8 +305,11 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>✈️ 손안에 가이드</h1>
-            <p>AI가 들려주는 여행 이야기 - 파리 현장 가이드가 만든 PWA</p>
+            <div class="header-content">
+                <h1>✈️ 손안에 가이드</h1>
+                <p>AI가 들려주는 여행 이야기 - 파리 현장 가이드가 만든 PWA</p>
+            </div>
+            <a href="/#archive" class="back-button no-print">← 보관함</a>
         </div>
 
         <div class="intro">
