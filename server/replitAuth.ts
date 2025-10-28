@@ -99,8 +99,64 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
   }
 
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+  // ✅ 세션 직렬화: OAuth는 ID만, Replit Auth는 전체 객체 저장
+  passport.serializeUser((user: any, cb) => {
+    try {
+      // Google/Kakao OAuth: ID와 provider만 저장 (토큰 불필요)
+      if (user.provider === 'google' || user.provider === 'kakao') {
+        console.log('✅ [Serialize] OAuth 사용자:', user.id);
+        return cb(null, { id: user.id, provider: user.provider });
+      }
+      // Replit Auth: 전체 객체 저장 (claims, tokens 포함 - DB에 없음)
+      if (user.claims?.sub) {
+        console.log('✅ [Serialize] Replit 사용자 (전체 객체 저장)');
+        return cb(null, { type: 'replit', data: user });
+      }
+      console.error('❌ [Serialize] 알 수 없는 사용자 형식:', user);
+      cb(new Error('Unknown user type'));
+    } catch (error) {
+      console.error('❌ [Serialize] 오류:', error);
+      cb(error);
+    }
+  });
+
+  // ✅ 세션 역직렬화: OAuth는 DB 조회, Replit Auth는 객체 복원
+  passport.deserializeUser(async (serialized: any, cb) => {
+    try {
+      // Replit Auth: 전체 객체 복원 (claims, tokens DB에 없음)
+      if (serialized.type === 'replit') {
+        console.log('✅ [Deserialize] Replit 사용자 복원');
+        return cb(null, serialized.data);
+      }
+      
+      // Google/Kakao OAuth: DB에서 조회
+      if (serialized.provider === 'google' || serialized.provider === 'kakao') {
+        console.log('🔍 [Deserialize] OAuth 사용자 조회:', serialized.id);
+        const user = await storage.getUser(serialized.id);
+        
+        if (!user) {
+          console.error('❌ [Deserialize] 사용자 없음:', serialized.id);
+          return cb(new Error('User not found'));
+        }
+        
+        console.log('✅ [Deserialize] OAuth 사용자 복원:', user.id);
+        return cb(null, {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+          provider: user.provider
+        });
+      }
+      
+      console.error('❌ [Deserialize] 알 수 없는 직렬화 형식:', serialized);
+      cb(new Error('Unknown serialized user type'));
+    } catch (error) {
+      console.error('❌ [Deserialize] 오류:', error);
+      cb(error);
+    }
+  });
 
   app.get("/api/login", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
@@ -138,7 +194,9 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       userExists: !!user,
       hasExpiresAt: !!user?.expires_at,
       hasRefreshToken: !!user?.refresh_token,
-      userSub: user?.claims?.sub
+      userSub: user?.claims?.sub,
+      userId: user?.id,
+      provider: user?.provider
     });
   }
 
@@ -146,9 +204,15 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  // 🧪 [테스트모드] expires_at이 없는 경우에도 허용 (테스트 환경용)
+  // ✅ Google/Kakao OAuth 사용자는 expires_at이 없음 - 바로 허용
+  if (user.provider === 'google' || user.provider === 'kakao') {
+    console.log(`✅ [OAuth ${user.provider}] 인증 완료, 세션 유효`);
+    return next();
+  }
+
+  // 🔐 Replit Auth 사용자는 토큰 만료 체크
   if (!user.expires_at) {
-    console.log('⚠️ [테스트모드] expires_at이 없지만 인증된 사용자로 진행');
+    console.log('⚠️ [Replit Auth] expires_at이 없지만 인증된 사용자로 진행');
     return next();
   }
 
