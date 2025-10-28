@@ -889,15 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Page Control ---
     function showPage(pageToShow) {
         [featuresPage, mainPage, detailPage, archivePage, settingsPage].forEach(page => {
-            if (page) {
-                page.classList.toggle('visible', page === pageToShow);
-                // ⚡ featuresPage 명시적 제어 (2025-10-28)
-                if (page === featuresPage && page !== pageToShow) {
-                    page.style.display = 'none';
-                } else if (page === featuresPage && page === pageToShow) {
-                    page.style.display = '';
-                }
-            }
+            if (page) page.classList.toggle('visible', page === pageToShow);
         });
     }
     
@@ -906,10 +898,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // ✅ 페이지 이동 시 음성 즉시 정지 - 2025.10.02 확보됨
         synth.cancel();
         resetSpeechState();
-        // 🔗 해시 제거 (2025-10-28)
-        if (window.location.hash) {
-            history.replaceState(null, '', window.location.pathname);
-        }
         showPage(mainPage);
 
         detailPage.classList.remove('bg-friendly');
@@ -939,10 +927,6 @@ document.addEventListener('DOMContentLoaded', () => {
         resetSpeechState();
         if (isSelectionMode) { 
             toggleSelectionMode(false);
-        }
-        // 🔗 해시 설정 (2025-10-28)
-        if (window.location.hash !== '#archive') {
-            history.replaceState(null, '', '#archive');
         }
         showPage(archivePage); // ⚡ 화면 먼저 표시 (즉시)
         renderArchive(); // ⚡ 데이터 백그라운드 로드 (비차단)
@@ -986,12 +970,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("데이터베이스를 열 수 없습니다. 앱이 정상적으로 작동하지 않을 수 있습니다.");
         }
         
-        // 🔗 해시 라우팅: DB 준비 후 초기 해시 확인 (2025-10-28)
-        handleHashRoute();
-        
-        // 🔗 해시 라우팅: 해시 변경 시 자동 페이지 이동 (2025-10-28)
-        window.addEventListener('hashchange', handleHashRoute);
-        
         // 인증 완료 후 대기 중인 공유 URL 확인
         console.log('🔍 Checking for pending share URL...');
         const pendingUrl = localStorage.getItem('pendingShareUrl');
@@ -1027,21 +1005,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 checkAuthStatusAndCloseModal();
             }
         });
-    }
-    
-    // 🔗 해시 라우팅 핸들러 (2025-10-28)
-    function handleHashRoute() {
-        const hash = window.location.hash.replace('#', '');
-        console.log('🔗 Hash route:', hash);
-        
-        if (hash === 'archive') {
-            showArchivePage();
-        } else if (hash === 'settings') {
-            showSettingsPage();
-        } else if (hash === '') {
-            // 해시가 없으면 메인 페이지 표시 (2025-10-28)
-            showMainPage();
-        }
     }
     
     // 인증 상태 확인 및 모달 자동 닫기
@@ -1223,20 +1186,63 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // 📍 사진 업로드 (GPS 차단 - 개인정보 보호)
+    // 📍 사진 업로드 + GPS 자동 추출 (2025-10-26)
     // ═══════════════════════════════════════════════════════════════
-    // 목적: 개인정보 보호 (집 주소 등 노출 방지)
-    // 갤러리 업로드: GPS 수집 안 함 ❌
-    // 촬영 버튼: GPS 수집 함 ✅ (현장 촬영 = 관광지)
+    // 목적: 콘텐츠 신뢰성 최적화 (Google Maps 연동)
+    // 기능: 사진 업로드 시 GPS EXIF 자동 추출 → 지도 표시
     // ═══════════════════════════════════════════════════════════════
     async function handleFileSelect(event) {
         const file = event.target.files?.[0];
         if (file) {
-            // 🔒 개인정보 보호: 갤러리 업로드 시 GPS 수집 안 함
-            window.currentGPS = null;
-            console.log('🔒 갤러리 업로드: GPS 차단 (개인정보 보호)');
+            // 📸 Step 1: GPS EXIF 데이터 추출 (exifr 라이브러리)
+            try {
+                if (window.exifr) {
+                    const gpsData = await exifr.gps(file);
+                    if (gpsData && gpsData.latitude && gpsData.longitude) {
+                        // GPS 데이터를 전역 객체에 저장
+                        window.currentGPS = {
+                            latitude: gpsData.latitude,
+                            longitude: gpsData.longitude,
+                            locationName: null
+                        };
+                        console.log('📍 EXIF GPS 추출 성공:', window.currentGPS);
+                        
+                        // 🗺️ Step 1.5: 주변 유명 랜드마크 찾기 (GPS → "에펠탑" 등)
+                        loadGoogleMapsAPI(async () => {
+                            console.log('🗺️ callback 실행됨 (EXIF GPS)');
+                            const landmark = await getNearbyLandmark(
+                                gpsData.latitude,
+                                gpsData.longitude
+                            );
+                            console.log('🔎 랜드마크 검색 결과:', landmark);
+                            if (landmark) {
+                                window.currentGPS.locationName = landmark;
+                                console.log('✅ 위치 이름 저장 완료:', landmark);
+                            }
+                        });
+                    } else {
+                        console.log('ℹ️ EXIF GPS 정보 없음 → 브라우저 위치 요청');
+                        window.currentGPS = null;
+                        
+                        // 📍 EXIF GPS 없으면 브라우저 위치 사용 (백그라운드)
+                        requestBrowserLocation();
+                    }
+                } else {
+                    console.warn('⚠️ exifr 라이브러리 로딩 실패 → 브라우저 위치 요청');
+                    window.currentGPS = null;
+                    
+                    // 📍 브라우저 위치 요청 (백그라운드)
+                    requestBrowserLocation();
+                }
+            } catch (error) {
+                console.error('GPS 추출 오류:', error);
+                window.currentGPS = null;
+                
+                // 📍 오류 시에도 브라우저 위치 요청 (백그라운드)
+                requestBrowserLocation();
+            }
             
-            // 📷 이미지 처리
+            // 📷 Step 2: 이미지 처리 (기존 로직)
             const reader = new FileReader();
             reader.onload = (e) => processImage(e.target?.result, uploadBtn);
             reader.readAsDataURL(file);
@@ -1286,18 +1292,6 @@ document.addEventListener('DOMContentLoaded', () => {
             textOverlay.classList.add('animate-in');
             loadingHeader.classList.add('hidden');
             detailFooter.classList.remove('hidden');
-            
-            // 📍 GPS 위치 정보 표시 (2025-10-26)
-            const locationInfo = document.getElementById('locationInfo');
-            const locationName = document.getElementById('locationName');
-            if (window.currentGPS && window.currentGPS.locationName && locationInfo && locationName) {
-                locationName.textContent = window.currentGPS.locationName;
-                locationInfo.classList.remove('hidden');
-                console.log('✅ GPS 정보 표시:', window.currentGPS.locationName);
-            } else if (locationInfo) {
-                locationInfo.classList.add('hidden');
-                console.log('ℹ️ GPS 정보 없음 또는 로딩 중');
-            }
 
             let sentenceBuffer = '';
             for await (const chunk of responseStream) {
