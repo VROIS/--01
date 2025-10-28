@@ -1292,6 +1292,18 @@ document.addEventListener('DOMContentLoaded', () => {
             textOverlay.classList.add('animate-in');
             loadingHeader.classList.add('hidden');
             detailFooter.classList.remove('hidden');
+            
+            // 📍 GPS 위치 정보 표시 (2025-10-26)
+            const locationInfo = document.getElementById('locationInfo');
+            const locationName = document.getElementById('locationName');
+            if (window.currentGPS && window.currentGPS.locationName && locationInfo && locationName) {
+                locationName.textContent = window.currentGPS.locationName;
+                locationInfo.classList.remove('hidden');
+                console.log('✅ GPS 정보 표시:', window.currentGPS.locationName);
+            } else if (locationInfo) {
+                locationInfo.classList.add('hidden');
+                console.log('ℹ️ GPS 정보 없음 또는 로딩 중');
+            }
 
             let sentenceBuffer = '';
             for await (const chunk of responseStream) {
