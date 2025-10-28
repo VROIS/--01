@@ -128,6 +128,9 @@ API Endpoints:
                     <button onclick="showTab('shares')" id="tab-shares" class="flex-1 py-3 px-6 rounded-lg font-semibold transition-all text-white hover:bg-white/10">
                         인기 공유
                     </button>
+                    <button onclick="showTab('featured')" id="tab-featured" class="flex-1 py-3 px-6 rounded-lg font-semibold transition-all text-white hover:bg-white/10">
+                        추천 갤러리
+                    </button>
                     <button onclick="showTab('analytics')" id="tab-analytics" class="flex-1 py-3 px-6 rounded-lg font-semibold transition-all text-white hover:bg-white/10">
                         분석
                     </button>
@@ -172,6 +175,17 @@ API Endpoints:
                 </div>
             </div>
 
+            <!-- 추천 갤러리 탭 -->
+            <div id="content-featured" class="hidden">
+                <div class="bg-white rounded-xl p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">⭐ 추천 갤러리 관리</h2>
+                    <p class="text-gray-600 mb-4">추천 갤러리에 선정된 콘텐츠는 리턴 버튼이 추가되어 사용자가 앱 내에서 탐색할 수 있습니다.</p>
+                    <div id="featuredList" class="space-y-3">
+                        <!-- 동적 생성 -->
+                    </div>
+                </div>
+            </div>
+
             <!-- 분석 탭 -->
             <div id="content-analytics" class="hidden">
                 <div class="bg-white rounded-xl p-6 shadow-lg">
@@ -206,7 +220,7 @@ API Endpoints:
             currentTab = tab;
             
             // 탭 버튼 스타일
-            ['overview', 'shares', 'analytics'].forEach(t => {
+            ['overview', 'shares', 'featured', 'analytics'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 const content = document.getElementById(`content-${t}`);
                 
@@ -220,6 +234,11 @@ API Endpoints:
                     content.classList.add('hidden');
                 }
             });
+            
+            // Featured 탭이면 목록 로드
+            if (tab === 'featured') {
+                loadFeaturedList();
+            }
         }
 
         // 데이터 로드
@@ -341,6 +360,106 @@ API Endpoints:
             }).join('');
             
             document.getElementById('analyticsTable').innerHTML = rows || '<tr><td colspan="4" class="text-center py-8 text-gray-500">데이터가 없습니다.</td></tr>';
+        }
+
+        // Featured 목록 로드
+        async function loadFeaturedList() {
+            try {
+                const res = await fetch('/api/admin/featured');
+                if (!res.ok) throw new Error('Featured 목록 로드 실패');
+                const data = await res.json();
+                renderFeaturedList(data.featured);
+            } catch (error) {
+                console.error('Featured 목록 로드 오류:', error);
+                document.getElementById('featuredList').innerHTML = `<p class="text-center text-red-500 py-8">목록 로드 실패</p>`;
+            }
+        }
+
+        function renderFeaturedList(featured) {
+            const html = featured.map(page => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                    <div class="flex items-center gap-4">
+                        <img src="/shared/${page.id}.html" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27%23ccc%27%3E%3Cpath d=%27M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z%27/%3E%3C/svg%3E'" class="w-16 h-16 rounded-lg object-cover" alt="${page.name}">
+                        <div>
+                            <div class="font-semibold text-gray-800">${page.name}</div>
+                            <div class="text-sm text-gray-500">👤 ${page.sender_name} | 📍 ${page.location}</div>
+                            <div class="text-xs text-gray-400">${new Date(page.created_at).toLocaleDateString('ko-KR')}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="editFeatured('${page.id}')" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition">
+                            편집
+                        </button>
+                        <button onclick="removeFeatured('${page.id}')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition">
+                            제거
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('featuredList').innerHTML = html || '<p class="text-center text-gray-500 py-8">추천 갤러리에 선정된 콘텐츠가 없습니다.</p>';
+        }
+
+        // Featured 편집 모달
+        async function editFeatured(id) {
+            try {
+                const res = await fetch(`/api/share/${id}`);
+                if (!res.ok) throw new Error('공유 페이지 로드 실패');
+                const data = await res.json();
+                const page = data.sharePage;
+                
+                const newTitle = prompt('제목을 수정하세요:', page.name);
+                if (!newTitle) return;
+                
+                const newSender = prompt('발신자 이름을 수정하세요:', page.sender_name);
+                if (!newSender) return;
+                
+                const newLocation = prompt('위치를 수정하세요:', page.location);
+                if (!newLocation) return;
+                
+                const newDate = prompt('날짜를 수정하세요 (YYYY-MM-DD):', page.date);
+                if (!newDate) return;
+                
+                if (confirm(`이 콘텐츠를 수정하고 HTML을 재생성하시겠습니까?\n\n제목: ${newTitle}\n발신자: ${newSender}\n위치: ${newLocation}\n날짜: ${newDate}`)) {
+                    const updateRes = await fetch(`/api/admin/featured/${id}/regenerate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: newTitle,
+                            sender: newSender,
+                            location: newLocation,
+                            date: newDate
+                        })
+                    });
+                    
+                    if (!updateRes.ok) throw new Error('HTML 재생성 실패');
+                    
+                    alert('✅ HTML이 성공적으로 재생성되었습니다!');
+                    loadFeaturedList();
+                }
+            } catch (error) {
+                console.error('Featured 편집 오류:', error);
+                alert('❌ 편집 실패: ' + error.message);
+            }
+        }
+
+        // Featured 제거
+        async function removeFeatured(id) {
+            if (!confirm('추천 갤러리에서 제거하시겠습니까?\n(공유 페이지는 삭제되지 않고 Featured 상태만 해제됩니다)')) return;
+            
+            try {
+                const res = await fetch(`/api/admin/featured/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!res.ok) throw new Error('Featured 제거 실패');
+                
+                alert('✅ 추천 갤러리에서 제거되었습니다.');
+                loadFeaturedList();
+            } catch (error) {
+                console.error('Featured 제거 오류:', error);
+                alert('❌ 제거 실패: ' + error.message);
+            }
         }
 
         // 페이지 로드 시 데이터 불러오기
