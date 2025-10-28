@@ -1382,6 +1382,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Featured 제거에 실패했습니다.' });
     }
   });
+
+  // POST /api/admin/featured/:id/regenerate - Featured HTML 재생성
+  app.post('/api/admin/featured/:id/regenerate', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { title, sender, location, date } = req.body;
+      
+      if (!title || !sender || !location || !date) {
+        return res.status(400).json({ error: '모든 필드를 입력해주세요.' });
+      }
+      
+      // 공유 페이지 정보 가져오기
+      const page = await storage.getSharedHtmlPage(id);
+      if (!page) {
+        return res.status(404).json({ error: '공유 페이지를 찾을 수 없습니다.' });
+      }
+      
+      // HTML 재생성 (isFeatured=true)
+      await storage.regenerateFeaturedHtml(id, {
+        title,
+        sender,
+        location,
+        date
+      });
+      
+      res.json({ success: true, message: 'HTML이 재생성되었습니다.' });
+    } catch (error) {
+      console.error('HTML 재생성 오류:', error);
+      res.status(500).json({ error: 'HTML 재생성에 실패했습니다.' });
+    }
+  });
   
   /**
    * 📦 GET /sw-share.js - 공유 페이지용 Service Worker

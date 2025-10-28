@@ -84,6 +84,7 @@ export interface IStorage {
   setFeatured(id: string, featured: boolean): Promise<void>;
   incrementDownloadCount(id: string): Promise<void>;
   deactivateHtmlPage(id: string): Promise<void>;
+  regenerateFeaturedHtml(id: string, metadata: { title: string; sender: string; location: string; date: string }): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -771,6 +772,108 @@ export class DatabaseStorage implements IStorage {
       .update(sharedHtmlPages)
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(sharedHtmlPages.id, id));
+  }
+
+  /**
+   * ⭐ Featured HTML 재생성
+   * 
+   * 목적: 관리자가 메타데이터를 수정하고 Featured HTML을 재생성
+   * 
+   * @param id - 공유 페이지 ID
+   * @param metadata - 수정할 메타데이터 (title, sender, location, date)
+   * 
+   * 작동 방식:
+   * 1. DB 메타데이터 업데이트
+   * 2. HTML 파일 읽기
+   * 3. 메타데이터 부분 교체 (정규식)
+   * 4. 리턴 버튼 추가 (Featured용)
+   * 5. HTML 파일 덮어쓰기
+   */
+  async regenerateFeaturedHtml(id: string, metadata: { title: string; sender: string; location: string; date: string }): Promise<void> {
+    // 1. DB 메타데이터 업데이트
+    await db
+      .update(sharedHtmlPages)
+      .set({
+        name: metadata.title,
+        sender: metadata.sender,
+        location: metadata.location,
+        date: metadata.date,
+        updatedAt: new Date()
+      })
+      .where(eq(sharedHtmlPages.id, id));
+
+    // 2. HTML 파일 읽기
+    const page = await this.getSharedHtmlPage(id);
+    if (!page || !page.htmlFilePath) {
+      throw new Error('HTML 파일 경로를 찾을 수 없습니다.');
+    }
+
+    const htmlPath = path.join(process.cwd(), 'public', page.htmlFilePath);
+    if (!fs.existsSync(htmlPath)) {
+      throw new Error(`HTML 파일이 존재하지 않습니다: ${htmlPath}`);
+    }
+
+    let htmlContent = fs.readFileSync(htmlPath, 'utf8');
+
+    // 3. 메타데이터 교체
+    // 제목 교체
+    htmlContent = htmlContent.replace(
+      /<title>.*?<\/title>/,
+      `<title>${this.escapeHtml(metadata.title)} - 손안에 가이드</title>`
+    );
+    htmlContent = htmlContent.replace(
+      /<h1>.*?<\/h1>/,
+      `<h1>${this.escapeHtml(metadata.title)}</h1>`
+    );
+
+    // 메타데이터 섹션 교체
+    htmlContent = htmlContent.replace(
+      /<p>👤 .*?<\/p>/,
+      `<p>👤 ${this.escapeHtml(metadata.sender)} 님이 보냄</p>`
+    );
+    htmlContent = htmlContent.replace(
+      /<p>📍 .*?<\/p>/,
+      `<p>📍 ${this.escapeHtml(metadata.location)}</p>`
+    );
+    htmlContent = htmlContent.replace(
+      /<p>📅 .*?<\/p>/,
+      `<p>📅 ${this.escapeHtml(metadata.date)}</p>`
+    );
+
+    // 4. 리턴 버튼 추가 (Featured용)
+    // 갤러리 뷰 시작 부분을 찾아서 리턴 버튼 추가
+    const galleryViewRegex = /(<div id="gallery-view">)/;
+    const returnButtonHtml = `
+        <!-- 🔙 추천 갤러리 전용 리턴 버튼 (왼쪽 상단, 앱과 통일) -->
+        <div style="position: sticky; top: 0; z-index: 100; height: 60px; display: flex; align-items: center; padding: 0 1rem; background: #4285F4;">
+            <button onclick="window.location.href='/#archive'" style="width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(255, 255, 255, 0.95); color: #4285F4; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.3s;" aria-label="보관함으로 돌아가기">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 1.5rem; height: 1.5rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+            </button>
+        </div>
+        `;
+    
+    // 리턴 버튼이 이미 있는지 확인
+    if (!htmlContent.includes('보관함으로 돌아가기')) {
+      htmlContent = htmlContent.replace(galleryViewRegex, `$1${returnButtonHtml}`);
+    }
+
+    // 5. HTML 파일 덮어쓰기
+    fs.writeFileSync(htmlPath, htmlContent, 'utf8');
+    console.log(`✅ Featured HTML 재생성 완료: ${page.htmlFilePath}`);
+  }
+
+  // HTML escape 헬퍼 함수
+  private escapeHtml(text: string): string {
+    const map: { [key: string]: string } = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
   }
 }
 
