@@ -987,7 +987,13 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('❌ No pending URL found');
         }
         
+        // ✨ 보관함 직접 접속 (#archive) 처리 (2025-10-28)
+        if (window.location.hash === '#archive') {
+            console.log('📁 Direct archive access detected');
+            showArchivePage();
+        }
         // The landing page animation will handle showing the features page initially.
+        
         if (recognition) {
             recognition.continuous = false;
             recognition.lang = 'ko-KR';

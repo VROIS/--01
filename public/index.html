@@ -889,10 +889,19 @@
         const curtainLeft = document.getElementById('curtain-left');
         const curtainRight = document.getElementById('curtain-right');
         const curtainLayer = document.getElementById('curtain-layer');
-        const featuresPage = document.getElementById('featuresPage'); // Need a reference to the features page
+        const featuresPage = document.getElementById('featuresPage');
+        const archivePage = document.getElementById('archivePage');
         if (!logo || !curtainLeft || !curtainRight || !curtainLayer || !featuresPage) return;
 
-        // --- Animation Sequence ---
+        // ✨ 보관함 직접 접속 (#archive) - 커튼 건너뛰기 (2025-10-28)
+        if (window.location.hash === '#archive') {
+            // 커튼 즉시 제거 (애니메이션 없음)
+            curtainLayer.style.display = 'none';
+            // archivePage는 index.js에서 표시됨
+            return;
+        }
+
+        // --- 기존 커튼 애니메이션 (해시 없을 때만) ---
         
         // 1. Logo appears
         setTimeout(() => {
