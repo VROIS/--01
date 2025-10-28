@@ -928,6 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isSelectionMode) { 
             toggleSelectionMode(false);
         }
+        window.location.hash = 'archive'; // URL 해시 설정
         showPage(archivePage); // ⚡ 화면 먼저 표시 (즉시)
         renderArchive(); // ⚡ 데이터 백그라운드 로드 (비차단)
     }
