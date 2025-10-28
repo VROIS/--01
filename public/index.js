@@ -1006,6 +1006,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 checkAuthStatusAndCloseModal();
             }
         });
+        
+        // 🔗 해시 라우팅: 초기 로드 시 해시 확인 (2025-10-28)
+        handleHashRoute();
+        
+        // 🔗 해시 라우팅: 해시 변경 시 자동 페이지 이동 (2025-10-28)
+        window.addEventListener('hashchange', handleHashRoute);
+    }
+    
+    // 🔗 해시 라우팅 핸들러 (2025-10-28)
+    function handleHashRoute() {
+        const hash = window.location.hash.replace('#', '');
+        console.log('🔗 Hash route:', hash);
+        
+        if (hash === 'archive') {
+            showArchivePage();
+        } else if (hash === 'settings') {
+            showSettingsPage();
+        }
+        // 메인 페이지는 hash가 없거나 빈 문자열일 때 자동으로 표시됨
     }
     
     // 인증 상태 확인 및 모달 자동 닫기
