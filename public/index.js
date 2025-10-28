@@ -889,7 +889,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Page Control ---
     function showPage(pageToShow) {
         [featuresPage, mainPage, detailPage, archivePage, settingsPage].forEach(page => {
-            if (page) page.classList.toggle('visible', page === pageToShow);
+            if (page) {
+                page.classList.toggle('visible', page === pageToShow);
+                // ⚡ featuresPage 명시적 제어 (2025-10-28)
+                if (page === featuresPage && page !== pageToShow) {
+                    page.style.display = 'none';
+                } else if (page === featuresPage && page === pageToShow) {
+                    page.style.display = '';
+                }
+            }
         });
     }
     
