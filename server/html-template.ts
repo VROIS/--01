@@ -572,7 +572,7 @@ export function generateShareHtml(data: SharePageData): string {
         if (galleryBackBtn) {
             galleryBackBtn.addEventListener('click', () => {
                 // 앱의 보관함 페이지로 이동
-                window.location.href = '${appOrigin}/#archive';
+                window.location.href = '/#archive';
             });
         }
         
