@@ -802,10 +802,13 @@
             <div id="promptSettingsSection" class="hidden space-y-6">
                 <!-- 🔒 대시보드 링크 (관리자 인증 후 표시) -->
                 <div id="adminDashboardLink" class="hidden bg-white p-6 rounded-lg shadow-sm border-l-4 border-purple-600">
-                    <a href="/admin-dashboard.html" class="block w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 text-center font-bold text-lg shadow-lg transition-all transform hover:scale-105">
+                    <a href="admin-dashboard.html" class="block w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 text-center font-bold text-lg shadow-lg transition-all transform hover:scale-105" data-testid="link-dashboard">
                         📊 관리자 대시보드 열기
                     </a>
                     <p class="text-xs text-gray-500 mt-2 text-center">실시간 통계 및 분석 대시보드</p>
+                    <a href="user-guide.html" class="block w-full mt-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 text-center font-bold shadow-lg transition-all transform hover:scale-105" data-testid="link-guide">
+                        📖 사용설명서 열기
+                    </a>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-sm">
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">이미지 설명 프롬프트</h2>
