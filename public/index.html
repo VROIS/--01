@@ -383,6 +383,19 @@
     </style>
 </head>
 <body style="background-color: #FFFEFA;">
+    <!-- ⚡ 해시 라우팅: 즉시 실행 (랜딩 페이지 깜빡임 방지 - 2025-10-28) -->
+    <script>
+        if (window.location.hash) {
+            // 해시가 있으면 featuresPage를 처음부터 숨김
+            document.addEventListener('DOMContentLoaded', function() {
+                const featuresPage = document.getElementById('featuresPage');
+                if (featuresPage) {
+                    featuresPage.style.display = 'none';
+                }
+            });
+        }
+    </script>
+    
     <!-- New Landing Page (Surgically Transplanted) -->
     <div id="curtain-layer">
         <div id="curtain-left" class="curtain"></div>
