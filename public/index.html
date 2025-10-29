@@ -15,6 +15,26 @@
     <link rel="stylesheet" href="https://hangeul.pstatic.net/maruburi/maruburi.css">
     <!-- 'Pretendard' 폰트 추가 -->
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    
+    <!-- ⭐ 카카오톡 인앱 브라우저 Chrome 강제 리다이렉트 (2025-10-29) -->
+    <script>
+        (function() {
+            var userAgent = navigator.userAgent.toLowerCase();
+            
+            // 카카오톡 인앱 브라우저 감지
+            if (userAgent.match(/kakaotalk/i)) {
+                // Intent URL로 Chrome 강제 열기
+                var targetUrl = window.location.href;
+                var intentUrl = 'intent://' + targetUrl.replace(/https?:\/\//, '') + 
+                              '#Intent;scheme=https;package=com.android.chrome;end';
+                
+                // 경고 메시지 표시 후 리다이렉트
+                alert('📱 카메라 기능을 사용하려면 Chrome 브라우저가 필요합니다.\n\n자동으로 Chrome으로 이동합니다.');
+                window.location.href = intentUrl;
+            }
+        })();
+    </script>
+    
     <style>
         :root {
             --gemini-blue: #4285F4;
