@@ -18,21 +18,45 @@
     
     <!-- ⭐ 카카오톡 인앱 브라우저 Chrome 강제 리다이렉트 (2025-10-29) -->
     <script>
+        var isKakaoInApp = false;
+        
         (function() {
             var userAgent = navigator.userAgent.toLowerCase();
+            var targetUrl = window.location.href;
             
             // 카카오톡 인앱 브라우저 감지
             if (userAgent.match(/kakaotalk/i)) {
-                // Intent URL로 Chrome 강제 열기
-                var targetUrl = window.location.href;
-                var intentUrl = 'intent://' + targetUrl.replace(/https?:\/\//, '') + 
-                              '#Intent;scheme=https;package=com.android.chrome;end';
+                isKakaoInApp = true;
                 
-                // 경고 메시지 표시 후 리다이렉트
-                alert('📱 카메라 기능을 사용하려면 Chrome 브라우저가 필요합니다.\n\n자동으로 Chrome으로 이동합니다.');
-                window.location.href = intentUrl;
+                // 페이지 로드 후 배너 표시
+                window.addEventListener('DOMContentLoaded', function() {
+                    var banner = document.getElementById('kakao-browser-warning');
+                    var mainApp = document.querySelector('.ui-layer');
+                    
+                    if (banner) {
+                        banner.style.display = 'flex';
+                    }
+                    if (mainApp) {
+                        mainApp.style.display = 'none';
+                    }
+                    
+                    // 0.5초 후 Chrome으로 자동 리다이렉트
+                    setTimeout(function() {
+                        var intentUrl = 'intent://' + targetUrl.replace(/https?:\/\//, '') + 
+                                      '#Intent;scheme=https;package=com.android.chrome;end';
+                        window.location.href = intentUrl;
+                    }, 500);
+                });
             }
         })();
+        
+        // 수동 버튼: Chrome에서 열기
+        function openInChrome() {
+            const currentUrl = window.location.href;
+            const intentUrl = 'intent://' + currentUrl.replace(/https?:\/\//, '') + 
+                              '#Intent;scheme=https;package=com.android.chrome;end';
+            window.location.href = intentUrl;
+        }
     </script>
     
     <style>
@@ -399,10 +423,85 @@
             margin-bottom: 0.5rem;
             object-fit: cover;
         }
+        
+        /* 카카오톡 인앱 브라우저 경고 */
+        #kakao-browser-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+            z-index: 99999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        #kakao-browser-warning .warning-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        #kakao-browser-warning .warning-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #1F2937;
+            margin-bottom: 1rem;
+        }
+        #kakao-browser-warning .warning-message {
+            font-size: 1.1rem;
+            color: #374151;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+        #kakao-browser-warning .chrome-btn {
+            background: #4285F4;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        #kakao-browser-warning .chrome-btn:active {
+            transform: scale(0.95);
+        }
+        #kakao-browser-warning .helper-text {
+            font-size: 0.875rem;
+            color: #6B7280;
+            margin-top: 1rem;
+        }
 
     </style>
 </head>
 <body style="background-color: #FFFEFA;">
+    <!-- 카카오톡 인앱 브라우저 경고 배너 -->
+    <div id="kakao-browser-warning">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-title">카메라 기능을 사용할 수 없습니다</div>
+        <div class="warning-message">
+            카카오톡 앱 내부 브라우저에서는<br>
+            카메라와 일부 기능이 제한됩니다.<br><br>
+            <strong>Chrome 브라우저로 이동합니다...</strong>
+        </div>
+        <button class="chrome-btn" onclick="openInChrome()">
+            🌐 Chrome에서 열기
+        </button>
+        <div class="helper-text">
+            자동으로 열리지 않으면 위 버튼을 눌러주세요
+        </div>
+    </div>
+    
     <!-- New Landing Page (Surgically Transplanted) -->
     <div id="curtain-layer">
         <div id="curtain-left" class="curtain"></div>
