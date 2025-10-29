@@ -19,36 +19,27 @@
     <!-- ⭐ 카카오톡 인앱 브라우저 Chrome 강제 리다이렉트 (2025-10-29) -->
     <script>
         var isKakaoInApp = false;
+        var userAgent = navigator.userAgent.toLowerCase();
         
-        (function() {
-            var userAgent = navigator.userAgent.toLowerCase();
-            var targetUrl = window.location.href;
+        // 카카오톡 인앱 브라우저 감지 (즉시 실행)
+        if (userAgent.match(/kakaotalk/i)) {
+            isKakaoInApp = true;
             
-            // 카카오톡 인앱 브라우저 감지
-            if (userAgent.match(/kakaotalk/i)) {
-                isKakaoInApp = true;
+            // 즉시 스타일 주입하여 메인 앱 숨기기
+            document.write('<style>#curtain-layer, .ui-layer { display: none !important; } #kakao-browser-warning { display: flex !important; }</style>');
+            
+            // 페이지 로드 후 Chrome 리다이렉트
+            window.addEventListener('DOMContentLoaded', function() {
+                var targetUrl = window.location.href;
                 
-                // 페이지 로드 후 배너 표시
-                window.addEventListener('DOMContentLoaded', function() {
-                    var banner = document.getElementById('kakao-browser-warning');
-                    var mainApp = document.querySelector('.ui-layer');
-                    
-                    if (banner) {
-                        banner.style.display = 'flex';
-                    }
-                    if (mainApp) {
-                        mainApp.style.display = 'none';
-                    }
-                    
-                    // 0.5초 후 Chrome으로 자동 리다이렉트
-                    setTimeout(function() {
-                        var intentUrl = 'intent://' + targetUrl.replace(/https?:\/\//, '') + 
-                                      '#Intent;scheme=https;package=com.android.chrome;end';
-                        window.location.href = intentUrl;
-                    }, 500);
-                });
-            }
-        })();
+                // 1초 후 Chrome으로 자동 리다이렉트
+                setTimeout(function() {
+                    var intentUrl = 'intent://' + targetUrl.replace(/https?:\/\//, '') + 
+                                  '#Intent;scheme=https;package=com.android.chrome;end';
+                    window.location.href = intentUrl;
+                }, 1000);
+            });
+        }
         
         // 수동 버튼: Chrome에서 열기
         function openInChrome() {
