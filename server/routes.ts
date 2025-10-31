@@ -1393,8 +1393,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: '공유 페이지를 찾을 수 없습니다.' });
       }
       
+      console.log('📋 공유 페이지:', { id, guideIds: page.guideIds, guideIdsCount: page.guideIds?.length });
+      
       // 가이드 정보 가져오기
       const guides = await storage.getGuidesByIds(page.guideIds);
+      
+      console.log('📋 조회된 가이드:', { guidesCount: guides?.length, guides: guides?.map(g => ({ id: g.id, userId: g.userId })) });
       
       res.json({
         page,
