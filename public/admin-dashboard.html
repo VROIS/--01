@@ -409,11 +409,14 @@ API Endpoints:
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
+                        <button onclick="window.open('/s/${page.id}', '_blank')" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition">
+                            👁️ 미리보기
+                        </button>
                         <button onclick="editFeatured('${page.id}')" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition">
-                            편집
+                            ✏️ 편집
                         </button>
                         <button onclick="removeFeatured('${page.id}')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition">
-                            제거
+                            🗑️ 제거
                         </button>
                     </div>
                 </div>
