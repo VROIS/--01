@@ -841,12 +841,12 @@ export class DatabaseStorage implements IStorage {
     );
 
     // 4. 리턴 버튼 추가 (Featured용)
-    // 갤러리 뷰 시작 부분을 찾아서 리턴 버튼 추가
+    // ⚠️ CRITICAL FIX (2025-10-31): window.close()로 페이지만 닫기 → 카메라 권한 유지
     const galleryViewRegex = /(<div id="gallery-view">)/;
     const returnButtonHtml = `
         <!-- 🔙 추천 갤러리 전용 리턴 버튼 (왼쪽 상단, 앱과 통일) -->
         <div style="position: sticky; top: 0; z-index: 100; height: 60px; display: flex; align-items: center; padding: 0 1rem; background: #4285F4;">
-            <button onclick="window.location.href='/#archive'" style="width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(255, 255, 255, 0.95); color: #4285F4; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.3s;" aria-label="보관함으로 돌아가기">
+            <button onclick="window.close()" style="width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(255, 255, 255, 0.95); color: #4285F4; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.3s;" aria-label="페이지 닫기">
                 <svg xmlns="http://www.w3.org/2000/svg" style="width: 1.5rem; height: 1.5rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                 </svg>
@@ -855,7 +855,7 @@ export class DatabaseStorage implements IStorage {
         `;
     
     // 리턴 버튼이 이미 있는지 확인
-    if (!htmlContent.includes('보관함으로 돌아가기')) {
+    if (!htmlContent.includes('페이지 닫기')) {
       htmlContent = htmlContent.replace(galleryViewRegex, `$1${returnButtonHtml}`);
     }
 
