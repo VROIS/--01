@@ -6,6 +6,86 @@
 
 ---
 
+## 🎯 2025-10-31 세션: Featured 리턴 버튼 + 콘텐츠 순서 편집 ✅
+
+### 작업 시간: 3시간
+### 담당: Claude Sonnet 4.5
+
+#### ✅ 완료 작업
+
+1. **Featured 리턴 버튼 수정** ✅ 🔥 **CRITICAL FIX**
+   - 문제: `window.location.href='/#archive'` → 카메라 권한 손실
+   - 해결: `window.close()` → 페이지만 닫고 앱 유지
+   - 위치: `server/storage.ts` (라인 852)
+   - 효과: **삼성폰 카메라 권한 문제 완전 해결** ✅
+
+2. **Featured 콘텐츠 순서 편집 기능** ✅ 
+   - Backend: guideIds 파라미터 추가
+     - `server/routes.ts`: POST /api/admin/featured/:id/regenerate
+     - `server/storage.ts`: regenerateFeaturedHtml 함수
+   - Admin UI: Drag & Drop 구현
+     - `public/admin-dashboard.html`: 편집 모달
+     - HTML5 Drag API 사용
+     - 20장 이미지 순서 변경 가능
+   - 사용 시나리오:
+     - 관리자가 Featured 편집 버튼 클릭
+     - 가이드 목록이 썸네일과 함께 표시
+     - 드래그로 순서 변경 (여행 동선/하이라이트 기준)
+     - 저장 → guideIds 배열 업데이트 → HTML 재생성
+
+3. **LSP 에러 수정** ✅
+   - `server/storage.ts`: select 쿼리에 date 필드 추가
+   - 라인 677, 715
+
+#### 📝 수정된 파일
+1. `server/storage.ts` (lines 846-863, 796-813, 677, 715)
+   - Featured 리턴 버튼: window.close()
+   - regenerateFeaturedHtml: guideIds 파라미터 지원
+   - select 쿼리: date 필드 추가
+
+2. `server/routes.ts` (lines 1389-1421)
+   - POST /api/admin/featured/:id/regenerate
+   - guideIds 파라미터 추가
+
+3. `public/admin-dashboard.html` (전체)
+   - 편집 모달 UI 추가
+   - Drag & Drop 로직 구현
+   - CSS 스타일 추가
+
+#### 🎨 핵심 로직 (절대 수정 금지!)
+
+```javascript
+// Featured 리턴 버튼 (카메라 권한 유지)
+onclick="window.close()"
+
+// Drag & Drop 순서 변경
+const guideItems = document.querySelectorAll('.guide-item');
+const newGuideIds = Array.from(guideItems).map(item => item.dataset.index);
+
+// API로 전송
+await fetch(`/api/admin/featured/${id}/regenerate`, {
+  method: 'POST',
+  body: JSON.stringify({
+    title, sender, location, date,
+    guideIds: newGuideIds  // 새 순서
+  })
+});
+```
+
+#### 🔒 보호된 핵심 로직 목록 (업데이트)
+1. ⚠️ Featured 리턴 버튼 (2025.10.31) - **카메라 권한 보호**
+2. ⚠️ Featured 순서 편집 (2025.10.31) - Drag & Drop
+3. ⚠️ 관리자 대시보드 API (2025.10.26)
+4. ⚠️ HTML 파일 저장 시스템 (2025.10.26)
+5. ⚠️ 관리자 인증 로직 (2025.10.26)
+6. 🔥 카카오톡 Chrome 강제 리다이렉트 (2025.10.26) - P1-1 CRITICAL
+7. ✅ Featured Gallery 캐싱 (2025.10.26)
+8. ✅ Featured Gallery 로딩 (2025.10.05)
+9. ✅ 공유/삭제 간편 로직 (2025.10.02)
+10. ✅ 4존 스크롤 레이아웃 (2025.10.02)
+
+---
+
 ## 🎯 2025-10-26 세션: 관리자 대시보드 & DB 최적화 ✅
 
 ### 작업 시간: 4시간
