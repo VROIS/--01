@@ -2715,22 +2715,24 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('editLocation').value = page.location || '미지정';
             document.getElementById('editDate').value = page.date || new Date(page.createdAt).toISOString().split('T')[0];
             
-            // 3. 드래그 가능한 가이드 리스트 생성
+            // 3. 모바일 친화적 가이드 리스트 생성 (위/아래 버튼)
             const guideListHtml = guides.map((guide, index) => {
                 const imgSrc = guide.imageUrl || '';
+                const isFirst = index === 0;
+                const isLast = index === guides.length - 1;
                 return `
-                    <div class="guide-item flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 cursor-move hover:bg-yellow-50 transition" draggable="true" data-guide-id="${guide.id}">
-                        <span class="text-gray-400 text-xl">⋮⋮</span>
-                        <img src="${imgSrc}" alt="가이드 ${index + 1}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
-                        <span class="font-medium text-gray-700">가이드 ${index + 1}</span>
+                    <div class="guide-item flex items-center gap-2 p-3 bg-white rounded-lg border-2 border-gray-300 mb-2" data-guide-id="${guide.id}">
+                        <img src="${imgSrc}" alt="가이드 ${index + 1}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                        <span class="font-medium text-gray-700 flex-1">가이드 ${index + 1}</span>
+                        <div class="flex flex-col gap-1">
+                            <button onclick="moveGuideUp(this)" ${isFirst ? 'disabled' : ''} class="px-3 py-1 bg-blue-500 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed text-lg font-bold" style="min-width: 40px; min-height: 36px;">▲</button>
+                            <button onclick="moveGuideDown(this)" ${isLast ? 'disabled' : ''} class="px-3 py-1 bg-blue-500 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed text-lg font-bold" style="min-width: 40px; min-height: 36px;">▼</button>
+                        </div>
                     </div>
                 `;
             }).join('');
             
             document.getElementById('guideList').innerHTML = guideListHtml;
-            
-            // 4. Drag & Drop 이벤트 추가
-            initDragAndDrop();
             
             // 5. 모달 표시
             document.getElementById('editFeaturedModal').classList.remove('hidden');
@@ -2790,48 +2792,41 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('editFeaturedModal').classList.add('hidden');
     };
 
-    // Drag & Drop 초기화
-    function initDragAndDrop() {
-        const guideList = document.getElementById('guideList');
-        let draggedItem = null;
-        
-        guideList.addEventListener('dragstart', (e) => {
-            if (e.target.classList.contains('guide-item')) {
-                draggedItem = e.target;
-                e.target.style.opacity = '0.5';
-            }
-        });
-        
-        guideList.addEventListener('dragend', (e) => {
-            if (e.target.classList.contains('guide-item')) {
-                e.target.style.opacity = '1';
-            }
-        });
-        
-        guideList.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            const afterElement = getDragAfterElement(guideList, e.clientY);
-            if (afterElement == null) {
-                guideList.appendChild(draggedItem);
-            } else {
-                guideList.insertBefore(draggedItem, afterElement);
-            }
-        });
-    }
+    // 가이드 위로 이동 (모바일 친화적)
+    window.moveGuideUp = function(button) {
+        const item = button.closest('.guide-item');
+        const prev = item.previousElementSibling;
+        if (prev) {
+            item.parentNode.insertBefore(item, prev);
+            updateGuideNumbers();
+        }
+    };
 
-    function getDragAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll('.guide-item:not(.dragging)')];
-        
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
+    // 가이드 아래로 이동 (모바일 친화적)
+    window.moveGuideDown = function(button) {
+        const item = button.closest('.guide-item');
+        const next = item.nextElementSibling;
+        if (next) {
+            item.parentNode.insertBefore(next, item);
+            updateGuideNumbers();
+        }
+    };
+
+    // 가이드 번호 및 버튼 상태 업데이트
+    function updateGuideNumbers() {
+        const items = document.querySelectorAll('.guide-item');
+        items.forEach((item, index) => {
+            // 번호 업데이트
+            const label = item.querySelector('span.font-medium');
+            if (label) label.textContent = `가이드 ${index + 1}`;
             
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
+            // 버튼 상태 업데이트
+            const upBtn = item.querySelector('button:first-of-type');
+            const downBtn = item.querySelector('button:last-of-type');
+            
+            upBtn.disabled = (index === 0);
+            downBtn.disabled = (index === items.length - 1);
+        });
     }
 
     function savePrompts() {
