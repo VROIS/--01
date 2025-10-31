@@ -84,7 +84,7 @@ export interface IStorage {
   setFeatured(id: string, featured: boolean): Promise<void>;
   incrementDownloadCount(id: string): Promise<void>;
   deactivateHtmlPage(id: string): Promise<void>;
-  regenerateFeaturedHtml(id: string, metadata: { title: string; sender: string; location: string; date: string }): Promise<void>;
+  regenerateFeaturedHtml(id: string, metadata: { title: string; sender: string; location: string; date: string; guideIds?: string[] }): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -780,26 +780,33 @@ export class DatabaseStorage implements IStorage {
    * 목적: 관리자가 메타데이터를 수정하고 Featured HTML을 재생성
    * 
    * @param id - 공유 페이지 ID
-   * @param metadata - 수정할 메타데이터 (title, sender, location, date)
+   * @param metadata - 수정할 메타데이터 (title, sender, location, date, guideIds)
    * 
    * 작동 방식:
-   * 1. DB 메타데이터 업데이트
+   * 1. DB 메타데이터 업데이트 (guideIds 포함)
    * 2. HTML 파일 읽기
    * 3. 메타데이터 부분 교체 (정규식)
-   * 4. 리턴 버튼 추가 (Featured용)
-   * 5. HTML 파일 덮어쓰기
+   * 4. guideIds가 있으면 갤러리 순서 재생성 ⭐ NEW (2025-10-31)
+   * 5. 리턴 버튼 추가 (Featured용)
+   * 6. HTML 파일 덮어쓰기
    */
-  async regenerateFeaturedHtml(id: string, metadata: { title: string; sender: string; location: string; date: string }): Promise<void> {
-    // 1. DB 메타데이터 업데이트
+  async regenerateFeaturedHtml(id: string, metadata: { title: string; sender: string; location: string; date: string; guideIds?: string[] }): Promise<void> {
+    // 1. DB 메타데이터 업데이트 (guideIds 포함)
+    const updateData: any = {
+      name: metadata.title,
+      sender: metadata.sender,
+      location: metadata.location,
+      date: metadata.date,
+      updatedAt: new Date()
+    };
+    
+    if (metadata.guideIds) {
+      updateData.guideIds = metadata.guideIds;
+    }
+    
     await db
       .update(sharedHtmlPages)
-      .set({
-        name: metadata.title,
-        sender: metadata.sender,
-        location: metadata.location,
-        date: metadata.date,
-        updatedAt: new Date()
-      })
+      .set(updateData)
       .where(eq(sharedHtmlPages.id, id));
 
     // 2. HTML 파일 읽기
