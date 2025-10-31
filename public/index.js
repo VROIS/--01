@@ -2709,6 +2709,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             const { page, guides } = data;
             
+            console.log('📊 편집 데이터:', { page, guides, guidesCount: guides?.length });
+            
             // 2. 모달 입력 필드 채우기
             document.getElementById('editTitle').value = page.name || '';
             document.getElementById('editSender').value = page.sender || '여행자';
