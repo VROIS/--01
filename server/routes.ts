@@ -1383,6 +1383,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/admin/featured/:id/data - Featured 편집용 데이터 조회
+  app.get('/api/admin/featured/:id/data', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const page = await storage.getSharedHtmlPage(id);
+      
+      if (!page) {
+        return res.status(404).json({ error: '공유 페이지를 찾을 수 없습니다.' });
+      }
+      
+      // 가이드 정보 가져오기
+      const guides = await storage.getGuidesByIds(page.guideIds);
+      
+      res.json({
+        page,
+        guides
+      });
+    } catch (error) {
+      console.error('Featured 데이터 조회 오류:', error);
+      res.status(500).json({ error: '데이터 조회에 실패했습니다.' });
+    }
+  });
+
   // POST /api/admin/featured/:id/regenerate - Featured HTML 재생성
   // ⭐ 2025-10-31: guideIds 순서 변경 기능 추가
   app.post('/api/admin/featured/:id/regenerate', requireAdmin, async (req: any, res) => {

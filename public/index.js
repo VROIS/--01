@@ -2698,38 +2698,28 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             showToast('📝 편집 정보 불러오는 중...');
             
-            // 1. 공유 페이지 데이터 가져오기
-            const res = await fetch(`/api/share/${id}`);
+            // 1. 관리자용 API로 데이터 가져오기
+            const res = await fetch(`/api/admin/featured/${id}/data`, {
+                credentials: 'include'
+            });
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.error || '공유 페이지 로드 실패');
+                throw new Error(errorData.error || '데이터 로드 실패');
             }
             const data = await res.json();
-            const page = data.sharePage;
-            
-            if (!page.htmlFilePath) {
-                throw new Error('HTML 파일 경로가 없습니다');
-            }
+            const { page, guides } = data;
             
             // 2. 모달 입력 필드 채우기
-            document.getElementById('editTitle').value = page.name;
+            document.getElementById('editTitle').value = page.name || '';
             document.getElementById('editSender').value = page.sender || '여행자';
             document.getElementById('editLocation').value = page.location || '미지정';
             document.getElementById('editDate').value = page.date || new Date(page.createdAt).toISOString().split('T')[0];
             
-            // 3. HTML 파일에서 갤러리 아이템 파싱
-            const htmlRes = await fetch(page.htmlFilePath);
-            const htmlText = await htmlRes.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlText, 'text/html');
-            const galleryItems = doc.querySelectorAll('.gallery-item');
-            
-            // 4. 드래그 가능한 리스트 생성
-            const guideListHtml = Array.from(galleryItems).map((item, index) => {
-                const img = item.querySelector('img');
-                const imgSrc = img ? img.src : '';
+            // 3. 드래그 가능한 가이드 리스트 생성
+            const guideListHtml = guides.map((guide, index) => {
+                const imgSrc = guide.imageUrl || '';
                 return `
-                    <div class="guide-item flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 cursor-move hover:bg-yellow-50 transition" draggable="true" data-index="${index}">
+                    <div class="guide-item flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 cursor-move hover:bg-yellow-50 transition" draggable="true" data-guide-id="${guide.id}">
                         <span class="text-gray-400 text-xl">⋮⋮</span>
                         <img src="${imgSrc}" alt="가이드 ${index + 1}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
                         <span class="font-medium text-gray-700">가이드 ${index + 1}</span>
@@ -2739,24 +2729,30 @@ document.addEventListener('DOMContentLoaded', () => {
             
             document.getElementById('guideList').innerHTML = guideListHtml;
             
-            // 5. Drag & Drop 이벤트 추가
+            // 4. Drag & Drop 이벤트 추가
             initDragAndDrop();
             
-            // 6. 모달 표시
+            // 5. 모달 표시
             document.getElementById('editFeaturedModal').classList.remove('hidden');
             
-            // 7. 저장 버튼 클릭 이벤트
+            // 6. 저장 버튼 클릭 이벤트
             document.getElementById('saveFeaturedBtn').onclick = async () => {
                 const title = document.getElementById('editTitle').value;
                 const sender = document.getElementById('editSender').value;
                 const location = document.getElementById('editLocation').value;
                 const date = document.getElementById('editDate').value;
                 
-                // 가이드 순서 가져오기
+                if (!title || !sender || !location || !date) {
+                    showToast('❌ 모든 필드를 입력해주세요.');
+                    return;
+                }
+                
+                // 가이드 순서 가져오기 (올바른 가이드 ID 사용)
                 const guideItems = document.querySelectorAll('.guide-item');
-                const newGuideIds = Array.from(guideItems).map(item => parseInt(item.dataset.index));
+                const newGuideIds = Array.from(guideItems).map(item => parseInt(item.dataset.guideId));
                 
                 try {
+                    showToast('💾 저장 중...');
                     const response = await fetch(`/api/admin/featured/${id}/regenerate`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -2770,7 +2766,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         })
                     });
                     
-                    if (!response.ok) throw new Error('HTML 재생성 실패');
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'HTML 재생성 실패');
+                    }
                     
                     showToast('✅ Featured 페이지가 업데이트되었습니다!');
                     closeEditModal();
