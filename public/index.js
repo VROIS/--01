@@ -2602,6 +2602,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button onclick="window.open('/s/${page.id}', '_blank')" class="text-purple-600 hover:text-purple-800 text-sm font-medium">
                             👁️ 미리보기
                         </button>
+                        <button onclick="editFeatured('${page.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            ✏️ 편집
+                        </button>
                         <button onclick="removeFeatured('${page.id}')" class="text-red-500 hover:text-red-700 text-sm">
                             ✕ 제거
                         </button>
