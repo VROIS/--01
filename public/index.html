@@ -949,7 +949,12 @@
                 <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-yellow-500">
                     <div class="flex items-center justify-between mb-3">
                         <h2 class="text-lg font-semibold text-gray-800">⭐ Featured 갤러리 관리</h2>
-                        <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">관리자 전용</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="window.open('/admin-dashboard.html', '_blank')" class="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 font-semibold transition-all shadow-lg text-sm">
+                                📊 관리자 대시보드
+                            </button>
+                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">관리자 전용</span>
+                        </div>
                     </div>
                     <p class="text-sm text-gray-500 mb-4">추천 갤러리에 표시할 공유 페이지를 검색하세요 (최대 3개)</p>
                     
