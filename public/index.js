@@ -1102,15 +1102,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function showSettingsPage() {
         pauseCamera();
-        // Reset settings page state
-        authPassword.value = '';
-        authSection.classList.remove('hidden');
-        promptSettingsSection.classList.add('hidden');
         
-        // 🔒 대시보드 링크 숨기기 (관리자 인증 후에만 표시)
-        const dashboardLink = document.getElementById('adminDashboardLink');
-        if (dashboardLink) {
-            dashboardLink.classList.add('hidden');
+        // 🔐 관리자 인증 세션 확인 (localStorage에 저장된 세션)
+        const isAdminAuthenticated = localStorage.getItem('adminAuthenticated') === 'true';
+        const authTime = localStorage.getItem('adminAuthTime');
+        const isSessionValid = authTime && (Date.now() - parseInt(authTime)) < 24 * 60 * 60 * 1000; // 24시간 유효
+        
+        if (isAdminAuthenticated && isSessionValid) {
+            // 세션 유효 - 관리자 섹션 자동 표시
+            authSection.classList.add('hidden');
+            promptSettingsSection.classList.remove('hidden');
+            
+            const dashboardLink = document.getElementById('adminDashboardLink');
+            if (dashboardLink) {
+                dashboardLink.classList.remove('hidden');
+            }
+            
+            // Featured 관리 데이터 로드
+            await loadAdminData();
+        } else {
+            // 세션 없음 또는 만료 - 로그인 화면 표시
+            authPassword.value = '';
+            authSection.classList.remove('hidden');
+            promptSettingsSection.classList.add('hidden');
+            
+            const dashboardLink = document.getElementById('adminDashboardLink');
+            if (dashboardLink) {
+                dashboardLink.classList.add('hidden');
+            }
         }
         
         populatePromptTextareas(); // Load saved or default prompts
@@ -2472,7 +2491,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (response.ok) {
-                // 인증 성공
+                // 인증 성공 - localStorage에 세션 저장 (유지)
+                localStorage.setItem('adminAuthenticated', 'true');
+                localStorage.setItem('adminAuthTime', Date.now().toString());
+                
                 authSection.classList.add('hidden');
                 promptSettingsSection.classList.remove('hidden');
                 showToast('관리자 인증 성공');
@@ -2597,15 +2619,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             list.innerHTML = featured.map(page => `
                 <div class="flex items-center justify-between p-2 bg-yellow-50 rounded">
-                    <span class="text-sm">${page.name}</span>
+                    <span class="text-sm font-medium text-gray-800">${page.name}</span>
                     <div class="flex items-center gap-2">
-                        <button onclick="window.open('/s/${page.id}', '_blank')" class="text-purple-600 hover:text-purple-800 text-sm font-medium">
-                            👁️ 미리보기
-                        </button>
                         <button onclick="editFeatured('${page.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                             ✏️ 편집
                         </button>
-                        <button onclick="removeFeatured('${page.id}')" class="text-red-500 hover:text-red-700 text-sm">
+                        <button onclick="removeFeatured('${page.id}')" class="text-red-500 hover:text-red-700 text-sm font-medium">
                             ✕ 제거
                         </button>
                     </div>
@@ -2677,11 +2696,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Featured 편집 모달
     window.editFeatured = async function(id) {
         try {
+            showToast('📝 편집 정보 불러오는 중...');
+            
             // 1. 공유 페이지 데이터 가져오기
             const res = await fetch(`/api/share/${id}`);
-            if (!res.ok) throw new Error('공유 페이지 로드 실패');
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || '공유 페이지 로드 실패');
+            }
             const data = await res.json();
             const page = data.sharePage;
+            
+            if (!page.htmlFilePath) {
+                throw new Error('HTML 파일 경로가 없습니다');
+            }
             
             // 2. 모달 입력 필드 채우기
             document.getElementById('editTitle').value = page.name;
