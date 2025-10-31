@@ -2598,9 +2598,14 @@ document.addEventListener('DOMContentLoaded', () => {
             list.innerHTML = featured.map(page => `
                 <div class="flex items-center justify-between p-2 bg-yellow-50 rounded">
                     <span class="text-sm">${page.name}</span>
-                    <button onclick="removeFeatured('${page.id}')" class="text-red-500 hover:text-red-700 text-sm">
-                        ✕ 제거
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.open('/s/${page.id}', '_blank')" class="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                            👁️ 미리보기
+                        </button>
+                        <button onclick="removeFeatured('${page.id}')" class="text-red-500 hover:text-red-700 text-sm">
+                            ✕ 제거
+                        </button>
+                    </div>
                 </div>
             `).join('');
         } catch (error) {
