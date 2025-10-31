@@ -2674,6 +2674,139 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Featured 편집 모달
+    window.editFeatured = async function(id) {
+        try {
+            // 1. 공유 페이지 데이터 가져오기
+            const res = await fetch(`/api/share/${id}`);
+            if (!res.ok) throw new Error('공유 페이지 로드 실패');
+            const data = await res.json();
+            const page = data.sharePage;
+            
+            // 2. 모달 입력 필드 채우기
+            document.getElementById('editTitle').value = page.name;
+            document.getElementById('editSender').value = page.sender || '여행자';
+            document.getElementById('editLocation').value = page.location || '미지정';
+            document.getElementById('editDate').value = page.date || new Date(page.createdAt).toISOString().split('T')[0];
+            
+            // 3. HTML 파일에서 갤러리 아이템 파싱
+            const htmlRes = await fetch(page.htmlFilePath);
+            const htmlText = await htmlRes.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, 'text/html');
+            const galleryItems = doc.querySelectorAll('.gallery-item');
+            
+            // 4. 드래그 가능한 리스트 생성
+            const guideListHtml = Array.from(galleryItems).map((item, index) => {
+                const img = item.querySelector('img');
+                const imgSrc = img ? img.src : '';
+                return `
+                    <div class="guide-item flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 cursor-move hover:bg-yellow-50 transition" draggable="true" data-index="${index}">
+                        <span class="text-gray-400 text-xl">⋮⋮</span>
+                        <img src="${imgSrc}" alt="가이드 ${index + 1}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                        <span class="font-medium text-gray-700">가이드 ${index + 1}</span>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('guideList').innerHTML = guideListHtml;
+            
+            // 5. Drag & Drop 이벤트 추가
+            initDragAndDrop();
+            
+            // 6. 모달 표시
+            document.getElementById('editFeaturedModal').classList.remove('hidden');
+            
+            // 7. 저장 버튼 클릭 이벤트
+            document.getElementById('saveFeaturedBtn').onclick = async () => {
+                const title = document.getElementById('editTitle').value;
+                const sender = document.getElementById('editSender').value;
+                const location = document.getElementById('editLocation').value;
+                const date = document.getElementById('editDate').value;
+                
+                // 가이드 순서 가져오기
+                const guideItems = document.querySelectorAll('.guide-item');
+                const newGuideIds = Array.from(guideItems).map(item => parseInt(item.dataset.index));
+                
+                try {
+                    const response = await fetch(`/api/admin/featured/${id}/regenerate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            title,
+                            sender,
+                            location,
+                            date,
+                            guideIds: newGuideIds
+                        })
+                    });
+                    
+                    if (!response.ok) throw new Error('HTML 재생성 실패');
+                    
+                    showToast('✅ Featured 페이지가 업데이트되었습니다!');
+                    closeEditModal();
+                    loadFeaturedList();
+                } catch (error) {
+                    console.error('Featured 편집 오류:', error);
+                    showToast('❌ 편집 실패: ' + error.message);
+                }
+            };
+        } catch (error) {
+            console.error('Featured 편집 오류:', error);
+            showToast('❌ 편집 실패: ' + error.message);
+        }
+    };
+
+    // 모달 닫기
+    window.closeEditModal = function() {
+        document.getElementById('editFeaturedModal').classList.add('hidden');
+    };
+
+    // Drag & Drop 초기화
+    function initDragAndDrop() {
+        const guideList = document.getElementById('guideList');
+        let draggedItem = null;
+        
+        guideList.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('guide-item')) {
+                draggedItem = e.target;
+                e.target.style.opacity = '0.5';
+            }
+        });
+        
+        guideList.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('guide-item')) {
+                e.target.style.opacity = '1';
+            }
+        });
+        
+        guideList.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(guideList, e.clientY);
+            if (afterElement == null) {
+                guideList.appendChild(draggedItem);
+            } else {
+                guideList.insertBefore(draggedItem, afterElement);
+            }
+        });
+    }
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.guide-item:not(.dragging)')];
+        
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
     function savePrompts() {
         const imagePrompt = imagePromptTextarea.value.trim();
         const textPrompt = textPromptTextarea.value.trim();
