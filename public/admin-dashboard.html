@@ -61,6 +61,28 @@ API Endpoints:
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .guide-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: move;
+            transition: all 0.2s;
+        }
+        .guide-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+        .drag-handle {
+            margin-left: auto;
+            color: #9ca3af;
+            font-size: 20px;
+            cursor: grab;
+        }
     </style>
 </head>
 <body class="p-6">
@@ -403,24 +425,57 @@ API Endpoints:
         // Featured 편집 모달
         async function editFeatured(id) {
             try {
+                // 1. 공유 페이지 데이터 가져오기
                 const res = await fetch(`/api/share/${id}`);
                 if (!res.ok) throw new Error('공유 페이지 로드 실패');
                 const data = await res.json();
                 const page = data.sharePage;
                 
-                const newTitle = prompt('제목을 수정하세요:', page.name);
-                if (!newTitle) return;
+                // 2. 모달 입력 필드 채우기
+                document.getElementById('editTitle').value = page.name;
+                document.getElementById('editSender').value = page.sender || '여행자';
+                document.getElementById('editLocation').value = page.location || '미지정';
+                document.getElementById('editDate').value = page.date || new Date(page.createdAt).toISOString().split('T')[0];
                 
-                const newSender = prompt('발신자 이름을 수정하세요:', page.sender || '여행자');
-                if (!newSender) return;
+                // 3. HTML 파일에서 갤러리 아이템 파싱
+                const htmlRes = await fetch(page.htmlFilePath);
+                const htmlText = await htmlRes.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                const galleryItems = doc.querySelectorAll('.gallery-item');
                 
-                const newLocation = prompt('위치를 수정하세요:', page.location || '미지정');
-                if (!newLocation) return;
+                // 4. 드래그 가능한 리스트 생성
+                const guideListHtml = Array.from(galleryItems).map((item, index) => {
+                    const img = item.querySelector('img');
+                    const imgSrc = img ? img.src : '';
+                    return `
+                        <div class="guide-item" draggable="true" data-index="${index}">
+                            <img src="${imgSrc}" alt="가이드 ${index + 1}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                            <span>가이드 ${index + 1}</span>
+                            <span class="drag-handle">⋮⋮</span>
+                        </div>
+                    `;
+                }).join('');
                 
-                const newDate = prompt('날짜를 수정하세요 (YYYY-MM-DD):', page.date || new Date(page.createdAt).toISOString().split('T')[0]);
-                if (!newDate) return;
+                document.getElementById('guideList').innerHTML = guideListHtml;
                 
-                if (confirm(`이 콘텐츠를 수정하고 HTML을 재생성하시겠습니까?\n\n제목: ${newTitle}\n발신자: ${newSender}\n위치: ${newLocation}\n날짜: ${newDate}`)) {
+                // 5. Drag & Drop 이벤트 추가
+                initDragAndDrop();
+                
+                // 6. 모달 표시
+                document.getElementById('editFeaturedModal').classList.remove('hidden');
+                
+                // 7. 저장 버튼 클릭 이벤트
+                document.getElementById('saveFeaturedBtn').onclick = async () => {
+                    const newTitle = document.getElementById('editTitle').value;
+                    const newSender = document.getElementById('editSender').value;
+                    const newLocation = document.getElementById('editLocation').value;
+                    const newDate = document.getElementById('editDate').value;
+                    
+                    // 새 순서 추출
+                    const guideItems = document.querySelectorAll('.guide-item');
+                    const newGuideIds = Array.from(guideItems).map(item => item.dataset.index);
+                    
                     const updateRes = await fetch(`/api/admin/featured/${id}/regenerate`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -428,15 +483,17 @@ API Endpoints:
                             title: newTitle,
                             sender: newSender,
                             location: newLocation,
-                            date: newDate
+                            date: newDate,
+                            guideIds: newGuideIds
                         })
                     });
                     
                     if (!updateRes.ok) throw new Error('HTML 재생성 실패');
                     
                     alert('✅ HTML이 성공적으로 재생성되었습니다!');
+                    closeEditModal();
                     loadFeaturedList();
-                }
+                };
             } catch (error) {
                 console.error('Featured 편집 오류:', error);
                 alert('❌ 편집 실패: ' + error.message);
@@ -462,8 +519,112 @@ API Endpoints:
             }
         }
 
+        // Drag & Drop 헬퍼 함수
+        function initDragAndDrop() {
+            const guideList = document.getElementById('guideList');
+            let draggedItem = null;
+            
+            guideList.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('guide-item')) {
+                    draggedItem = e.target;
+                    e.target.style.opacity = '0.5';
+                }
+            });
+            
+            guideList.addEventListener('dragend', (e) => {
+                if (e.target.classList.contains('guide-item')) {
+                    e.target.style.opacity = '1';
+                }
+            });
+            
+            guideList.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(guideList, e.clientY);
+                if (afterElement == null) {
+                    guideList.appendChild(draggedItem);
+                } else {
+                    guideList.insertBefore(draggedItem, afterElement);
+                }
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.guide-item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function closeEditModal() {
+            document.getElementById('editFeaturedModal').classList.add('hidden');
+        }
+
         // 페이지 로드 시 데이터 불러오기
         loadData();
     </script>
+
+    <!-- Featured 편집 모달 -->
+    <div id="editFeaturedModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <!-- 모달 헤더 -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800">✏️ Featured 콘텐츠 편집</h2>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 모달 바디 -->
+            <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 200px);">
+                <!-- 입력 필드 -->
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">제목</label>
+                        <input id="editTitle" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">발신자</label>
+                        <input id="editSender" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">위치</label>
+                        <input id="editLocation" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">날짜</label>
+                        <input id="editDate" type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    </div>
+                </div>
+
+                <!-- 가이드 목록 -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">콘텐츠 순서 (드래그로 변경)</h3>
+                    <div id="guideList" class="space-y-2 p-4 bg-gray-50 rounded-lg" style="max-height: 400px; overflow-y: auto;">
+                        <!-- 동적 생성 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 모달 푸터 -->
+            <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+                <button onclick="closeEditModal()" class="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 font-semibold transition-colors">
+                    취소
+                </button>
+                <button id="saveFeaturedBtn" class="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 font-semibold transition-all shadow-lg">
+                    저장 및 HTML 재생성
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
