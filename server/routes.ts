@@ -1384,10 +1384,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST /api/admin/featured/:id/regenerate - Featured HTML 재생성
+  // ⭐ 2025-10-31: guideIds 순서 변경 기능 추가
   app.post('/api/admin/featured/:id/regenerate', requireAdmin, async (req: any, res) => {
     try {
       const { id } = req.params;
-      const { title, sender, location, date } = req.body;
+      const { title, sender, location, date, guideIds } = req.body;
       
       if (!title || !sender || !location || !date) {
         return res.status(400).json({ error: '모든 필드를 입력해주세요.' });
@@ -1400,11 +1401,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // HTML 재생성 (isFeatured=true)
+      // guideIds가 있으면 순서 변경, 없으면 기존 순서 유지
       await storage.regenerateFeaturedHtml(id, {
         title,
         sender,
         location,
-        date
+        date,
+        guideIds: guideIds || page.guideIds // 옵션: 순서 변경
       });
       
       res.json({ success: true, message: 'HTML이 재생성되었습니다.' });
