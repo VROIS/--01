@@ -1408,14 +1408,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (fs.existsSync(htmlPath)) {
           const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
           
-          // shareData JSON 추출
+          // 방법 1: shareData JSON 추출 (generate-standalone.js로 생성된 경우)
           const shareDataMatch = htmlContent.match(/const shareData = ({[\s\S]*?});/);
           if (shareDataMatch) {
             try {
               const shareData = JSON.parse(shareDataMatch[1]);
               console.log('📦 ShareData 파싱 성공:', { contentsCount: shareData.contents?.length });
               
-              // contents 배열을 guides 형식으로 변환
               guides = (shareData.contents || []).map((item: any, index: number) => ({
                 id: page.guideIds[index] || `guide-${index}`,
                 userId: page.userId,
@@ -1432,12 +1431,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 updatedAt: page.createdAt
               }));
               
-              console.log('✅ HTML에서 가이드 추출 완료:', { guidesCount: guides.length });
+              console.log('✅ ShareData에서 가이드 추출 완료:', { guidesCount: guides.length });
             } catch (parseError) {
               console.error('❌ ShareData JSON 파싱 실패:', parseError);
             }
           } else {
-            console.warn('⚠️ HTML에서 shareData를 찾을 수 없음');
+            // 방법 2: gallery-item 태그 파싱 (regenerateFeaturedHtml로 생성된 경우)
+            console.log('📦 gallery-item 파싱 시도...');
+            const galleryItemRegex = /<div[^>]*class="gallery-item"[^>]*data-id="([^"]*)"[^>]*>\s*<img[^>]*src="([^"]*)"[^>]*>\s*<p>([^<]*)<\/p>/g;
+            let match;
+            const parsedGuides: any[] = [];
+            
+            while ((match = galleryItemRegex.exec(htmlContent)) !== null) {
+              const [, dataId, imgSrc, title] = match;
+              parsedGuides.push({
+                id: dataId || `guide-${parsedGuides.length}`,
+                userId: page.userId,
+                title: title.trim(),
+                description: '',
+                imageUrl: imgSrc,
+                latitude: null,
+                longitude: null,
+                locationName: page.location || '',
+                aiGeneratedContent: '',
+                viewCount: 0,
+                language: 'ko',
+                createdAt: page.createdAt,
+                updatedAt: page.createdAt
+              });
+            }
+            
+            if (parsedGuides.length > 0) {
+              guides = parsedGuides;
+              console.log('✅ gallery-item에서 가이드 추출 완료:', { guidesCount: guides.length });
+            } else {
+              console.warn('⚠️ HTML에서 가이드 정보를 찾을 수 없음');
+            }
           }
         } else {
           console.warn('⚠️ HTML 파일이 존재하지 않음:', htmlPath);
