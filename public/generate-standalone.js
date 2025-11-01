@@ -264,6 +264,19 @@ function generateStandaloneHTML(shareData, shareId) {
             }
         });
         
+        // Service Worker 등록 (오프라인 지원)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker 등록 성공:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('❌ Service Worker 등록 실패:', error);
+                    });
+            });
+        }
+        
         console.log('독립형 가이드북이 로드되었습니다!');
     </script>
 </body>
