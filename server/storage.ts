@@ -557,16 +557,17 @@ export class DatabaseStorage implements IStorage {
         fs.writeFileSync(fullPath, page.htmlContent, 'utf8');
         console.log(`✅ HTML 파일 저장: ${htmlFilePath}`);
         
-        // DB에는 경로만 저장 (htmlContent 제외)
-        const { htmlContent, ...pageWithoutHtml } = page;
-        
+        // ⚠️ DB에 htmlContent도 함께 저장 (배포 시 파일 삭제 대비!)
+        // 배포 환경에서는 파일 시스템이 persistent하지 않으므로,
+        // DB에 htmlContent를 저장하여 fallback으로 사용
         const [newPage] = await db
           .insert(sharedHtmlPages)
           .values({ 
+            ...page,
             id: shortId,
             userId: userId,
             htmlFilePath: htmlFilePath,
-            ...pageWithoutHtml
+            htmlContent: page.htmlContent // ← htmlContent도 DB에 저장!
           })
           .returning();
         
