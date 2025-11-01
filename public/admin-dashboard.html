@@ -428,11 +428,14 @@ API Endpoints:
         // Featured 편집 모달
         async function editFeatured(id) {
             try {
-                // 1. 공유 페이지 데이터 가져오기
-                const res = await fetch(`/api/share/${id}`);
+                // 1. Featured 데이터 가져오기 (가이드 정보 포함)
+                const res = await fetch(`/api/admin/featured/${id}/data`);
                 if (!res.ok) throw new Error('공유 페이지 로드 실패');
                 const data = await res.json();
-                const page = data.sharePage;
+                const page = data.page;
+                const guides = data.guides || [];
+                
+                console.log('📋 편집 모달 데이터:', { page, guidesCount: guides.length, guides });
                 
                 // 2. 모달 입력 필드 채우기
                 document.getElementById('editTitle').value = page.name;
@@ -440,44 +443,44 @@ API Endpoints:
                 document.getElementById('editLocation').value = page.location || '미지정';
                 document.getElementById('editDate').value = page.date || new Date(page.createdAt).toISOString().split('T')[0];
                 
-                // 3. HTML 파일에서 갤러리 아이템 파싱
-                const htmlRes = await fetch(page.htmlFilePath);
-                const htmlText = await htmlRes.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlText, 'text/html');
-                const galleryItems = doc.querySelectorAll('.gallery-item');
+                // 3. 가이드 목록 생성 (▲▼ 버튼으로 순서 변경)
+                if (guides.length === 0) {
+                    document.getElementById('guideList').innerHTML = '<p class="text-center text-gray-500 py-4">가이드가 없습니다.</p>';
+                } else {
+                    const guideListHtml = guides.map((guide, index) => {
+                        return `
+                            <div class="guide-item flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg" data-guide-id="${guide.id}">
+                                <img src="${guide.imageUrl || '/assets/placeholder.png'}" alt="${guide.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                <div class="flex-1">
+                                    <div class="font-semibold text-gray-800">가이드 ${index + 1}</div>
+                                    <div class="text-sm text-gray-500">${guide.title || '제목 없음'}</div>
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <button onclick="moveGuideUp(${index})" ${index === 0 ? 'disabled' : ''} class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed">▲</button>
+                                    <button onclick="moveGuideDown(${index})" ${index === guides.length - 1 ? 'disabled' : ''} class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed">▼</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    document.getElementById('guideList').innerHTML = guideListHtml;
+                }
                 
-                // 4. 드래그 가능한 리스트 생성
-                const guideListHtml = Array.from(galleryItems).map((item, index) => {
-                    const img = item.querySelector('img');
-                    const imgSrc = img ? img.src : '';
-                    return `
-                        <div class="guide-item" draggable="true" data-index="${index}">
-                            <img src="${imgSrc}" alt="가이드 ${index + 1}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
-                            <span>가이드 ${index + 1}</span>
-                            <span class="drag-handle">⋮⋮</span>
-                        </div>
-                    `;
-                }).join('');
-                
-                document.getElementById('guideList').innerHTML = guideListHtml;
-                
-                // 5. Drag & Drop 이벤트 추가
-                initDragAndDrop();
-                
-                // 6. 모달 표시
+                // 4. 모달 표시
                 document.getElementById('editFeaturedModal').classList.remove('hidden');
                 
-                // 7. 저장 버튼 클릭 이벤트
+                // 5. 저장 버튼 클릭 이벤트
                 document.getElementById('saveFeaturedBtn').onclick = async () => {
                     const newTitle = document.getElementById('editTitle').value;
                     const newSender = document.getElementById('editSender').value;
                     const newLocation = document.getElementById('editLocation').value;
                     const newDate = document.getElementById('editDate').value;
                     
-                    // 새 순서 추출
+                    // 새 순서 추출 (guide-id 기준)
                     const guideItems = document.querySelectorAll('.guide-item');
-                    const newGuideIds = Array.from(guideItems).map(item => item.dataset.index);
+                    const newGuideIds = Array.from(guideItems).map(item => item.dataset.guideId);
+                    
+                    console.log('💾 저장할 데이터:', { newTitle, newSender, newLocation, newDate, newGuideIds });
                     
                     const updateRes = await fetch(`/api/admin/featured/${id}/regenerate`, {
                         method: 'POST',
@@ -522,48 +525,55 @@ API Endpoints:
             }
         }
 
-        // Drag & Drop 헬퍼 함수
-        function initDragAndDrop() {
+        // ▲▼ 버튼으로 가이드 순서 변경
+        function moveGuideUp(index) {
             const guideList = document.getElementById('guideList');
-            let draggedItem = null;
+            const items = guideList.querySelectorAll('.guide-item');
             
-            guideList.addEventListener('dragstart', (e) => {
-                if (e.target.classList.contains('guide-item')) {
-                    draggedItem = e.target;
-                    e.target.style.opacity = '0.5';
-                }
-            });
-            
-            guideList.addEventListener('dragend', (e) => {
-                if (e.target.classList.contains('guide-item')) {
-                    e.target.style.opacity = '1';
-                }
-            });
-            
-            guideList.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                const afterElement = getDragAfterElement(guideList, e.clientY);
-                if (afterElement == null) {
-                    guideList.appendChild(draggedItem);
-                } else {
-                    guideList.insertBefore(draggedItem, afterElement);
-                }
-            });
+            if (index > 0 && index < items.length) {
+                const currentItem = items[index];
+                const previousItem = items[index - 1];
+                guideList.insertBefore(currentItem, previousItem);
+                updateGuideNumbers();
+            }
         }
 
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.guide-item:not(.dragging)')];
+        function moveGuideDown(index) {
+            const guideList = document.getElementById('guideList');
+            const items = guideList.querySelectorAll('.guide-item');
             
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
+            if (index >= 0 && index < items.length - 1) {
+                const currentItem = items[index];
+                const nextItem = items[index + 1];
+                if (nextItem.nextSibling) {
+                    guideList.insertBefore(currentItem, nextItem.nextSibling);
                 } else {
-                    return closest;
+                    guideList.appendChild(currentItem);
                 }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
+                updateGuideNumbers();
+            }
+        }
+
+        function updateGuideNumbers() {
+            const items = document.querySelectorAll('.guide-item');
+            items.forEach((item, index) => {
+                const titleDiv = item.querySelector('.font-semibold');
+                if (titleDiv) {
+                    titleDiv.textContent = `가이드 ${index + 1}`;
+                }
+                
+                const upBtn = item.querySelectorAll('button')[0];
+                const downBtn = item.querySelectorAll('button')[1];
+                
+                if (upBtn) {
+                    upBtn.disabled = (index === 0);
+                    upBtn.onclick = () => moveGuideUp(index);
+                }
+                if (downBtn) {
+                    downBtn.disabled = (index === items.length - 1);
+                    downBtn.onclick = () => moveGuideDown(index);
+                }
+            });
         }
 
         function closeEditModal() {
@@ -611,7 +621,7 @@ API Endpoints:
 
                 <!-- 가이드 목록 -->
                 <div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-3">콘텐츠 순서 (드래그로 변경)</h3>
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">콘텐츠 순서 (▲▼ 버튼으로 변경)</h3>
                     <div id="guideList" class="space-y-2 p-4 bg-gray-50 rounded-lg" style="max-height: 400px; overflow-y: auto;">
                         <!-- 동적 생성 -->
                     </div>
