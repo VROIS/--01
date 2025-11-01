@@ -1697,6 +1697,11 @@ self.addEventListener('fetch', (event) => {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Content-Disposition', 'inline');
       
+      // 🚫 캐시 방지 - 사용자가 항상 최신 버전을 볼 수 있도록
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
       // htmlFilePath가 있으면 파일에서 읽기, 없으면 DB에서 읽기 (하위 호환성)
       if (page.htmlFilePath) {
         const fullPath = path.join(process.cwd(), 'public', page.htmlFilePath);
