@@ -35,7 +35,9 @@ export default defineConfig({
           'imageOptimizer.js',
           'performanceMonitor.js',
           'generate-standalone.js',
-          'tailwind.css'
+          'tailwind.css',
+          'admin-dashboard.html',
+          'user-guide.html'
         ];
         
         filesToCopy.forEach(file => {
