@@ -90,9 +90,44 @@ function generateStandaloneHTML(shareData, shareId) {
         }
         
         .hidden { display: none !important; }
+        
+        .close-window-btn {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            width: 3rem;
+            height: 3rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 50%;
+            color: var(--gemini-blue);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .close-window-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: scale(1.1);
+        }
+        
+        .close-window-btn:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
+    <!-- 닫기 버튼 (새 창으로 열렸을 때만 표시) -->
+    <button id="closeWindowBtn" class="close-window-btn" onclick="window.close()" title="페이지 닫기">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
+
     <div class="container">
         <header class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">${shareData.name || '공유된 가이드북'}</h1>
@@ -143,6 +178,14 @@ function generateStandaloneHTML(shareData, shareId) {
     <script>
         // 공유 데이터
         const shareData = ${JSON.stringify(shareData, null, 2)};
+        
+        // 새 창으로 열린 경우 닫기 버튼 표시
+        if (window.opener) {
+            const closeBtn = document.getElementById('closeWindowBtn');
+            if (closeBtn) {
+                closeBtn.style.display = 'flex';
+            }
+        }
         
         let currentIndex = 0;
         let speechSynthesis = window.speechSynthesis;
