@@ -1395,10 +1395,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('📋 공유 페이지:', { id, guideIds: page.guideIds, guideIdsCount: page.guideIds?.length });
       
-      // 가이드 정보 가져오기
-      const guides = await storage.getGuidesByIds(page.guideIds);
+      // 가이드 정보 가져오기 (DB에서)
+      let guides = await storage.getGuidesByIds(page.guideIds);
       
-      console.log('📋 조회된 가이드:', { guidesCount: guides?.length, guides: guides?.map(g => ({ id: g.id, userId: g.userId })) });
+      console.log('📋 조회된 가이드 (DB):', { guidesCount: guides?.length });
+      
+      // DB에 가이드가 없으면 HTML 파일에서 파싱
+      if (guides.length === 0 && page.htmlFilePath) {
+        const htmlPath = path.join(process.cwd(), 'public', page.htmlFilePath);
+        console.log('📄 HTML 파싱 시도:', htmlPath);
+        
+        if (fs.existsSync(htmlPath)) {
+          const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+          
+          // shareData JSON 추출
+          const shareDataMatch = htmlContent.match(/const shareData = ({[\s\S]*?});/);
+          if (shareDataMatch) {
+            try {
+              const shareData = JSON.parse(shareDataMatch[1]);
+              console.log('📦 ShareData 파싱 성공:', { contentsCount: shareData.contents?.length });
+              
+              // contents 배열을 guides 형식으로 변환
+              guides = (shareData.contents || []).map((item: any, index: number) => ({
+                id: page.guideIds[index] || `guide-${index}`,
+                userId: page.userId,
+                title: item.description?.substring(0, 50) || `가이드 ${index + 1}`,
+                description: item.description || '',
+                imageUrl: item.imageDataUrl || '',
+                latitude: null,
+                longitude: null,
+                locationName: item.location || page.location || '',
+                aiGeneratedContent: item.description || '',
+                viewCount: 0,
+                language: 'ko',
+                createdAt: page.createdAt,
+                updatedAt: page.createdAt
+              }));
+              
+              console.log('✅ HTML에서 가이드 추출 완료:', { guidesCount: guides.length });
+            } catch (parseError) {
+              console.error('❌ ShareData JSON 파싱 실패:', parseError);
+            }
+          } else {
+            console.warn('⚠️ HTML에서 shareData를 찾을 수 없음');
+          }
+        } else {
+          console.warn('⚠️ HTML 파일이 존재하지 않음:', htmlPath);
+        }
+      }
       
       res.json({
         page,
