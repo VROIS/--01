@@ -98,7 +98,7 @@ function generateStandaloneHTML(shareData, shareId) {
             z-index: 1000;
             width: 3rem;
             height: 3rem;
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
             background: rgba(0, 0, 0, 0.6);
@@ -108,6 +108,7 @@ function generateStandaloneHTML(shareData, shareId) {
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: none;
         }
         
         .close-window-btn:hover {
@@ -121,7 +122,7 @@ function generateStandaloneHTML(shareData, shareId) {
     </style>
 </head>
 <body>
-    <!-- 닫기 버튼 (새 창으로 열렸을 때만 표시) -->
+    <!-- 닫기 버튼 (모든 공유 페이지에 표시) -->
     <button id="closeWindowBtn" class="close-window-btn" onclick="window.close()" title="페이지 닫기">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -178,14 +179,6 @@ function generateStandaloneHTML(shareData, shareId) {
     <script>
         // 공유 데이터
         const shareData = ${JSON.stringify(shareData, null, 2)};
-        
-        // 새 창으로 열린 경우 닫기 버튼 표시
-        if (window.opener) {
-            const closeBtn = document.getElementById('closeWindowBtn');
-            if (closeBtn) {
-                closeBtn.style.display = 'flex';
-            }
-        }
         
         let currentIndex = 0;
         let speechSynthesis = window.speechSynthesis;
