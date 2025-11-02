@@ -2335,8 +2335,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     };
 
-    // ⚠️ 2025.11.02: Featured 갤러리 클릭 핸들러 - 반응형 새창 열기
-    // 핵심: window.open으로 반응형 사이즈 새창에서 열어 보관함 세션 유지
+    // ⚠️ 2025.11.02 FIX: Featured 갤러리 - 현재 탭에서 열기 (인증 플로우 단순화)
+    // 핵심: 새 창이 아닌 현재 탭에서 열고, X 버튼으로 /archive 복귀
     window.handleFeaturedClick = async function(shareUrl) {
         console.log('🔵 Featured Gallery clicked:', shareUrl);
         try {
@@ -2344,18 +2344,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/auth/user');
             console.log('🔵 Auth status:', response.ok, response.status);
             if (response.ok) {
-                // 로그인되어 있으면 반응형 새창에서 페이지 열기
-                console.log('✅ Opening page in responsive window:', shareUrl);
-                
-                // 반응형 새창 크기 계산 (모바일: 전체 화면, 데스크톱: 50% 너비)
-                const isMobile = window.innerWidth <= 768;
-                const width = isMobile ? window.screen.width : Math.floor(window.screen.width * 0.5);
-                const height = window.screen.height;
-                const left = isMobile ? 0 : Math.floor(window.screen.width * 0.25);
-                const top = 0;
-                
-                const windowFeatures = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
-                window.open(shareUrl, '_blank', windowFeatures);
+                // 로그인되어 있으면 현재 탭에서 페이지 열기
+                console.log('✅ Opening page in current tab:', shareUrl);
+                window.location.href = shareUrl;
             } else {
                 // 로그인되어 있지 않으면 URL 저장 후 인증 모달 표시
                 console.log('❌ Not authenticated, showing auth modal');
