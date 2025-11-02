@@ -103,22 +103,31 @@ export async function setupGoogleAuth(app: Express) {
             return res.redirect("/archive?auth=failed");
           }
           
-          // ⚠️ 2025.11.02 근본 해결: 팝업이면 닫고, 원래 창에서 인증 체크
-          res.send(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>인증 완료</title>
-              <meta charset="UTF-8">
-            </head>
-            <body>
-              <script>
-                // 팝업 즉시 닫기 (opener가 자동으로 인증 상태 확인함)
-                window.close();
-              </script>
-            </body>
-            </html>
-          `);
+          // ⚠️ CRITICAL: 세션 저장 후 팝업 닫기
+          req.session.save((saveErr) => {
+            if (saveErr) {
+              console.error('세션 저장 오류:', saveErr);
+              return res.redirect("/archive?auth=failed");
+            }
+            
+            console.log('✅ 세션 저장 완료!');
+            res.send(`
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <title>인증 완료</title>
+                <meta charset="UTF-8">
+              </head>
+              <body>
+                <h2>✅ 로그인 성공!</h2>
+                <p>창이 자동으로 닫힙니다...</p>
+                <script>
+                  setTimeout(() => window.close(), 100);
+                </script>
+              </body>
+              </html>
+            `);
+          });
         });
       })(req, res, next);
     }
