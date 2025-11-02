@@ -37,8 +37,8 @@ export function generateShareHtml(data: SharePageData): string {
     locationName: item.locationName || null // 🗺️ GPS 위치 이름 (2025-10-26)
   })));
 
-  // 앱 origin (현재 호스트 기반)
-  const appOrigin = '/';
+  // 앱 origin - ⚠️ 2025.11.02: 보관함으로 (랜딩 페이지 금지)
+  const appOrigin = '/archive';
 
   return `<!DOCTYPE html>
 <html lang="ko">
