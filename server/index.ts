@@ -45,15 +45,32 @@ app.use((req, res, next) => {
   
   // 🔧 [공유링크 수정] 정적 파일 서빙을 라우트 등록보다 먼저 설정
   const publicDir = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
-  app.use(express.static(publicDir));
+  
+  // ⚠️ 2025.11.02: 정적 파일 캐시 비활성화 (사용자가 항상 최신 버전을 받도록)
+  app.use(express.static(publicDir, {
+    setHeaders: (res, path) => {
+      // HTML과 JS 파일은 캐시 안 함 (항상 최신 버전)
+      if (path.endsWith('.html') || path.endsWith('.js')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
+    }
+  }));
   
   // Route for root page
   app.get('/', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile('index.html', { root: publicDir });
   });
   
   // Route for share page - 명시적 라우트 추가
   app.get('/share.html', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile('share.html', { root: publicDir });
   });
   
@@ -66,6 +83,9 @@ app.use((req, res, next) => {
   app.get('*', (req, res) => {
     // API 경로는 이미 위에서 처리되었으므로 여기 도달하지 않음
     // 클라이언트 라우트(/archive, /settings 등)를 index.html로 보냄
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile('index.html', { root: publicDir });
   });
 
