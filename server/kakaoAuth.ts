@@ -137,17 +137,24 @@ export async function setupKakaoAuth(app: Express) {
                 <p>잠시만 기다려주세요...</p>
               </div>
               <script>
-                // 팝업 창이면 자동으로 닫기
-                if (window.opener) {
-                  console.log('✅ OAuth 팝업 - 자동으로 닫힙니다');
-                  setTimeout(() => {
+                // ⚠️ iOS Safari 팝업 닫기 강화 (2025.11.02)
+                function closePopup() {
+                  try {
                     window.close();
-                  }, 500);
-                } else {
-                  // 일반 창이면 보관함으로 이동
-                  console.log('✅ 일반 창 - 보관함으로 이동');
-                  window.location.href = '/archive';
+                  } catch(e) {
+                    console.error('팝업 닫기 실패:', e);
+                  }
+                  
+                  // 1초 후에도 안 닫혔으면 메시지 표시
+                  setTimeout(() => {
+                    if (!window.closed) {
+                      document.body.innerHTML = '<div class="message"><h2>✅ 로그인 완료!</h2><p>이 창을 닫아주세요</p></div>';
+                    }
+                  }, 1000);
                 }
+                
+                // 즉시 닫기 시도
+                closePopup();
               </script>
             </body>
             </html>

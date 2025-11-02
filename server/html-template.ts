@@ -140,15 +140,18 @@ export function generateShareHtml(data: SharePageData): string {
         }
         .hidden { display: none !important; }
         
-        /* 앱과 동일한 전체 화면 배경 */
+        /* 앱과 동일한 전체 화면 배경 - 최대 높이 제한 */
         .full-screen-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            object-fit: cover;
+            max-height: 100vh;
+            object-fit: contain;
+            object-position: center;
             z-index: 1;
+            background: #000;
         }
         
         /* UI 오버레이 레이어 */
