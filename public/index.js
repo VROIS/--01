@@ -3025,7 +3025,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     archiveSelectBtn?.addEventListener('click', () => {
         // 선택 버튼: 선택 모드 토글
+        console.log('🔴 [DEBUG] 선택 버튼 클릭됨');
         toggleSelectionMode(!isSelectionMode);
+        
+        // 즉시 다운로드 버튼 상태 확인
+        setTimeout(() => {
+            const container = document.getElementById('downloadSelectedBtnContainer');
+            const button = document.getElementById('downloadSelectedBtn');
+            console.log('🔴 [DEBUG] 다운로드 컨테이너:', {
+                exists: !!container,
+                hidden: container?.classList.contains('hidden'),
+                display: container ? window.getComputedStyle(container).display : 'N/A',
+                visibility: container ? window.getComputedStyle(container).visibility : 'N/A'
+            });
+            console.log('🔴 [DEBUG] 다운로드 버튼:', {
+                exists: !!button,
+                text: button?.textContent,
+                disabled: button?.disabled
+            });
+        }, 100);
     });
     // ✅ 공유 버튼 간편 로직 - 2025.10.02 구현 완료 (디바운스 추가)
     // 핵심: 1회 클릭 → 선택 모드 활성화 / 2회 클릭 (선택 후) → 공유 모달
