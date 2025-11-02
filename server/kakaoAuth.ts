@@ -105,30 +105,15 @@ export async function setupKakaoAuth(app: Express) {
             return res.redirect("/archive?auth=failed");
           }
           
-          // ⚠️ CRITICAL: 세션 저장 후 팝업 닫기
+          // ⚠️ 간단한 방법: /archive로 리다이렉트 (거기서 팝업 닫기)
           req.session.save((saveErr) => {
             if (saveErr) {
               console.error('세션 저장 오류:', saveErr);
               return res.redirect("/archive?auth=failed");
             }
             
-            console.log('✅ 세션 저장 완료!');
-            res.send(`
-              <!DOCTYPE html>
-              <html>
-              <head>
-                <title>인증 완료</title>
-                <meta charset="UTF-8">
-              </head>
-              <body>
-                <h2>✅ 로그인 성공!</h2>
-                <p>창이 자동으로 닫힙니다...</p>
-                <script>
-                  setTimeout(() => window.close(), 100);
-                </script>
-              </body>
-              </html>
-            `);
+            console.log('✅ 세션 저장 완료! /archive로 리다이렉트');
+            res.redirect("/archive?auth=success&popup=true");
           });
         });
       })(req, res, next);
