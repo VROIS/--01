@@ -2217,34 +2217,46 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderFeaturedGallery(featuredPages) {
         if (featuredPages.length > 0) {
             featuredGallery.classList.remove('hidden');
-            featuredGrid.innerHTML = featuredPages.map(page => {
+            featuredGrid.innerHTML = featuredPages.map((page, index) => {
                 const thumbnail = page.thumbnail || '';
                 const shareUrl = `${window.location.origin}/s/${page.id}`;
                 const pageName = page.name || '공유 페이지';
                 return `
-                    <div onclick="handleFeaturedClick('${shareUrl}')" 
-                       class="relative block bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:scale-105 cursor-pointer"
-                       data-testid="featured-${page.id}">
-                        ${thumbnail ? `
-                            <img src="${thumbnail}" alt="${pageName}" 
-                                 class="w-full aspect-square object-cover">
-                        ` : `
-                            <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                                <span class="text-4xl">📍</span>
+                    <div class="flex flex-col gap-2">
+                        <div onclick="handleFeaturedClick('${shareUrl}')" 
+                           class="relative block bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:scale-105 cursor-pointer"
+                           data-testid="featured-${page.id}">
+                            ${thumbnail ? `
+                                <img src="${thumbnail}" alt="${pageName}" 
+                                     class="w-full aspect-square object-cover">
+                            ` : `
+                                <div class="w-full aspect-square bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                                    <span class="text-4xl">📍</span>
+                                </div>
+                            `}
+                            <div class="absolute inset-0 bg-gradient-to-b from-black/85 via-black/50 to-black/20 flex items-start justify-center pt-4 px-4">
+                                <h3 class="text-white font-extrabold text-center leading-tight line-clamp-2" 
+                                    style="font-size: clamp(1rem, 4.5vw, 1.5rem); text-shadow: 0 3px 15px rgba(0,0,0,1), 0 2px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.8);">
+                                    ${pageName}
+                                </h3>
                             </div>
-                        `}
-                        <div class="absolute inset-0 bg-gradient-to-b from-black/85 via-black/50 to-black/20 flex items-start justify-center pt-4 px-4">
-                            <h3 class="text-white font-extrabold text-center leading-tight line-clamp-2" 
-                                style="font-size: clamp(1rem, 4.5vw, 1.5rem); text-shadow: 0 3px 15px rgba(0,0,0,1), 0 2px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.8);">
-                                ${pageName}
-                            </h3>
+                            <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 shadow-lg" data-testid="download-count-${page.id}">
+                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                <span class="text-xs font-bold text-gray-700">${page.downloadCount || 0}</span>
+                            </div>
                         </div>
-                        <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 shadow-lg" data-testid="download-count-${page.id}">
-                            <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        <button 
+                            onclick="event.stopPropagation(); handleFeaturedDownload('${shareUrl}', ${index})"
+                            data-testid="button-download-featured-${index}"
+                            class="w-full py-2 px-3 flex items-center justify-center rounded-full transition-all interactive-btn"
+                            style="background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px);"
+                            aria-label="링크 복사">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" style="color: #4285F4;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                             </svg>
-                            <span class="text-xs font-bold text-gray-700">${page.downloadCount || 0}</span>
-                        </div>
+                        </button>
                     </div>
                 `;
             }).join('');
@@ -2253,8 +2265,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ⚠️ 2025.11.02: Featured 갤러리 클릭 핸들러 - 새 탭 열기
-    // 핵심: window.open으로 새 탭에서 열어 보관함 세션 유지
+    // ⚠️ 2025.11.02: Featured 갤러리 다운로드 버튼 핸들러
+    // 핵심: 공유 페이지 링크를 클립보드에 복사
+    window.handleFeaturedDownload = async function(shareUrl, index) {
+        console.log('📥 Featured Gallery download clicked:', shareUrl, 'index:', index);
+        try {
+            // 클립보드에 링크 복사
+            await navigator.clipboard.writeText(shareUrl);
+            console.log('✅ Link copied to clipboard:', shareUrl);
+            
+            // "링크가 복사되었습니다" 토스트 표시
+            showToast('링크가 복사되었습니다');
+        } catch (error) {
+            console.error('❌ Failed to copy link:', error);
+            showToast('링크 복사 실패');
+        }
+    };
+
+    // ⚠️ 2025.11.02: Featured 갤러리 클릭 핸들러 - 반응형 새창 열기
+    // 핵심: window.open으로 반응형 사이즈 새창에서 열어 보관함 세션 유지
     window.handleFeaturedClick = async function(shareUrl) {
         console.log('🔵 Featured Gallery clicked:', shareUrl);
         try {
@@ -2262,9 +2291,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/auth/user');
             console.log('🔵 Auth status:', response.ok, response.status);
             if (response.ok) {
-                // 로그인되어 있으면 새 탭에서 페이지 열기
-                console.log('✅ Opening page in new tab:', shareUrl);
-                window.open(shareUrl, '_blank');
+                // 로그인되어 있으면 반응형 새창에서 페이지 열기
+                console.log('✅ Opening page in responsive window:', shareUrl);
+                
+                // 반응형 새창 크기 계산 (모바일: 전체 화면, 데스크톱: 50% 너비)
+                const isMobile = window.innerWidth <= 768;
+                const width = isMobile ? window.screen.width : Math.floor(window.screen.width * 0.5);
+                const height = window.screen.height;
+                const left = isMobile ? 0 : Math.floor(window.screen.width * 0.25);
+                const top = 0;
+                
+                const windowFeatures = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+                window.open(shareUrl, '_blank', windowFeatures);
             } else {
                 // 로그인되어 있지 않으면 URL 저장 후 인증 모달 표시
                 console.log('❌ Not authenticated, showing auth modal');
