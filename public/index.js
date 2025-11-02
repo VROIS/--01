@@ -1238,12 +1238,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 authModal?.classList.remove('pointer-events-auto');
                 console.log('✅ Auth modal closed - user is authenticated');
                 
-                // 대기 중인 공유 URL이 있으면 자동으로 열기
+                // 대기 중인 공유 URL이 있으면 새 탭으로 열기
                 const pendingUrl = localStorage.getItem('pendingShareUrl');
                 if (pendingUrl) {
-                    console.log('🎯 Opening pending share URL:', pendingUrl);
+                    console.log('🎯 Opening pending share URL in new tab:', pendingUrl);
                     localStorage.removeItem('pendingShareUrl');
-                    window.location.href = pendingUrl;
+                    window.open(pendingUrl, '_blank');
                 }
             } else {
                 console.log('⚪ Not authenticated, keeping modal state');
@@ -3263,12 +3263,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 인증 모달 닫기
                 authModal?.classList.add('hidden');
                 
-                // pendingShareUrl이 있으면 열기
+                // pendingShareUrl이 있으면 새 탭으로 열기
                 const pendingUrl = localStorage.getItem('pendingShareUrl');
                 if (pendingUrl) {
-                    console.log('🎯 Opening pending URL:', pendingUrl);
+                    console.log('🎯 Opening pending URL in new tab:', pendingUrl);
                     localStorage.removeItem('pendingShareUrl');
-                    window.location.href = pendingUrl;
+                    window.open(pendingUrl, '_blank');
                 } else {
                     // Featured Gallery 새로고침
                     loadFeaturedGallery();
