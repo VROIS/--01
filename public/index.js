@@ -1685,12 +1685,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const downloadSelectedBtnContainer = document.getElementById('downloadSelectedBtnContainer');
+        console.log('🔵 [Selection Mode] Toggling:', isSelectionMode);
+        console.log('🔵 [Selection Mode] Download container exists:', !!downloadSelectedBtnContainer);
 
         if (isSelectionMode) {
             archiveGrid.classList.add('selection-mode');
             archiveHeader.classList.add('hidden');
             selectionHeader.classList.remove('hidden');
             downloadSelectedBtnContainer?.classList.remove('hidden'); // 다운로드 버튼 표시
+            console.log('✅ [Selection Mode] Download button shown');
             selectedItemIds = []; // ✅ Array 초기화
             updateSelectionUI();
         } else {
@@ -1698,6 +1701,7 @@ document.addEventListener('DOMContentLoaded', () => {
             archiveHeader.classList.remove('hidden');
             selectionHeader.classList.add('hidden');
             downloadSelectedBtnContainer?.classList.add('hidden'); // 다운로드 버튼 숨김
+            console.log('❌ [Selection Mode] Download button hidden');
             selectedItemIds = []; // ✅ Array 초기화
             
             // Remove selection styling from all items
