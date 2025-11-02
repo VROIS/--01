@@ -1703,25 +1703,48 @@ self.addEventListener('fetch', (event) => {
       res.setHeader('Expires', '0');
       
       // htmlFilePath가 있으면 파일에서 읽기, 없으면 DB에서 읽기 (하위 호환성)
+      let htmlContent = '';
+      
       if (page.htmlFilePath) {
         const fullPath = path.join(process.cwd(), 'public', page.htmlFilePath);
         if (fs.existsSync(fullPath)) {
-          const htmlContent = fs.readFileSync(fullPath, 'utf8');
-          res.send(htmlContent);
+          htmlContent = fs.readFileSync(fullPath, 'utf8');
         } else {
           // ⚠️ 파일이 없으면 DB의 htmlContent 사용 (fallback)
           console.warn(`⚠️ HTML 파일 없음, DB 콘텐츠 사용: ${fullPath}`);
           if (page.htmlContent) {
-            res.send(page.htmlContent);
+            htmlContent = page.htmlContent;
           } else {
             console.error(`❌ HTML 파일도 없고 DB 콘텐츠도 없음: ${id}`);
-            res.status(500).send('HTML 콘텐츠를 찾을 수 없습니다.');
+            return res.status(500).send('HTML 콘텐츠를 찾을 수 없습니다.');
           }
         }
       } else {
         // 기존 데이터 (htmlContent 사용)
-        res.send(page.htmlContent);
+        htmlContent = page.htmlContent || '';
       }
+      
+      // ✅ X 버튼 자동 주입 (모든 공유 페이지에 적용)
+      if (htmlContent && !htmlContent.includes('id="closeWindowBtn"')) {
+        const closeButton = `
+    <!-- ❌ X 닫기 버튼 (우측 상단, 최상위 z-index) -->
+    <button id="closeWindowBtn" onclick="handleCloseWindow()" title="페이지 닫기" style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
+    <script>
+        // X 버튼 클릭 핸들러 (단순 페이지 닫기)
+        function handleCloseWindow() {
+            window.close();
+        }
+    </script>
+`;
+        // <body> 태그 직후에 X 버튼 삽입
+        htmlContent = htmlContent.replace(/<body[^>]*>/i, (match) => match + closeButton);
+      }
+      
+      res.send(htmlContent);
       
     } catch (error) {
       console.error('공유 페이지 조회 오류:', error);
