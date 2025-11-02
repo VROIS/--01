@@ -3209,16 +3209,31 @@ document.addEventListener('DOMContentLoaded', () => {
         authModal.classList.remove('pointer-events-auto');
     });
 
-    // ⚠️ 2025.11.02 FIX: postMessage로 OAuth 완료 감지
-    window.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'AUTH_SUCCESS') {
-            console.log('📨 Received AUTH_SUCCESS message from popup');
-            checkAuthAndOpenPendingUrl();
-        }
-    });
+    // ⚠️ 2025.11.02 근본 해결: 팝업 열고 주기적으로 인증 상태 체크
+    let authCheckInterval = null;
+    
+    function startAuthCheck() {
+        // 이미 체크 중이면 무시
+        if (authCheckInterval) return;
+        
+        console.log('🔄 Starting auth check interval...');
+        authCheckInterval = setInterval(async () => {
+            try {
+                const response = await fetch('/api/auth/user');
+                if (response.ok) {
+                    console.log('✅ 인증 완료 감지!');
+                    clearInterval(authCheckInterval);
+                    authCheckInterval = null;
+                    checkAuthAndOpenPendingUrl();
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+            }
+        }, 500); // 0.5초마다 체크
+    }
     
     googleLoginBtn?.addEventListener('click', () => {
-        // 작은 팝업 창으로 OAuth 열기
+        // 팝업 열기
         const width = 500;
         const height = 600;
         const left = window.screen.width / 2 - width / 2;
@@ -3228,10 +3243,13 @@ document.addEventListener('DOMContentLoaded', () => {
             'google-oauth',
             `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
         );
+        
+        // 인증 상태 체크 시작
+        startAuthCheck();
     });
 
     kakaoLoginBtn?.addEventListener('click', () => {
-        // 작은 팝업 창으로 OAuth 열기
+        // 팝업 열기
         const width = 500;
         const height = 600;
         const left = window.screen.width / 2 - width / 2;
@@ -3241,6 +3259,9 @@ document.addEventListener('DOMContentLoaded', () => {
             'kakao-oauth',
             `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
         );
+        
+        // 인증 상태 체크 시작
+        startAuthCheck();
     });
     
     // OAuth 팝업 닫힌 후 인증 상태 확인 및 Featured Gallery 열기

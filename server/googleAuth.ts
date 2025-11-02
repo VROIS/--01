@@ -103,51 +103,18 @@ export async function setupGoogleAuth(app: Express) {
             return res.redirect("/archive?auth=failed");
           }
           
-          // ⚠️ 2025.11.02 FIX: OAuth 팝업 플로우 - 팝업 자동 닫기
-          // 팝업 창이면 자동으로 닫힘, 일반 창이면 /archive로 이동
+          // ⚠️ 2025.11.02 근본 해결: 팝업이면 닫고, 원래 창에서 인증 체크
           res.send(`
             <!DOCTYPE html>
             <html>
             <head>
               <title>인증 완료</title>
-              <style>
-                body { 
-                  font-family: Arial, sans-serif; 
-                  display: flex; 
-                  align-items: center; 
-                  justify-content: center; 
-                  height: 100vh; 
-                  margin: 0;
-                  background: #f5f5f5;
-                }
-                .message {
-                  text-align: center;
-                  padding: 2rem;
-                  background: white;
-                  border-radius: 8px;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                }
-              </style>
+              <meta charset="UTF-8">
             </head>
             <body>
-              <div class="message">
-                <h2>✅ 로그인 성공!</h2>
-                <p>잠시만 기다려주세요...</p>
-              </div>
               <script>
-                // ⚠️ 2025.11.02 FIX: postMessage로 원래 창에 인증 완료 알림
-                if (window.opener) {
-                  console.log('📨 Sending auth success message to opener');
-                  window.opener.postMessage({ type: 'AUTH_SUCCESS' }, '*');
-                  
-                  // 메시지 전송 후 팝업 닫기
-                  setTimeout(() => {
-                    window.close();
-                  }, 100);
-                } else {
-                  // 일반 창이면 보관함으로 이동
-                  window.location.href = '/archive';
-                }
+                // 팝업 즉시 닫기 (opener가 자동으로 인증 상태 확인함)
+                window.close();
               </script>
             </body>
             </html>
