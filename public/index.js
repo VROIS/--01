@@ -730,20 +730,9 @@ document.addEventListener('DOMContentLoaded', () => {
         </svg>
     </button>
     <script>
-        // X 버튼 클릭 핸들러 (스마트 닫기)
+        // X 버튼 클릭 핸들러 (단순 페이지 닫기)
         function handleCloseWindow() {
-            // 1. 앱 내에서 열렸으면 뒤로 가기
-            if (document.referrer && document.referrer.includes(window.location.hostname)) {
-                window.history.back();
-            } 
-            // 2. 독립 페이지면 창 닫기 시도
-            else {
-                window.close();
-                // window.close() 실패 시 (독립 페이지지만 JS로 열리지 않은 경우)
-                setTimeout(function() {
-                    window.location.href = '${appOrigin}';
-                }, 100);
-            }
+            window.close();
         }
     </script>
     
