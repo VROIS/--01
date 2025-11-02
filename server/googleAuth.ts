@@ -88,23 +88,23 @@ export async function setupGoogleAuth(app: Express) {
       passport.authenticate("google", (err: any, user: any) => {
         if (err) {
           console.error('구글 인증 콜백 오류:', err);
-          return res.redirect("/?auth=failed");
+          return res.redirect("/archive?auth=failed");
         }
         
         if (!user) {
           console.error('구글 인증 실패: 사용자 없음');
-          return res.redirect("/?auth=failed");
+          return res.redirect("/archive?auth=failed");
         }
         
         // 로그인 처리
         req.logIn(user, (loginErr) => {
           if (loginErr) {
             console.error('구글 로그인 오류:', loginErr);
-            return res.redirect("/?auth=failed");
+            return res.redirect("/archive?auth=failed");
           }
           
-          // 홈으로 리다이렉트 (프론트엔드에서 pendingShareUrl 처리)
-          res.redirect('/');
+          // ⚠️ 2025.11.02: 인증 성공 → 보관함으로 (랜딩 페이지 금지)
+          res.redirect('/archive');
         });
       })(req, res, next);
     }
