@@ -475,7 +475,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         res.clearCookie('connect.sid');
         console.log('✅ Logged out successfully');
-        res.redirect('/');
+        // ⚠️ 2025.11.02: 로그아웃 후 보관함으로 (랜딩 페이지 금지)
+        res.redirect('/archive');
       });
     });
   });

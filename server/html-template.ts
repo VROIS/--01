@@ -377,8 +377,8 @@ export function generateShareHtml(data: SharePageData): string {
     </style>
 </head>
 <body>
-    <!-- ✕ 닫기 버튼 (모든 공유 페이지에 표시) -->
-    <button id="closeWindowBtn" onclick="window.close()" title="페이지 닫기" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
+    <!-- ✕ 닫기 버튼 (모든 공유 페이지에 표시) - ⚠️ 2025.11.02: 보관함으로 이동 -->
+    <button id="closeWindowBtn" onclick="window.location.href='/archive'" title="보관함으로 돌아가기" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -413,13 +413,19 @@ export function generateShareHtml(data: SharePageData): string {
     
     <!-- 갤러리 뷰 -->
     <div id="gallery-view">
-        <!-- 🔙 보관함으로 돌아가기 버튼 (2025-10-26) -->
-        <div style="position: sticky; top: 0; z-index: 100; background: linear-gradient(to bottom, #343a40 0%, #343a40 80%, transparent 100%); padding: 15px; padding-bottom: 30px;">
+        <!-- 🔙 보관함으로 돌아가기 & 🗑️ 삭제 버튼 (2025-11-02) -->
+        <div style="position: sticky; top: 0; z-index: 100; background: linear-gradient(to bottom, #343a40 0%, #343a40 80%, transparent 100%); padding: 15px; padding-bottom: 30px; display: flex; gap: 12px; flex-wrap: wrap;">
             <button id="gallery-back-btn" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(66, 133, 244, 0.9); color: white; padding: 12px 24px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3); transition: all 0.3s; backdrop-filter: blur(10px);">
                 <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                 </svg>
                 보관함으로 돌아가기
+            </button>
+            <button id="gallery-delete-btn" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(239, 68, 68, 0.9); color: white; padding: 12px 24px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); transition: all 0.3s; backdrop-filter: blur(10px);">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+                이 페이지 삭제
             </button>
         </div>
         <div class="gallery-grid">
@@ -578,8 +584,58 @@ export function generateShareHtml(data: SharePageData): string {
         const galleryBackBtn = document.getElementById('gallery-back-btn');
         if (galleryBackBtn) {
             galleryBackBtn.addEventListener('click', () => {
-                // 앱의 보관함 페이지로 이동
-                window.location.href = '/#archive';
+                // ⚠️ 2025.11.02: 보관함으로 이동 (랜딩 페이지 금지)
+                window.location.href = '/archive';
+            });
+        }
+        
+        // 🗑️ 공유 페이지 삭제 (2025-11-02)
+        const galleryDeleteBtn = document.getElementById('gallery-delete-btn');
+        if (galleryDeleteBtn) {
+            galleryDeleteBtn.addEventListener('click', async () => {
+                if (!confirm('이 공유 페이지를 삭제하시겠습니까?\\n\\n삭제된 페이지는 복구할 수 없습니다.')) {
+                    return;
+                }
+                
+                try {
+                    // 현재 URL에서 share ID 추출 (/s/xxxxx 또는 /shared/xxxxx.html)
+                    const pathParts = window.location.pathname.split('/');
+                    let shareId = '';
+                    
+                    if (pathParts.includes('s')) {
+                        // /s/xxxxx 형식
+                        const sIndex = pathParts.indexOf('s');
+                        shareId = pathParts[sIndex + 1];
+                    } else if (pathParts.includes('shared')) {
+                        // /shared/xxxxx.html 형식
+                        const filename = pathParts[pathParts.length - 1];
+                        shareId = filename.replace('.html', '');
+                    }
+                    
+                    if (!shareId) {
+                        alert('공유 페이지 ID를 찾을 수 없습니다.');
+                        return;
+                    }
+                    
+                    console.log('🗑️ Deleting share page:', shareId);
+                    
+                    // API 호출
+                    const response = await fetch(\`/api/share/\${shareId}\`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+                    
+                    if (response.ok) {
+                        alert('공유 페이지가 삭제되었습니다.');
+                        window.location.href = '/archive';
+                    } else {
+                        const error = await response.json().catch(() => ({ message: '알 수 없는 오류' }));
+                        alert('삭제 실패: ' + (error.message || '알 수 없는 오류'));
+                    }
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    alert('삭제 중 오류가 발생했습니다: ' + error.message);
+                }
             });
         }
         
