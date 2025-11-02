@@ -6,6 +6,270 @@
 
 ---
 
+## 🎯 2025-11-02 세션: Featured Gallery UX 개선 + 다운로드 기능
+
+### 작업 예상 시간: 3-4시간
+### 담당: Claude Sonnet 4.5
+
+---
+
+### 📋 사용자 요구사항
+
+**배경:**
+- 현재 5,100+ 조회수, 566 방문자로 바이럴 성장 중
+- Featured Gallery가 가장 인기 많은 기능 (통계 분석 결과)
+- 사용자가 콘텐츠를 다운로드하고 재공유하고 싶어함
+
+**핵심 요구:**
+1. **추천 갤러리 상단 고정** - 스크롤되면 안 됨, 내 보관함만 스크롤
+2. **다운로드 버튼 추가** - 추천 갤러리와 내 보관함 사이에 배치
+3. **새 탭으로 열기** - 보관함 세션 유지
+4. **디자인 통일성** - Gemini Blue + Heroicons (절대 이모지 금지)
+5. **모바일 최적화** - Featured 타이틀 글자 크기 축소
+
+---
+
+### 🏗️ 구현 계획
+
+#### **1. Featured Gallery 레이아웃 재구성** 🎯 HIGH PRIORITY
+
+**현재 문제:**
+```
+보관함 헤더 (고정)
+└─ 스크롤 영역 ← 전체가 움직임 ❌
+   ├─ 추천 갤러리 (3칸)
+   └─ 내 보관함 (그리드)
+```
+
+**목표 구조:**
+```
+┌────────────────────────────┐
+│ 보관함 헤더 (고정)          │ ← 고정
+├────────────────────────────┤
+│ ⭐ 추천 갤러리 (3칸)        │ ← 고정 (스크롤 안 됨)
+├────────────────────────────┤
+│ 📥 [다운로드 버튼]          │ ← 고정 (새로 추가)
+├────────────────────────────┤
+│ ┌────────────────────────┐ │
+│ │ 📂 내 보관함 (그리드)  │ │ ← 여기만 스크롤
+│ │  [사진] [사진] [사진] │ │
+│ │       (스크롤)         │ │
+│ └────────────────────────┘ │
+└────────────────────────────┘
+```
+
+**구현 방법:**
+- `featuredGallery`를 `archiveScrollZone` 밖으로 이동
+- 헤더와 스크롤 영역 사이에 배치
+- `hidden` 클래스 동적 제어 유지
+
+**수정 파일:**
+- `public/index.html` (라인 794-796)
+
+**기대 효과:**
+- ✅ 추천 갤러리가 항상 보임 (스크롤 무관)
+- ✅ 사용자가 추천 콘텐츠에 쉽게 접근
+- ✅ 보관함 스크롤 시 시야 방해 없음
+
+---
+
+#### **2. 다운로드 버튼 추가** 🎯 HIGH PRIORITY
+
+**위치:**
+- 추천 갤러리 바로 아래
+- 내 보관함 스크롤 영역 위
+
+**디자인:**
+```html
+<button id="downloadSelectedBtn" 
+        data-testid="button-download-selected"
+        class="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 
+               text-white font-bold rounded-lg hover:from-blue-600 hover:to-blue-700 
+               transition duration-300 shadow-md flex items-center justify-center gap-2">
+  <!-- Heroicons Download Icon -->
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+  </svg>
+  <span>선택한 가이드 다운로드</span>
+</button>
+```
+
+**기능:**
+1. 선택 모드가 아닐 때는 `hidden` 상태
+2. 선택 모드 진입 시 표시
+3. 선택된 항목이 있을 때만 활성화
+4. 클릭 시 선택된 가이드들을 ZIP으로 다운로드
+
+**수정 파일:**
+- `public/index.html` (다운로드 버튼 HTML 추가)
+- `public/index.js` (다운로드 로직 구현)
+
+**기대 효과:**
+- ✅ 사용자가 여러 가이드를 한 번에 다운로드
+- ✅ 콘텐츠 소장 가치 증가
+- ✅ 오프라인 열람 가능
+- ✅ 재공유 용이성 향상
+
+---
+
+#### **3. Featured Gallery 새 탭 열기** 🎯 HIGH PRIORITY
+
+**현재 문제:**
+```javascript
+// public/index.js 라인 2162
+window.location.href = shareUrl;  // ← 같은 탭 이동 ❌
+```
+- 같은 탭 이동 → 브라우저 히스토리 생성
+- 뒤로가기 시 랜딩 페이지로 이동
+- 보관함 세션 손실
+
+**해결 방법:**
+```javascript
+// window.location.href → window.open
+window.open(shareUrl, '_blank');  // ← 새 탭 열기 ✅
+```
+
+**수정 파일:**
+- `public/index.js` (라인 2162)
+- `handleFeaturedClick()` 함수
+
+**기대 효과:**
+- ✅ 보관함 세션 유지 (새로고침 불필요)
+- ✅ 독립 페이지처럼 작동
+- ✅ 브라우저 닫기로 간편하게 복귀
+- ✅ 멀티태스킹 가능
+
+---
+
+#### **4. Featured 타이틀 글자 크기 조정** 🎯 MEDIUM PRIORITY
+
+**현재 문제:**
+```javascript
+// public/index.js 라인 2134
+style="font-size: clamp(1.125rem, 6vw, 1.75rem);"
+```
+- 모바일에서 타이틀이 너무 커서 뭉개짐
+- 긴 제목 시 가독성 저하
+
+**해결 방법:**
+```javascript
+// 6vw → 4.5vw, 1.75rem → 1.5rem
+style="font-size: clamp(1rem, 4.5vw, 1.5rem);"
+```
+
+**수정 파일:**
+- `public/index.js` (라인 2134)
+- `renderFeaturedGallery()` 함수
+
+**기대 효과:**
+- ✅ 모바일 가독성 개선
+- ✅ 긴 제목도 깔끔하게 표시
+- ✅ UI 균형 향상
+
+---
+
+#### **5. 인증 후 리다이렉트 수정** 🎯 LOW PRIORITY
+
+**현재 문제:**
+```typescript
+// server/googleAuth.ts, kakaoAuth.ts
+res.redirect('/');  // ← 랜딩 페이지로 ❌
+```
+- 보관함에서 인증한 사용자가 랜딩 페이지로 이동
+- Featured Gallery → 인증 → 랜딩 (이탈 위험)
+
+**해결 방법:**
+```typescript
+res.redirect('/archive');  // ← 보관함으로 ✅
+```
+
+**수정 파일:**
+- `server/googleAuth.ts` (라인 107)
+- `server/kakaoAuth.ts` (라인 109)
+
+**기대 효과:**
+- ✅ 인증 후 메인 페이지(보관함) 복귀
+- ✅ 사용자 이탈 방지
+- ✅ Featured → 인증 → 보관함 플로우 완성
+
+---
+
+#### **6. X 버튼 수정 적용** ✅ ALREADY DONE
+
+**이미 완료:**
+- `server/routes.ts` (라인 1741)
+- `window.close()` → `window.location.href = '/archive'`
+
+**필요 작업:**
+- 서버 재시작으로 수정 적용 확인
+
+---
+
+### 🎨 디자인 가이드
+
+**아이콘 스타일 (Heroicons):**
+```html
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="..."/>
+</svg>
+```
+
+**컬러:**
+- Primary: `#4285F4` (Gemini Blue)
+- Gradient: `from-blue-500 to-blue-600`
+- Background: `#FFFEFA` (크림색)
+
+**폰트:**
+- MaruBuri (마루부리) - 미니멀, 세련, 심플
+
+**원칙:**
+- ❌ **절대 이모지 사용 금지**
+- ✅ Heroicons SVG만 사용
+- ✅ 터치 친화적 버튼 크기 (최소 44px)
+
+---
+
+### 📊 기대 효과 요약
+
+**사용자 경험:**
+1. 추천 갤러리 고정 → 항상 접근 가능 ✅
+2. 다운로드 버튼 → 오프라인 열람 + 재공유 ✅
+3. 새 탭 열기 → 독립 페이지 느낌 + 세션 유지 ✅
+4. 타이틀 크기 → 모바일 가독성 개선 ✅
+5. 인증 플로우 → 이탈 방지 ✅
+
+**비즈니스 임팩트:**
+- 콘텐츠 소장 가치 증가 → 사용자 충성도 ↑
+- 재공유 용이성 → 바이럴 확산 ↑
+- UX 개선 → 사용자 만족도 ↑
+- 이탈률 감소 → 전환율 ↑
+
+**기술적 개선:**
+- 레이아웃 안정성 향상
+- 브라우저 히스토리 문제 해결
+- 일관된 네비게이션 플로우
+- 모바일 최적화
+
+---
+
+### 🔒 보호된 핵심 로직 목록 (업데이트)
+1. ⚠️ **Featured Gallery 고정 레이아웃** (2025.11.02) - **스크롤 분리**
+2. ⚠️ **다운로드 버튼** (2025.11.02) - **콘텐츠 소장**
+3. ⚠️ **Featured Gallery 새 탭 열기** (2025.11.02) - **세션 유지**
+4. ⚠️ Featured 리턴 버튼 (2025.10.31) - **카메라 권한 보호**
+5. ⚠️ Featured 순서 편집 (2025.10.31) - Drag & Drop
+6. ⚠️ 관리자 대시보드 API (2025.10.26)
+7. ⚠️ HTML 파일 저장 시스템 (2025.10.26)
+8. ⚠️ 관리자 인증 로직 (2025.10.26)
+9. 🔥 카카오톡 Chrome 강제 리다이렉트 (2025.10.26) - P1-1 CRITICAL
+10. ✅ Featured Gallery 캐싱 (2025.10.26)
+11. ✅ Featured Gallery 로딩 (2025.10.05)
+12. ✅ 공유/삭제 간편 로직 (2025.10.02)
+13. ✅ 4존 스크롤 레이아웃 (2025.10.02)
+
+---
+
 ## 🎯 2025-10-31 세션: Featured 리턴 버튼 + 콘텐츠 순서 편집 ✅
 
 ### 작업 시간: 3시간
