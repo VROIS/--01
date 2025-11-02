@@ -137,24 +137,19 @@ export async function setupKakaoAuth(app: Express) {
                 <p>잠시만 기다려주세요...</p>
               </div>
               <script>
-                // ⚠️ iOS Safari 팝업 닫기 강화 (2025.11.02)
-                function closePopup() {
-                  try {
-                    window.close();
-                  } catch(e) {
-                    console.error('팝업 닫기 실패:', e);
-                  }
+                // ⚠️ 2025.11.02 FIX: postMessage로 원래 창에 인증 완료 알림
+                if (window.opener) {
+                  console.log('📨 Sending auth success message to opener');
+                  window.opener.postMessage({ type: 'AUTH_SUCCESS' }, '*');
                   
-                  // 1초 후에도 안 닫혔으면 메시지 표시
+                  // 메시지 전송 후 팝업 닫기
                   setTimeout(() => {
-                    if (!window.closed) {
-                      document.body.innerHTML = '<div class="message"><h2>✅ 로그인 완료!</h2><p>이 창을 닫아주세요</p></div>';
-                    }
-                  }, 1000);
+                    window.close();
+                  }, 100);
+                } else {
+                  // 일반 창이면 보관함으로 이동
+                  window.location.href = '/archive';
                 }
-                
-                // 즉시 닫기 시도
-                closePopup();
               </script>
             </body>
             </html>

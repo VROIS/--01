@@ -3209,27 +3209,25 @@ document.addEventListener('DOMContentLoaded', () => {
         authModal.classList.remove('pointer-events-auto');
     });
 
-    // ⚠️ 2025.11.02 FIX: OAuth 팝업 플로우 (인증 후 원래 창 유지)
+    // ⚠️ 2025.11.02 FIX: postMessage로 OAuth 완료 감지
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'AUTH_SUCCESS') {
+            console.log('📨 Received AUTH_SUCCESS message from popup');
+            checkAuthAndOpenPendingUrl();
+        }
+    });
+    
     googleLoginBtn?.addEventListener('click', () => {
         // 작은 팝업 창으로 OAuth 열기
         const width = 500;
         const height = 600;
         const left = window.screen.width / 2 - width / 2;
         const top = window.screen.height / 2 - height / 2;
-        const popup = window.open(
+        window.open(
             '/api/auth/google',
             'google-oauth',
             `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
         );
-        
-        // 팝업이 닫히면 인증 상태 확인
-        const checkPopup = setInterval(() => {
-            if (popup && popup.closed) {
-                clearInterval(checkPopup);
-                console.log('✅ OAuth 팝업 닫힘, 인증 상태 확인 중...');
-                checkAuthAndOpenPendingUrl();
-            }
-        }, 500);
     });
 
     kakaoLoginBtn?.addEventListener('click', () => {
@@ -3238,20 +3236,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const height = 600;
         const left = window.screen.width / 2 - width / 2;
         const top = window.screen.height / 2 - height / 2;
-        const popup = window.open(
+        window.open(
             '/api/auth/kakao',
             'kakao-oauth',
             `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
         );
-        
-        // 팝업이 닫히면 인증 상태 확인
-        const checkPopup = setInterval(() => {
-            if (popup && popup.closed) {
-                clearInterval(checkPopup);
-                console.log('✅ OAuth 팝업 닫힘, 인증 상태 확인 중...');
-                checkAuthAndOpenPendingUrl();
-            }
-        }, 500);
     });
     
     // OAuth 팝업 닫힌 후 인증 상태 확인 및 Featured Gallery 열기
