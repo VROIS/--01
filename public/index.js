@@ -2266,20 +2266,73 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ⚠️ 2025.11.02: Featured 갤러리 다운로드 버튼 핸들러
-    // 핵심: 공유 페이지 링크를 클립보드에 복사
+    // 핵심: 공유 페이지 링크를 클립보드에 복사 + 공유 모달 2번째 팝업 표시
     window.handleFeaturedDownload = async function(shareUrl, index) {
         console.log('📥 Featured Gallery download clicked:', shareUrl, 'index:', index);
+        
+        // 📋 클립보드에 복사 시도
+        let copySuccess = false;
         try {
-            // 클립보드에 링크 복사
             await navigator.clipboard.writeText(shareUrl);
+            copySuccess = true;
             console.log('✅ Link copied to clipboard:', shareUrl);
-            
-            // "링크가 복사되었습니다" 토스트 표시
-            showToast('링크가 복사되었습니다');
-        } catch (error) {
-            console.error('❌ Failed to copy link:', error);
-            showToast('링크 복사 실패');
+        } catch (clipboardError) {
+            console.warn('클립보드 복사 실패 (권한 없음):', clipboardError);
         }
+        
+        // ✅ 공유 모달 2번째 팝업 표시 (성공 메시지)
+        const escapedUrl = shareUrl.replace(/'/g, "\\'");
+        shareModalContent.innerHTML = `
+            <div class="p-8 text-center">
+                <div class="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">링크 복사 완료!</h3>
+                ${copySuccess ? `
+                    <p class="text-lg text-gray-700 mb-3">✅ 링크가 클립보드에 복사되었습니다</p>
+                    <p class="text-base text-gray-600">카카오톡, 문자, 메신저 등<br>원하는 곳에 붙여넣기 하세요!</p>
+                ` : `
+                    <p class="text-base text-gray-700 mb-4">아래 링크를 복사해서 공유하세요:</p>
+                    <div class="bg-gray-100 p-4 rounded-lg mb-3">
+                        <p class="text-sm font-mono text-gray-800 break-all">${shareUrl}</p>
+                    </div>
+                    <button id="manualCopyBtn" data-url="${shareUrl}"
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        링크 복사하기
+                    </button>
+                `}
+            </div>
+        `;
+        
+        // 수동 복사 버튼 이벤트 리스너 (클립보드 실패 시)
+        if (!copySuccess) {
+            const manualBtn = document.getElementById('manualCopyBtn');
+            if (manualBtn) {
+                manualBtn.onclick = async () => {
+                    try {
+                        await navigator.clipboard.writeText(shareUrl);
+                        manualBtn.textContent = '복사 완료!';
+                        setTimeout(() => {
+                            shareModal.classList.add('hidden');
+                            resetShareModal();
+                        }, 1000);
+                    } catch (err) {
+                        alert('복사 실패: ' + err.message);
+                    }
+                };
+            }
+        }
+        
+        // 모달 표시
+        shareModal.classList.remove('hidden');
+        
+        // 3초 후 자동으로 모달 닫기
+        setTimeout(() => {
+            shareModal.classList.add('hidden');
+            resetShareModal();
+        }, 3000);
     };
 
     // ⚠️ 2025.11.02: Featured 갤러리 클릭 핸들러 - 반응형 새창 열기
