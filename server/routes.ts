@@ -1725,19 +1725,8 @@ self.addEventListener('fetch', (event) => {
         htmlContent = page.htmlContent || '';
       }
       
-      // ✅ X 버튼 자동 주입 (모든 공유 페이지에 적용) - window.close() 사용
-      if (htmlContent && !htmlContent.includes('id="closeWindowBtn"')) {
-        const closeButton = `
-    <!-- ❌ X 닫기 버튼 (우측 상단, 최상위 z-index) -->
-    <button id="closeWindowBtn" onclick="window.close()" title="페이지 닫기" style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-    </button>
-`;
-        // <body> 태그 직후에 X 버튼 삽입
-        htmlContent = htmlContent.replace(/<body[^>]*>/i, (match) => match + closeButton);
-      }
+      // ⚠️ 2025.11.02: X 버튼은 html-template.ts에서 하드코딩됨 (window.close())
+      // routes.ts에서 자동 주입 불필요 (중복 방지)
       
       res.send(htmlContent);
       
