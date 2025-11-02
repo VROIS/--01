@@ -1745,6 +1745,82 @@ self.addEventListener('fetch', (event) => {
         htmlContent = htmlContent.replace(/<body[^>]*>/i, (match) => match + closeButton);
       }
       
+      // ✅ 보관함/삭제 버튼 자동 주입 (2025-11-02)
+      if (htmlContent && !htmlContent.includes('id="gallery-back-btn"')) {
+        const actionButtons = `
+    <!-- 🔙 보관함/삭제 버튼 영역 (갤러리 상단에 자동 추가됨) -->
+    <div id="injected-action-buttons" style="position: sticky; top: 0; z-index: 100; background: linear-gradient(to bottom, #343a40 0%, #343a40 80%, transparent 100%); padding: 15px; padding-bottom: 30px; display: flex; gap: 12px; flex-wrap: wrap;">
+        <button id="gallery-back-btn" onclick="window.location.href='/archive'" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(66, 133, 244, 0.9); color: white; padding: 12px 24px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3); transition: all 0.3s; backdrop-filter: blur(10px);">
+            <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+            </svg>
+            보관함으로 돌아가기
+        </button>
+        <button id="gallery-delete-btn" onclick="handleDeleteSharedPage()" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(239, 68, 68, 0.9); color: white; padding: 12px 24px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); transition: all 0.3s; backdrop-filter: blur(10px);">
+            <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+            </svg>
+            이 페이지 삭제
+        </button>
+    </div>
+    <script>
+        // 삭제 버튼 클릭 핸들러
+        async function handleDeleteSharedPage() {
+            if (!confirm('이 공유 페이지를 삭제하시겠습니까?\\n\\n삭제된 페이지는 복구할 수 없습니다.')) {
+                return;
+            }
+            
+            try {
+                // 현재 URL에서 share ID 추출
+                const pathParts = window.location.pathname.split('/');
+                let shareId = '';
+                
+                if (pathParts.includes('s')) {
+                    const sIndex = pathParts.indexOf('s');
+                    shareId = pathParts[sIndex + 1];
+                } else if (pathParts.includes('shared')) {
+                    const filename = pathParts[pathParts.length - 1];
+                    shareId = filename.replace('.html', '');
+                }
+                
+                if (!shareId) {
+                    alert('공유 페이지 ID를 찾을 수 없습니다.');
+                    return;
+                }
+                
+                console.log('🗑️ Deleting share page:', shareId);
+                
+                const response = await fetch('/api/share/' + shareId, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    alert('공유 페이지가 삭제되었습니다.');
+                    window.location.href = '/archive';
+                } else {
+                    const error = await response.json().catch(() => ({ message: '알 수 없는 오류' }));
+                    alert('삭제 실패: ' + (error.message || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('삭제 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+    </script>
+`;
+        
+        // 갤러리 그리드 앞에 버튼 영역 삽입 (여러 패턴 시도)
+        if (htmlContent.includes('class="gallery-grid"')) {
+          htmlContent = htmlContent.replace(/<div class="gallery-grid">/i, actionButtons + '<div class="gallery-grid">');
+        } else if (htmlContent.includes('id="gallery-view"')) {
+          htmlContent = htmlContent.replace(/<div id="gallery-view"[^>]*>/i, (match) => match + actionButtons);
+        } else {
+          // fallback: header 다음에 추가
+          htmlContent = htmlContent.replace(/<\/div>\s*<\/div>\s*<!-- 갤러리 뷰/i, (match) => '</div></div>' + actionButtons + '<!-- 갤러리 뷰');
+        }
+      }
+      
       res.send(htmlContent);
       
     } catch (error) {
