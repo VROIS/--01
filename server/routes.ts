@@ -1734,9 +1734,9 @@ self.addEventListener('fetch', (event) => {
         </svg>
     </button>
     <script>
-        // X 버튼 클릭 핸들러 (단순 페이지 닫기)
+        // X 버튼 클릭 핸들러 (보관함으로 이동)
         function handleCloseWindow() {
-            window.close();
+            window.location.href = '/archive';
         }
     </script>
 `;
