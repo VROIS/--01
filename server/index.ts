@@ -46,14 +46,18 @@ app.use((req, res, next) => {
   // 🔧 [공유링크 수정] 정적 파일 서빙을 라우트 등록보다 먼저 설정
   const publicDir = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
   
-  // ⚠️ 2025.11.02: 정적 파일 캐시 비활성화 (사용자가 항상 최신 버전을 받도록)
+  // ⚠️ 2025.11.02: 스마트 캐시 전략 (업데이트 vs 성능 균형)
   app.use(express.static(publicDir, {
     setHeaders: (res, path) => {
-      // HTML과 JS 파일은 캐시 안 함 (항상 최신 버전)
+      // HTML/JS만 캐시 비활성화 (업데이트 즉시 반영)
+      // 이미지/CSS는 캐시 허용 (성능 향상)
       if (path.endsWith('.html') || path.endsWith('.js')) {
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
+      } else {
+        // 이미지, CSS 등: 1시간 캐시
+        res.setHeader('Cache-Control', 'public, max-age=3600');
       }
     }
   }));
