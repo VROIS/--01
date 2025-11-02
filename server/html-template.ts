@@ -38,7 +38,7 @@ export function generateShareHtml(data: SharePageData): string {
   })));
 
   // 앱 origin - ⚠️ 2025.11.02: 보관함으로 (랜딩 페이지 금지)
-  const appOrigin = '/archive';
+  const appOrigin = '/#archive';
 
   return `<!DOCTYPE html>
 <html lang="ko">
@@ -378,7 +378,7 @@ export function generateShareHtml(data: SharePageData): string {
 </head>
 <body>
     <!-- ✕ 닫기 버튼 (모든 공유 페이지에 표시) - ⚠️ 2025.11.02: 보관함으로 이동 -->
-    <button id="closeWindowBtn" onclick="window.location.href='/archive'" title="보관함으로 돌아가기" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
+    <button id="closeWindowBtn" onclick="window.location.href='/#archive'" title="보관함으로 돌아가기" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -577,7 +577,7 @@ export function generateShareHtml(data: SharePageData): string {
         if (galleryBackBtn) {
             galleryBackBtn.addEventListener('click', () => {
                 // ⚠️ 2025.11.02: 보관함으로 이동 (랜딩 페이지 금지)
-                window.location.href = '/archive';
+                window.location.href = '/#archive';
             });
         }
         
@@ -619,7 +619,7 @@ export function generateShareHtml(data: SharePageData): string {
                     
                     if (response.ok) {
                         alert('공유 페이지가 삭제되었습니다.');
-                        window.location.href = '/archive';
+                        window.location.href = '/#archive';
                     } else {
                         const error = await response.json().catch(() => ({ message: '알 수 없는 오류' }));
                         alert('삭제 실패: ' + (error.message || '알 수 없는 오류'));
