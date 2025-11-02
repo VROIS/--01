@@ -105,16 +105,8 @@ export async function setupKakaoAuth(app: Express) {
             return res.redirect("/archive?auth=failed");
           }
           
-          // ⚠️ 세션 저장 후 팝업 닫기 (노트북 버전과 동일)
-          req.session.save((saveErr) => {
-            if (saveErr) {
-              console.error('세션 저장 오류:', saveErr);
-              return res.redirect("/archive?auth=failed");
-            }
-            
-            console.log('✅ 세션 저장 완료! 팝업 닫기');
-            res.send(`<!DOCTYPE html><html><body><script>window.close();</script></body></html>`);
-          });
+          // ⚠️ 간단하게: /archive로 리다이렉트
+          res.redirect("/archive?auth=success");
         });
       })(req, res, next);
     }
