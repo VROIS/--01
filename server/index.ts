@@ -61,6 +61,14 @@ app.use((req, res, next) => {
 
   const server = await registerRoutes(app);
 
+  // ⚠️ 2025.11.02: SPA Fallback - 모든 클라이언트 라우트를 index.html로
+  // API 라우트가 먼저 처리되고, 나머지는 모두 index.html로 (SPA 라우팅)
+  app.get('*', (req, res) => {
+    // API 경로는 이미 위에서 처리되었으므로 여기 도달하지 않음
+    // 클라이언트 라우트(/archive, /settings 등)를 index.html로 보냄
+    res.sendFile('index.html', { root: publicDir });
+  });
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
