@@ -1707,8 +1707,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ⚠️ 2025.11.02: 다운로드 버튼 활성화/비활성화 추가
     function updateSelectionUI() {
         selectionCount.textContent = `${selectedItemIds.length}개 선택`; // ✅ .size → .length
+        
+        // 다운로드 버튼 활성화/비활성화
+        const downloadSelectedBtn = document.getElementById('downloadSelectedBtn');
+        if (downloadSelectedBtn) {
+            if (selectedItemIds.length > 0) {
+                downloadSelectedBtn.disabled = false;
+                downloadSelectedBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                downloadSelectedBtn.disabled = true;
+                downloadSelectedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
     }
 
     async function handleDeleteSelected() {
