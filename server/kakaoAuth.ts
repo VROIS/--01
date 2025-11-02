@@ -105,8 +105,8 @@ export async function setupKakaoAuth(app: Express) {
             return res.redirect("/archive?auth=failed");
           }
           
-          // ⚠️ 간단하게: /archive로 리다이렉트
-          res.redirect("/archive?auth=success");
+          // ⚠️ 해시 라우팅 유지: /#archive로 리다이렉트
+          res.redirect("/#archive");
         });
       })(req, res, next);
     }
