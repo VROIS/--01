@@ -1,7 +1,7 @@
 // service-worker.js
 
-const CACHE_NAME = 'travel-assistant-cache-v2';
-const API_CACHE_NAME = 'travel-assistant-api-cache-v1';
+const CACHE_NAME = 'travel-assistant-cache-v3';
+const API_CACHE_NAME = 'travel-assistant-api-cache-v2';
 const urlsToCache = [
   '/',
   '/index.html',

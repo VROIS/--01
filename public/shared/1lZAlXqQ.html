@@ -321,6 +321,10 @@
     <script>
         // X 버튼 클릭 핸들러 (스마트 닫기)
         function handleCloseWindow() {
+            window.close();
+            return;
+            // OLD CODE BELOW (DISABLED):
+            //
             // 1. 앱 내에서 열렸으면 뒤로 가기
             if (document.referrer && document.referrer.includes(window.location.hostname)) {
                 window.history.back();
