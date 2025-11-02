@@ -1,7 +1,7 @@
 // service-worker.js
 
-const CACHE_NAME = 'travel-assistant-cache-v3';
-const API_CACHE_NAME = 'travel-assistant-api-cache-v2';
+const CACHE_NAME = 'travel-assistant-cache-v4';
+const API_CACHE_NAME = 'travel-assistant-api-cache-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -56,6 +56,12 @@ self.addEventListener('fetch', event => {
         });
       })
     );
+    return;
+  }
+  
+  // ⚠️ 공유 페이지 HTML (/s/* 또는 /shared/*.html)은 캐시하지 않음
+  if (url.pathname.startsWith('/s/') || url.pathname.startsWith('/shared/')) {
+    event.respondWith(fetch(event.request));
     return;
   }
   
