@@ -3198,15 +3198,77 @@ document.addEventListener('DOMContentLoaded', () => {
         authModal.classList.remove('pointer-events-auto');
     });
 
+    // ⚠️ 2025.11.02 FIX: OAuth 팝업 플로우 (인증 후 원래 창 유지)
     googleLoginBtn?.addEventListener('click', () => {
-        // 전체 페이지 리다이렉트 방식 (세션 공유 보장)
-        window.location.href = '/api/auth/google';
+        // 작은 팝업 창으로 OAuth 열기
+        const width = 500;
+        const height = 600;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+        const popup = window.open(
+            '/api/auth/google',
+            'google-oauth',
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+        );
+        
+        // 팝업이 닫히면 인증 상태 확인
+        const checkPopup = setInterval(() => {
+            if (popup && popup.closed) {
+                clearInterval(checkPopup);
+                console.log('✅ OAuth 팝업 닫힘, 인증 상태 확인 중...');
+                checkAuthAndOpenPendingUrl();
+            }
+        }, 500);
     });
 
     kakaoLoginBtn?.addEventListener('click', () => {
-        // 전체 페이지 리다이렉트 방식 (세션 공유 보장)
-        window.location.href = '/api/auth/kakao';
+        // 작은 팝업 창으로 OAuth 열기
+        const width = 500;
+        const height = 600;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+        const popup = window.open(
+            '/api/auth/kakao',
+            'kakao-oauth',
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+        );
+        
+        // 팝업이 닫히면 인증 상태 확인
+        const checkPopup = setInterval(() => {
+            if (popup && popup.closed) {
+                clearInterval(checkPopup);
+                console.log('✅ OAuth 팝업 닫힘, 인증 상태 확인 중...');
+                checkAuthAndOpenPendingUrl();
+            }
+        }, 500);
     });
+    
+    // OAuth 팝업 닫힌 후 인증 상태 확인 및 Featured Gallery 열기
+    async function checkAuthAndOpenPendingUrl() {
+        try {
+            const response = await fetch('/api/auth/user');
+            if (response.ok) {
+                console.log('✅ 인증 성공!');
+                // 인증 모달 닫기
+                authModal?.classList.add('hidden');
+                
+                // pendingShareUrl이 있으면 열기
+                const pendingUrl = localStorage.getItem('pendingShareUrl');
+                if (pendingUrl) {
+                    console.log('🎯 Opening pending URL:', pendingUrl);
+                    localStorage.removeItem('pendingShareUrl');
+                    window.location.href = pendingUrl;
+                } else {
+                    // Featured Gallery 새로고침
+                    loadFeaturedGallery();
+                }
+            } else {
+                console.log('❌ 인증 실패');
+            }
+        } catch (error) {
+            console.error('인증 확인 오류:', error);
+        }
+    }
 
     // Auth Modal Background Click to Close
     authModal?.addEventListener('click', (e) => {

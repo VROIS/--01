@@ -103,8 +103,53 @@ export async function setupGoogleAuth(app: Express) {
             return res.redirect("/archive?auth=failed");
           }
           
-          // ⚠️ 2025.11.02: 인증 성공 → 보관함으로 (랜딩 페이지 금지)
-          res.redirect('/archive');
+          // ⚠️ 2025.11.02 FIX: OAuth 팝업 플로우 - 팝업 자동 닫기
+          // 팝업 창이면 자동으로 닫힘, 일반 창이면 /archive로 이동
+          res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>인증 완료</title>
+              <style>
+                body { 
+                  font-family: Arial, sans-serif; 
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center; 
+                  height: 100vh; 
+                  margin: 0;
+                  background: #f5f5f5;
+                }
+                .message {
+                  text-align: center;
+                  padding: 2rem;
+                  background: white;
+                  border-radius: 8px;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                }
+              </style>
+            </head>
+            <body>
+              <div class="message">
+                <h2>✅ 로그인 성공!</h2>
+                <p>잠시만 기다려주세요...</p>
+              </div>
+              <script>
+                // 팝업 창이면 자동으로 닫기
+                if (window.opener) {
+                  console.log('✅ OAuth 팝업 - 자동으로 닫힙니다');
+                  setTimeout(() => {
+                    window.close();
+                  }, 500);
+                } else {
+                  // 일반 창이면 보관함으로 이동
+                  console.log('✅ 일반 창 - 보관함으로 이동');
+                  window.location.href = '/archive';
+                }
+              </script>
+            </body>
+            </html>
+          `);
         });
       })(req, res, next);
     }
