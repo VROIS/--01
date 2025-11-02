@@ -1110,25 +1110,42 @@ document.addEventListener('DOMContentLoaded', () => {
     async function showSettingsPage() {
         pauseCamera();
         
-        // 🔐 관리자 인증 세션 확인 (localStorage에 저장된 세션)
-        const isAdminAuthenticated = localStorage.getItem('adminAuthenticated') === 'true';
-        const authTime = localStorage.getItem('adminAuthTime');
-        const isSessionValid = authTime && (Date.now() - parseInt(authTime)) < 24 * 60 * 60 * 1000; // 24시간 유효
-        
-        if (isAdminAuthenticated && isSessionValid) {
-            // 세션 유효 - 관리자 섹션 자동 표시
-            authSection.classList.add('hidden');
-            promptSettingsSection.classList.remove('hidden');
-            
-            const dashboardLink = document.getElementById('adminDashboardLink');
-            if (dashboardLink) {
-                dashboardLink.classList.remove('hidden');
+        // 🔐 서버 세션 확인 (localStorage와 동기화)
+        try {
+            const response = await fetch('/api/admin/featured');
+            if (response.ok) {
+                // 서버 세션 유효 - 관리자 섹션 표시
+                localStorage.setItem('adminAuthenticated', 'true');
+                localStorage.setItem('adminAuthTime', Date.now().toString());
+                
+                authSection.classList.add('hidden');
+                promptSettingsSection.classList.remove('hidden');
+                
+                const dashboardLink = document.getElementById('adminDashboardLink');
+                if (dashboardLink) {
+                    dashboardLink.classList.remove('hidden');
+                }
+                
+                await loadAdminData();
+            } else {
+                // 서버 세션 없음 - localStorage 클리어 + 로그인 화면
+                localStorage.removeItem('adminAuthenticated');
+                localStorage.removeItem('adminAuthTime');
+                
+                authPassword.value = '';
+                authSection.classList.remove('hidden');
+                promptSettingsSection.classList.add('hidden');
+                
+                const dashboardLink = document.getElementById('adminDashboardLink');
+                if (dashboardLink) {
+                    dashboardLink.classList.add('hidden');
+                }
             }
+        } catch (error) {
+            // 에러 발생 - localStorage 클리어 + 로그인 화면
+            localStorage.removeItem('adminAuthenticated');
+            localStorage.removeItem('adminAuthTime');
             
-            // Featured 관리 데이터 로드
-            await loadAdminData();
-        } else {
-            // 세션 없음 또는 만료 - 로그인 화면 표시
             authPassword.value = '';
             authSection.classList.remove('hidden');
             promptSettingsSection.classList.add('hidden');
