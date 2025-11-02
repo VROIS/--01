@@ -2060,7 +2060,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ═══════════════════════════════════════════════════════════════
     async function loadFeaturedGallery() {
         try {
-            const CACHE_KEY = 'featuredGalleryCache';
+            const CACHE_KEY = 'featuredGalleryCache_v2'; // ✅ X 버튼 업데이트
             const CACHE_DURATION = 5 * 60 * 1000; // 5분
             
             // API 호출 (버전 체크를 위해)
