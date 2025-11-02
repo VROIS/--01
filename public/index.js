@@ -2131,7 +2131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         `}
                         <div class="absolute inset-0 bg-gradient-to-b from-black/85 via-black/50 to-black/20 flex items-start justify-center pt-4 px-4">
                             <h3 class="text-white font-extrabold text-center leading-tight line-clamp-2" 
-                                style="font-size: clamp(1.125rem, 6vw, 1.75rem); text-shadow: 0 3px 15px rgba(0,0,0,1), 0 2px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.8);">
+                                style="font-size: clamp(1rem, 4.5vw, 1.5rem); text-shadow: 0 3px 15px rgba(0,0,0,1), 0 2px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.8);">
                                 ${pageName}
                             </h3>
                         </div>
@@ -2149,7 +2149,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Featured 갤러리 클릭 핸들러 (전역 함수로 노출)
+    // ⚠️ 2025.11.02: Featured 갤러리 클릭 핸들러 - 새 탭 열기
+    // 핵심: window.open으로 새 탭에서 열어 보관함 세션 유지
     window.handleFeaturedClick = async function(shareUrl) {
         console.log('🔵 Featured Gallery clicked:', shareUrl);
         try {
@@ -2157,9 +2158,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/auth/user');
             console.log('🔵 Auth status:', response.ok, response.status);
             if (response.ok) {
-                // 로그인되어 있으면 같은 탭에서 페이지 열기
-                console.log('✅ Opening page in same tab:', shareUrl);
-                window.location.href = shareUrl;
+                // 로그인되어 있으면 새 탭에서 페이지 열기
+                console.log('✅ Opening page in new tab:', shareUrl);
+                window.open(shareUrl, '_blank');
             } else {
                 // 로그인되어 있지 않으면 URL 저장 후 인증 모달 표시
                 console.log('❌ Not authenticated, showing auth modal');
