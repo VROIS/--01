@@ -1676,6 +1676,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // ⚠️ 2025.11.02: 선택 모드 토글 - 다운로드 버튼 표시/숨김 추가
     function toggleSelectionMode(forceState) {
         if (typeof forceState === 'boolean') {
             isSelectionMode = forceState;
@@ -1683,16 +1684,20 @@ document.addEventListener('DOMContentLoaded', () => {
             isSelectionMode = !isSelectionMode;
         }
 
+        const downloadSelectedBtnContainer = document.getElementById('downloadSelectedBtnContainer');
+
         if (isSelectionMode) {
             archiveGrid.classList.add('selection-mode');
             archiveHeader.classList.add('hidden');
             selectionHeader.classList.remove('hidden');
+            downloadSelectedBtnContainer?.classList.remove('hidden'); // 다운로드 버튼 표시
             selectedItemIds = []; // ✅ Array 초기화
             updateSelectionUI();
         } else {
             archiveGrid.classList.remove('selection-mode');
             archiveHeader.classList.remove('hidden');
             selectionHeader.classList.add('hidden');
+            downloadSelectedBtnContainer?.classList.add('hidden'); // 다운로드 버튼 숨김
             selectedItemIds = []; // ✅ Array 초기화
             
             // Remove selection styling from all items
@@ -2033,6 +2038,88 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Share error:', error);
             shareModal.classList.add('hidden');
+            showToast('❌ ' + error.message);
+        }
+    }
+
+    // ⚠️ 2025.11.02: 선택한 가이드를 공유 페이지로 생성 후 바로 열기
+    // 핵심: createAndCopyShareLink 로직 복사 + window.open으로 새 탭 열기
+    async function handleDownloadSelectedGuides() {
+        const items = await getAllItems();
+        if (items.length === 0) return showToast('공유할 항목이 없습니다.');
+
+        // 선택된 아이템만 필터링 (클릭 순서 보존)
+        const selectedItems = selectedItemIds.map(id => items.find(item => item.id === id)).filter(Boolean);
+
+        // 검증
+        if (selectedItems.length === 0) return showToast('선택된 항목이 없습니다.');
+        if (selectedItems.length > 20) return showToast('한 번에 최대 20개까지 공유할 수 있습니다.');
+
+        // 로딩 토스트 표시
+        showToast('공유 페이지 생성 중...');
+
+        try {
+            // 메타데이터 자동 생성
+            const today = new Date().toLocaleDateString('ko-KR', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            // 링크 이름 자동 생성
+            const linkName = `내 여행 가이드 ${new Date().toLocaleDateString('ko-KR')}`;
+            
+            // HTML 콘텐츠 생성
+            const appOrigin = window.location.origin;
+            const htmlContent = generateShareHTML(
+                linkName,
+                '여행자',
+                '파리, 프랑스',
+                today,
+                selectedItems,
+                appOrigin
+            );
+
+            // 서버로 보낼 데이터 준비
+            const requestData = {
+                name: linkName,
+                htmlContent: htmlContent,
+                guideIds: selectedItems.map(item => item.id),
+                thumbnail: selectedItems[0]?.imageDataUrl || null,
+                sender: '여행자',
+                location: '파리, 프랑스',
+                featured: false
+            };
+
+            // 서버 API 호출 (공유 페이지 생성)
+            const response = await fetch('/api/share/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || '서버 오류가 발생했습니다');
+            }
+
+            const result = await response.json();
+            // 짧은 URL 생성
+            const shareUrl = `${window.location.origin}/s/${result.id}`;
+
+            // ✅ 핵심: 클립보드 복사 대신 새 탭으로 열기!
+            window.open(shareUrl, '_blank');
+
+            // 선택 모드 해제
+            if (isSelectionMode) toggleSelectionMode(false);
+            
+            // 보관함 새로고침
+            await renderArchive();
+            
+            showToast('✅ 가이드 페이지가 열렸습니다!');
+
+        } catch (error) {
+            console.error('Download guide error:', error);
             showToast('❌ ' + error.message);
         }
     }
@@ -2958,6 +3045,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             await handleDeleteSelected();
+        }, 600);
+    });
+    
+    // ⚠️ 2025.11.02: 다운로드 버튼 - 공유 페이지 생성 후 바로 열기
+    const downloadSelectedBtn = document.getElementById('downloadSelectedBtn');
+    downloadSelectedBtn?.addEventListener('click', async () => {
+        debounceClick('download', async () => {
+            if (selectedItemIds.length === 0) {
+                showToast('이미지를 선택해주세요');
+                return;
+            }
+            
+            await handleDownloadSelectedGuides();
         }, 600);
     });
     
