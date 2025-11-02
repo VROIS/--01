@@ -256,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5;">
             <h1>🔍 페이지를 찾을 수 없습니다</h1>
             <p>요청하신 공유 페이지가 존재하지 않거나 삭제되었습니다.</p>
-            <a href="/" style="color: #007bff; text-decoration: none;">내손가이드 홈페이지로 이동</a>
+            <a href="/archive" style="color: #007bff; text-decoration: none;">보관함으로 이동</a>
           </body>
           </html>
         `);
@@ -279,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5;">
             <h1>📚 가이드를 찾을 수 없습니다</h1>
             <p>이 공유 페이지에 포함된 가이드가 더 이상 존재하지 않습니다.</p>
-            <a href="/" style="color: #007bff; text-decoration: none;">내손가이드 홈페이지로 이동</a>
+            <a href="/archive" style="color: #007bff; text-decoration: none;">보관함으로 이동</a>
           </body>
           </html>
         `);
@@ -353,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5;">
           <h1>⚠️ 오류가 발생했습니다</h1>
           <p>공유 페이지를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.</p>
-          <a href="/" style="color: #007bff; text-decoration: none;">내손가이드 홈페이지로 이동</a>
+          <a href="/archive" style="color: #007bff; text-decoration: none;">보관함으로 이동</a>
         </body>
         </html>
       `);
