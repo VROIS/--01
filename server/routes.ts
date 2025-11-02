@@ -1803,8 +1803,12 @@ self.addEventListener('fetch', (event) => {
     try {
       const featuredPages = await storage.getFeaturedHtmlPages();
       
+      const versionString = featuredPages.map(p => p.id).sort().join(',');
+      const version = crypto.createHash('md5').update(versionString).digest('hex').substring(0, 8);
+      
       res.json({
         success: true,
+        version,
         pages: featuredPages.map(page => ({
           id: page.id,
           name: page.name,

@@ -2074,37 +2074,41 @@ document.addEventListener('DOMContentLoaded', () => {
             const CACHE_KEY = 'featuredGalleryCache';
             const CACHE_DURATION = 5 * 60 * 1000; // 5분
             
+            // API 호출 (버전 체크를 위해)
+            const response = await fetch('/api/share/featured/list');
+            if (!response.ok) return;
+            
+            const data = await response.json();
+            const featuredPages = data.pages || [];
+            const currentVersion = data.version;
+            
             // 캐시 확인
             const cached = localStorage.getItem(CACHE_KEY);
             if (cached) {
                 try {
-                    const { data, timestamp } = JSON.parse(cached);
+                    const { data: cachedData, timestamp, version: cachedVersion } = JSON.parse(cached);
                     const age = Date.now() - timestamp;
                     
-                    if (age < CACHE_DURATION) {
-                        console.log('💾 Featured Gallery 캐시 사용 (나이:', Math.round(age / 1000), '초)');
-                        renderFeaturedGallery(data.pages || []);
+                    if (age < CACHE_DURATION && cachedVersion === currentVersion) {
+                        console.log('💾 Featured Gallery 캐시 사용 (버전:', currentVersion, ', 나이:', Math.round(age / 1000), '초)');
+                        renderFeaturedGallery(cachedData.pages || []);
                         return;
+                    } else if (cachedVersion !== currentVersion) {
+                        console.log('🔄 Featured Gallery 버전 변경 감지 (', cachedVersion, '→', currentVersion, ') - 캐시 무효화');
                     }
                 } catch (e) {
                     // 캐시 파싱 실패 시 무시
                 }
             }
             
-            // API 호출
-            const response = await fetch('/api/share/featured/list');
-            if (!response.ok) return;
-            
-            const data = await response.json();
-            const featuredPages = data.pages || [];
-            
             // 캐시 저장
             try {
                 localStorage.setItem(CACHE_KEY, JSON.stringify({
                     data: data,
+                    version: currentVersion,
                     timestamp: Date.now()
                 }));
-                console.log('💾 Featured Gallery 캐시 저장 완료');
+                console.log('💾 Featured Gallery 캐시 저장 완료 (버전:', currentVersion, ')');
             } catch (e) {
                 // localStorage 저장 실패 시 무시
             }
