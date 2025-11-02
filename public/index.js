@@ -724,11 +724,28 @@ document.addEventListener('DOMContentLoaded', () => {
 </head>
 <body>
     <!-- ❌ X 닫기 버튼 (우측 상단, 최상위 z-index) -->
-    <button id="closeWindowBtn" onclick="window.close()" title="페이지 닫기" style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
+    <button id="closeWindowBtn" onclick="handleCloseWindow()" title="페이지 닫기" style="position: fixed; top: 1rem; right: 1rem; z-index: 10000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
     </button>
+    <script>
+        // X 버튼 클릭 핸들러 (스마트 닫기)
+        function handleCloseWindow() {
+            // 1. 앱 내에서 열렸으면 뒤로 가기
+            if (document.referrer && document.referrer.includes(window.location.hostname)) {
+                window.history.back();
+            } 
+            // 2. 독립 페이지면 창 닫기 시도
+            else {
+                window.close();
+                // window.close() 실패 시 (독립 페이지지만 JS로 열리지 않은 경우)
+                setTimeout(function() {
+                    window.location.href = '${appOrigin}';
+                }, 100);
+            }
+        }
+    </script>
     
     <!-- 🔔 카카오톡 인앱 브라우저 전체 화면 경고 -->
     <div id="kakao-browser-warning">
