@@ -3253,38 +3253,53 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('🗑️ pendingShareUrl 삭제 완료');
     });
 
-    // ⚠️ 2025.11.06: OAuth 팝업 방식 (원래 창 유지)
+    // ⚠️ 2025.11.06: OAuth 팝업 방식 (PC) vs 현재 탭 (모바일)
+    // 모바일 감지 함수
+    function isMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
     googleLoginBtn?.addEventListener('click', () => {
-        console.log('🔵 Google 로그인 - 팝업 열기');
-        const width = 500;
-        const height = 600;
-        const left = (window.screen.width - width) / 2;
-        const top = (window.screen.height - height) / 2;
-        const popup = window.open(
-            '/api/auth/google',
-            'google_oauth',
-            `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
-        );
-        if (!popup) {
-            console.error('❌ 팝업이 차단되었습니다. 현재 탭으로 진행합니다.');
+        if (isMobile()) {
+            console.log('🔵 Google 로그인 - 📱 모바일: 현재 탭에서 진행');
             window.location.href = '/api/auth/google';
+        } else {
+            console.log('🔵 Google 로그인 - 💻 PC: 팝업 열기');
+            const width = 500;
+            const height = 600;
+            const left = (window.screen.width - width) / 2;
+            const top = (window.screen.height - height) / 2;
+            const popup = window.open(
+                '/api/auth/google',
+                'google_oauth',
+                `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
+            );
+            if (!popup) {
+                console.error('❌ 팝업이 차단되었습니다. 현재 탭으로 진행합니다.');
+                window.location.href = '/api/auth/google';
+            }
         }
     });
 
     kakaoLoginBtn?.addEventListener('click', () => {
-        console.log('🔵 Kakao 로그인 - 팝업 열기');
-        const width = 500;
-        const height = 600;
-        const left = (window.screen.width - width) / 2;
-        const top = (window.screen.height - height) / 2;
-        const popup = window.open(
-            '/api/auth/kakao',
-            'kakao_oauth',
-            `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
-        );
-        if (!popup) {
-            console.error('❌ 팝업이 차단되었습니다. 현재 탭으로 진행합니다.');
+        if (isMobile()) {
+            console.log('🔵 Kakao 로그인 - 📱 모바일: 현재 탭에서 진행');
             window.location.href = '/api/auth/kakao';
+        } else {
+            console.log('🔵 Kakao 로그인 - 💻 PC: 팝업 열기');
+            const width = 500;
+            const height = 600;
+            const left = (window.screen.width - width) / 2;
+            const top = (window.screen.height - height) / 2;
+            const popup = window.open(
+                '/api/auth/kakao',
+                'kakao_oauth',
+                `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
+            );
+            if (!popup) {
+                console.error('❌ 팝업이 차단되었습니다. 현재 탭으로 진행합니다.');
+                window.location.href = '/api/auth/kakao';
+            }
         }
     });
     
