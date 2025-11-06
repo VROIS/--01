@@ -1267,6 +1267,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // 인증 상태 확인 및 모달 자동 닫기
     async function checkAuthStatusAndCloseModal() {
         console.log('🟡 Checking auth status...');
+        
+        // ⚠️ 2025.11.06: OAuth 리다이렉트 후 플래그 확인 (모바일 대응)
+        const authSuccess = localStorage.getItem('auth_success');
+        if (authSuccess === 'true') {
+            console.log('✅ OAuth 인증 성공 플래그 감지!');
+            authModal?.classList.add('hidden');
+            authModal?.classList.add('pointer-events-none');
+            authModal?.classList.remove('pointer-events-auto');
+            localStorage.removeItem('auth_success');
+            console.log('✅ Auth modal closed - OAuth redirect successful');
+            
+            // pendingShareUrl 확인하여 이동
+            const pendingUrl = localStorage.getItem('pendingShareUrl');
+            if (pendingUrl) {
+                console.log('🎯 Opening pending share URL:', pendingUrl);
+                localStorage.removeItem('pendingShareUrl');
+                window.location.href = pendingUrl;
+            }
+            return; // 플래그로 처리했으면 API 호출 스킵
+        }
+        
         try {
             const response = await fetch('/api/auth/user');
             console.log('🟡 Auth response:', response.ok, response.status);

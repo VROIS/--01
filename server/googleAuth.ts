@@ -120,7 +120,8 @@ export async function setupGoogleAuth(app: Express) {
                   document.body.innerHTML = '<div style="text-align:center; padding:50px; font-family:sans-serif;"><h2>✅ 로그인 완료!</h2><p>이 창은 자동으로 닫힙니다...</p></div>';
                   setTimeout(() => window.close(), 500);
                 } else {
-                  // 현재 탭에서 열렸으면 리다이렉트
+                  // 현재 탭에서 열렸으면 로그인 성공 플래그 저장 후 리다이렉트
+                  localStorage.setItem('auth_success', 'true');
                   window.location.href = '/#archive';
                 }
               </script>
