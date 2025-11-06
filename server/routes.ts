@@ -1810,7 +1810,11 @@ self.addEventListener('fetch', (event) => {
     try {
       const featuredPages = await storage.getFeaturedHtmlPages();
       
-      const versionString = featuredPages.map(p => p.id).sort().join(',');
+      // 버전 생성: ID + 메타데이터 포함 (2025-11-06 수정)
+      // 이유: 메타데이터 변경 시에도 캐시 무효화 필요
+      const versionString = featuredPages.map(p => 
+        `${p.id}:${p.name}:${p.sender}:${p.location}:${p.updatedAt?.getTime() || 0}`
+      ).sort().join(',');
       const version = crypto.createHash('md5').update(versionString).digest('hex').substring(0, 8);
       
       res.json({
