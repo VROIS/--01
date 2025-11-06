@@ -133,27 +133,19 @@ export function generateShareHtml(data: SharePageData): string {
         }
         
         // ✕ 스마트 닫기: 새 탭이면 닫기, 현재 탭이면 보관함으로 (2025-11-06)
-        // DOM 로드 완료 후 이벤트 리스너 등록
-        document.addEventListener('DOMContentLoaded', function() {
-            const closeBtn = document.getElementById('closeWindowBtn');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', function() {
-                    console.log('🔵 X 버튼 클릭됨');
-                    // window.opener가 있고 닫히지 않았으면 새 탭/팝업 (일반 공유)
-                    if (window.opener && !window.opener.closed) {
-                        console.log('✕ 새 탭 감지 - 창 닫기');
-                        window.close();
-                    } else {
-                        // 현재 탭에서 열렸으면 (추천 갤러리) 보관함으로 복귀
-                        // replace()로 히스토리 교체 → 뒤로 가기 방지
-                        console.log('✕ 현재 탭 감지 - 보관함으로 복귀 (히스토리 교체)');
-                        window.location.replace('/#archive');
-                    }
-                });
+        function handleSmartClose() {
+            console.log('🔵 X 버튼 클릭됨');
+            // window.opener가 있고 닫히지 않았으면 새 탭/팝업 (일반 공유)
+            if (window.opener && !window.opener.closed) {
+                console.log('✕ 새 탭 감지 - 창 닫기');
+                window.close();
             } else {
-                console.error('❌ closeWindowBtn 요소를 찾을 수 없습니다');
+                // 현재 탭에서 열렸으면 (추천 갤러리) 보관함으로 복귀
+                // replace()로 히스토리 교체 → 뒤로 가기 방지
+                console.log('✕ 현재 탭 감지 - 보관함으로 복귀 (히스토리 교체)');
+                window.location.replace('/#archive');
             }
-        });
+        }
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -406,7 +398,7 @@ export function generateShareHtml(data: SharePageData): string {
 </head>
 <body>
     <!-- ✕ 닫기 버튼 (스마트 동작: 새 탭이면 닫기, 현재 탭이면 보관함으로) - ⚠️ 2025.11.06 -->
-    <button id="closeWindowBtn" title="닫기" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
+    <button id="closeWindowBtn" onclick="handleSmartClose()" title="닫기" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
