@@ -3204,9 +3204,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auth Modal Event Listeners
     closeAuthModalBtn?.addEventListener('click', () => {
+        console.log('❌ 인증 취소 - 모달 닫기');
         authModal.classList.add('hidden');
         authModal.classList.add('pointer-events-none');
         authModal.classList.remove('pointer-events-auto');
+        // 대기 중인 URL 삭제 (배포본과 동일)
+        localStorage.removeItem('pendingShareUrl');
+        console.log('🗑️ pendingShareUrl 삭제 완료');
     });
 
     // ⚠️ 간단하게: 현재 탭에서 OAuth (팝업 X)
