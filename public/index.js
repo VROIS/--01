@@ -1181,6 +1181,16 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("데이터베이스를 열 수 없습니다. 앱이 정상적으로 작동하지 않을 수 있습니다.");
         }
         
+        // OAuth 인증 실패 체크 (UX 개선)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('auth') === 'failed') {
+            console.error('❌ OAuth 인증 실패 감지');
+            showToast('로그인에 실패했습니다. 다시 시도해주세요.');
+            // URL 파라미터 제거 (깨끗하게)
+            window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+            localStorage.removeItem('pendingShareUrl'); // 실패한 URL 삭제
+        }
+        
         // 인증 완료 후 대기 중인 공유 URL 확인
         console.log('🔍 Checking for pending share URL...');
         const pendingUrl = localStorage.getItem('pendingShareUrl');
