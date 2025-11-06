@@ -129,6 +129,16 @@ export function generateShareHtml(data: SharePageData): string {
                               '#Intent;scheme=https;package=com.android.chrome;end';
             window.location.href = intentUrl;
         }
+        
+        // ✕ 스마트 닫기: 새 탭이면 닫기, 현재 탭이면 보관함으로 (2025-11-06)
+        function handleSmartClose() {
+            // 새 탭에서 열렸으면 window.close() 작동 (일반 공유)
+            window.close();
+            // 현재 탭이면 (추천 갤러리) window.close() 실패 → 100ms 후 보관함으로
+            setTimeout(function() {
+                window.location.href = '/#archive';
+            }, 100);
+        }
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -380,8 +390,8 @@ export function generateShareHtml(data: SharePageData): string {
     </style>
 </head>
 <body>
-    <!-- ✕ 닫기 버튼 (공유 페이지 닫기 - 카메라 세션 보존) - ⚠️ 2025.11.02 -->
-    <button id="closeWindowBtn" onclick="window.close()" title="닫기" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
+    <!-- ✕ 닫기 버튼 (스마트 동작: 새 탭이면 닫기, 현재 탭이면 보관함으로) - ⚠️ 2025.11.06 -->
+    <button id="closeWindowBtn" onclick="handleSmartClose()" title="닫기" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
