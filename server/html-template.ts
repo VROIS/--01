@@ -138,8 +138,9 @@ export function generateShareHtml(data: SharePageData): string {
                 window.close();
             } else {
                 // 현재 탭에서 열렸으면 (추천 갤러리) 보관함으로 복귀
-                console.log('✕ 현재 탭 감지 - 보관함으로 복귀');
-                window.location.href = '/#archive';
+                // replace()로 히스토리 교체 → 뒤로 가기 방지
+                console.log('✕ 현재 탭 감지 - 보관함으로 복귀 (히스토리 교체)');
+                window.location.replace('/#archive');
             }
         }
     </script>
