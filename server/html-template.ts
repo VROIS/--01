@@ -132,12 +132,15 @@ export function generateShareHtml(data: SharePageData): string {
         
         // ✕ 스마트 닫기: 새 탭이면 닫기, 현재 탭이면 보관함으로 (2025-11-06)
         function handleSmartClose() {
-            // 새 탭에서 열렸으면 window.close() 작동 (일반 공유)
-            window.close();
-            // 현재 탭이면 (추천 갤러리) window.close() 실패 → 100ms 후 보관함으로
-            setTimeout(function() {
+            // window.opener가 있고 닫히지 않았으면 새 탭/팝업 (일반 공유)
+            if (window.opener && !window.opener.closed) {
+                console.log('✕ 새 탭 감지 - 창 닫기');
+                window.close();
+            } else {
+                // 현재 탭에서 열렸으면 (추천 갤러리) 보관함으로 복귀
+                console.log('✕ 현재 탭 감지 - 보관함으로 복귀');
                 window.location.href = '/#archive';
-            }, 100);
+            }
         }
     </script>
     <style>
