@@ -132,20 +132,32 @@ export function generateShareHtml(data: SharePageData): string {
             window.location.href = intentUrl;
         }
         
-        // ✕ 스마트 닫기: 새 탭이면 닫기, 현재 탭이면 보관함으로 (2025-11-06)
+        // ✕ 보관함 복귀 버튼 (추천 갤러리 전용) (2025-11-06)
         function handleSmartClose() {
             console.log('🔵 X 버튼 클릭됨');
-            // window.opener가 있고 닫히지 않았으면 새 탭/팝업 (일반 공유)
-            if (window.opener && !window.opener.closed) {
-                console.log('✕ 새 탭 감지 - 창 닫기');
-                window.close();
-            } else {
-                // 현재 탭에서 열렸으면 (추천 갤러리) 보관함으로 복귀
-                // replace()로 히스토리 교체 → 뒤로 가기 방지
-                console.log('✕ 현재 탭 감지 - 보관함으로 복귀 (히스토리 교체)');
-                window.location.replace('/#archive');
-            }
+            // 항상 보관함으로 복귀 (replace로 히스토리 교체 → 뒤로 가기 방지)
+            console.log('✅ 보관함으로 복귀');
+            window.location.replace('/#archive');
         }
+        
+        // X 버튼 표시 여부: 앱 내부에서 왔을 때만 표시
+        (function() {
+            var closeBtn = document.getElementById('closeWindowBtn');
+            if (closeBtn) {
+                // document.referrer로 앱 내부 접근인지 확인
+                var referrer = document.referrer || '';
+                var currentHost = window.location.host;
+                var isFromApp = referrer.includes(currentHost);
+                
+                if (isFromApp) {
+                    console.log('📱 앱 내부 접근 - X 버튼 표시');
+                    closeBtn.style.display = 'flex';
+                } else {
+                    console.log('🌐 외부 링크 접근 - X 버튼 숨김');
+                    closeBtn.style.display = 'none';
+                }
+            }
+        })();
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -397,8 +409,8 @@ export function generateShareHtml(data: SharePageData): string {
     </style>
 </head>
 <body>
-    <!-- ✕ 닫기 버튼 (스마트 동작: 새 탭이면 닫기, 현재 탭이면 보관함으로) - ⚠️ 2025.11.06 -->
-    <button id="closeWindowBtn" onclick="handleSmartClose()" title="닫기" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
+    <!-- ✕ 보관함 복귀 버튼 (추천 갤러리 전용) - ⚠️ 2025.11.06 -->
+    <button id="closeWindowBtn" onclick="handleSmartClose()" title="보관함으로 돌아가기" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; width: 3rem; height: 3rem; display: none; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); border-radius: 50%; color: #4285F4; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border: none;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
