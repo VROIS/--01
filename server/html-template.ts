@@ -114,7 +114,8 @@ export function generateShareHtml(data: SharePageData): string {
                 // 2. 자동 리다이렉트 시도 (실패해도 배너는 이미 표시됨)
                 setTimeout(function() {
                     // Intent URL로 Chrome 강제 열기
-                    var intentUrl = 'intent://' + targetUrl.replace(/https?:\\/\\//, '') + 
+                    var urlWithoutProtocol = targetUrl.split('://')[1] || targetUrl;
+                    var intentUrl = 'intent://' + urlWithoutProtocol + 
                                   '#Intent;scheme=https;package=com.android.chrome;end';
                     window.location.href = intentUrl;
                 }, 500); // 0.5초 후 Chrome으로 자동 리다이렉트
@@ -125,7 +126,8 @@ export function generateShareHtml(data: SharePageData): string {
         function openInChrome() {
             const currentUrl = window.location.href;
             // Android Intent URL 스킴
-            const intentUrl = 'intent://' + currentUrl.replace(/https?:\\/\\//, '') + 
+            const urlWithoutProtocol = currentUrl.split('://')[1] || currentUrl;
+            const intentUrl = 'intent://' + urlWithoutProtocol + 
                               '#Intent;scheme=https;package=com.android.chrome;end';
             window.location.href = intentUrl;
         }
