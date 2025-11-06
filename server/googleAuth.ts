@@ -103,8 +103,30 @@ export async function setupGoogleAuth(app: Express) {
             return res.redirect("/archive?auth=failed");
           }
           
-          // ⚠️ 해시 라우팅 유지: /#archive로 리다이렉트
-          res.redirect("/#archive");
+          // ⚠️ 2025.11.06: 팝업이면 부모 창에 메시지 전달 후 닫기, 아니면 리다이렉트
+          res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>로그인 완료</title>
+            </head>
+            <body>
+              <script>
+                if (window.opener) {
+                  // 팝업에서 열렸으면 부모 창에 메시지 전달
+                  window.opener.postMessage({ type: 'oauth_success' }, window.location.origin);
+                  window.close();
+                  // 일부 브라우저에서 즉시 닫히지 않을 수 있으므로 메시지 표시
+                  document.body.innerHTML = '<div style="text-align:center; padding:50px; font-family:sans-serif;"><h2>✅ 로그인 완료!</h2><p>이 창은 자동으로 닫힙니다...</p></div>';
+                  setTimeout(() => window.close(), 500);
+                } else {
+                  // 현재 탭에서 열렸으면 리다이렉트
+                  window.location.href = '/#archive';
+                }
+              </script>
+            </body>
+            </html>
+          `);
         });
       })(req, res, next);
     }
