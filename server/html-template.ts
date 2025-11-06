@@ -139,25 +139,6 @@ export function generateShareHtml(data: SharePageData): string {
             console.log('✅ 보관함으로 복귀');
             window.location.replace('/#archive');
         }
-        
-        // X 버튼 표시 여부: 앱 내부에서 왔을 때만 표시
-        (function() {
-            var closeBtn = document.getElementById('closeWindowBtn');
-            if (closeBtn) {
-                // document.referrer로 앱 내부 접근인지 확인
-                var referrer = document.referrer || '';
-                var currentHost = window.location.host;
-                var isFromApp = referrer.includes(currentHost);
-                
-                if (isFromApp) {
-                    console.log('📱 앱 내부 접근 - X 버튼 표시');
-                    closeBtn.style.display = 'flex';
-                } else {
-                    console.log('🌐 외부 링크 접근 - X 버튼 숨김');
-                    closeBtn.style.display = 'none';
-                }
-            }
-        })();
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -631,6 +612,31 @@ export function generateShareHtml(data: SharePageData): string {
                     });
             });
         }
+        
+        // ✕ X 버튼 표시 여부: 앱 내부에서 왔을 때만 표시 (2025-11-06)
+        document.addEventListener('DOMContentLoaded', function() {
+            var closeBtn = document.getElementById('closeWindowBtn');
+            if (closeBtn) {
+                // document.referrer로 앱 내부 접근인지 확인
+                var referrer = document.referrer || '';
+                var currentHost = window.location.host;
+                var isFromApp = referrer.includes(currentHost);
+                
+                console.log('🔍 Referrer:', referrer);
+                console.log('🔍 Current Host:', currentHost);
+                console.log('🔍 Is from app:', isFromApp);
+                
+                if (isFromApp) {
+                    console.log('📱 앱 내부 접근 - X 버튼 표시');
+                    closeBtn.style.display = 'flex';
+                } else {
+                    console.log('🌐 외부 링크 접근 - X 버튼 숨김');
+                    closeBtn.style.display = 'none';
+                }
+            } else {
+                console.error('❌ closeWindowBtn 요소를 찾을 수 없습니다');
+            }
+        });
     </script>
 </body>
 </html>`;
