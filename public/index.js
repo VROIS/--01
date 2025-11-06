@@ -1186,13 +1186,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const pendingUrl = localStorage.getItem('pendingShareUrl');
         console.log('📦 localStorage.pendingShareUrl:', pendingUrl);
         if (pendingUrl) {
-            console.log('🎯 Opening pending share URL after auth:', pendingUrl);
+            console.log('🎯 Redirecting to pending share URL after auth:', pendingUrl);
             localStorage.removeItem('pendingShareUrl');
             console.log('🗑️ Removed from localStorage');
-            // 약간의 지연 후 새 탭에서 열기 (window.close() 작동 보장)
+            // 같은 창에서 콘텐츠로 이동 (배포본과 동일)
             setTimeout(() => {
-                console.log('🚀 Opening page in new tab:', pendingUrl);
-                window.open(pendingUrl, '_blank');
+                console.log('🚀 Redirecting to:', pendingUrl);
+                window.location.href = pendingUrl;
             }, 500);
         } else {
             console.log('❌ No pending URL found');
@@ -1238,12 +1238,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 authModal?.classList.remove('pointer-events-auto');
                 console.log('✅ Auth modal closed - user is authenticated');
                 
-                // 대기 중인 공유 URL이 있으면 새 탭으로 열기
+                // 대기 중인 공유 URL이 있으면 같은 창에서 이동
                 const pendingUrl = localStorage.getItem('pendingShareUrl');
                 if (pendingUrl) {
-                    console.log('🎯 Opening pending share URL in new tab:', pendingUrl);
+                    console.log('🎯 Redirecting to pending share URL:', pendingUrl);
                     localStorage.removeItem('pendingShareUrl');
-                    window.open(pendingUrl, '_blank');
+                    window.location.href = pendingUrl;
                 }
             } else {
                 console.log('⚪ Not authenticated, keeping modal state');
@@ -3229,12 +3229,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 인증 모달 닫기
                 authModal?.classList.add('hidden');
                 
-                // pendingShareUrl이 있으면 새 탭으로 열기
+                // pendingShareUrl이 있으면 같은 창에서 이동
                 const pendingUrl = localStorage.getItem('pendingShareUrl');
                 if (pendingUrl) {
-                    console.log('🎯 Opening pending URL in new tab:', pendingUrl);
+                    console.log('🎯 Redirecting to pending URL:', pendingUrl);
                     localStorage.removeItem('pendingShareUrl');
-                    window.open(pendingUrl, '_blank');
+                    window.location.href = pendingUrl;
                 } else {
                     // Featured Gallery 새로고침
                     loadFeaturedGallery();
