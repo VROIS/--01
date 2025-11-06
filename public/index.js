@@ -1199,10 +1199,10 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('🎯 Opening pending share URL after auth:', pendingUrl);
             localStorage.removeItem('pendingShareUrl');
             console.log('🗑️ Removed from localStorage');
-            // 새 탭에서 열기 (window.close() 작동 보장)
+            // 현재 탭에서 열기 (모바일 팝업 차단 해결)
             setTimeout(() => {
-                console.log('🚀 Opening page in new tab:', pendingUrl);
-                window.open(pendingUrl, '_blank');
+                console.log('🚀 Opening page in current tab:', pendingUrl);
+                window.location.href = pendingUrl;
             }, 500);
         } else {
             console.log('❌ No pending URL found');
@@ -1248,12 +1248,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 authModal?.classList.remove('pointer-events-auto');
                 console.log('✅ Auth modal closed - user is authenticated');
                 
-                // 대기 중인 공유 URL이 있으면 새 탭으로 열기
+                // 대기 중인 공유 URL이 있으면 현재 탭에서 열기
                 const pendingUrl = localStorage.getItem('pendingShareUrl');
                 if (pendingUrl) {
-                    console.log('🎯 Opening pending share URL in new tab:', pendingUrl);
+                    console.log('🎯 Opening pending share URL in current tab:', pendingUrl);
                     localStorage.removeItem('pendingShareUrl');
-                    window.open(pendingUrl, '_blank');
+                    window.location.href = pendingUrl;
                 }
             } else {
                 console.log('⚪ Not authenticated, keeping modal state');
@@ -2356,8 +2356,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     };
 
-    // ⚠️ 2025.11.02 FINAL FIX: Featured 갤러리 - 새 탭에서 열기 (카메라 세션 보존)
-    // 핵심: 새 탭으로 열어야 window.close()가 작동함!
+    // ⚠️ 2025.11.06 UX FIX: Featured 갤러리 - 현재 탭에서 열기 (모바일 팝업 차단 해결)
+    // 핵심: 모바일에서 팝업 차단되므로 현재 탭에서 열기, X 버튼은 보관함으로 복귀!
     window.handleFeaturedClick = async function(shareUrl) {
         console.log('🔵 Featured Gallery clicked:', shareUrl);
         try {
@@ -2365,9 +2365,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/auth/user');
             console.log('🔵 Auth status:', response.ok, response.status);
             if (response.ok) {
-                // 로그인되어 있으면 새 탭에서 페이지 열기
-                console.log('✅ Opening page in new tab:', shareUrl);
-                window.open(shareUrl, '_blank');
+                // 로그인되어 있으면 현재 탭에서 페이지 열기
+                console.log('✅ Opening page in current tab:', shareUrl);
+                window.location.href = shareUrl;
             } else {
                 // 로그인되어 있지 않으면 URL 저장 후 인증 모달 표시
                 console.log('❌ Not authenticated, showing auth modal');
@@ -3243,12 +3243,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 인증 모달 닫기
                 authModal?.classList.add('hidden');
                 
-                // pendingShareUrl이 있으면 새 탭으로 열기
+                // pendingShareUrl이 있으면 현재 탭에서 열기
                 const pendingUrl = localStorage.getItem('pendingShareUrl');
                 if (pendingUrl) {
-                    console.log('🎯 Opening pending URL in new tab:', pendingUrl);
+                    console.log('🎯 Opening pending URL in current tab:', pendingUrl);
                     localStorage.removeItem('pendingShareUrl');
-                    window.open(pendingUrl, '_blank');
+                    window.location.href = pendingUrl;
                 } else {
                     // Featured Gallery 새로고침
                     loadFeaturedGallery();
