@@ -1232,6 +1232,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 checkAuthStatusAndCloseModal();
             }
         });
+        
+        // ⚠️ 2025.11.06: OAuth 팝업 완료 메시지 수신
+        window.addEventListener('message', (event) => {
+            // 보안: origin 체크 (같은 도메인만 허용)
+            if (event.origin !== window.location.origin) {
+                console.warn('⚠️ Unauthorized message origin:', event.origin);
+                return;
+            }
+            
+            if (event.data.type === 'oauth_success') {
+                console.log('✅ OAuth 팝업 성공 메시지 수신!');
+                
+                // 인증 모달 닫기
+                authModal?.classList.add('hidden');
+                authModal?.classList.add('pointer-events-none');
+                authModal?.classList.remove('pointer-events-auto');
+                
+                // pendingShareUrl로 이동
+                const pendingUrl = localStorage.getItem('pendingShareUrl');
+                if (pendingUrl) {
+                    console.log('🎯 Opening pending URL:', pendingUrl);
+                    localStorage.removeItem('pendingShareUrl');
+                    window.location.href = pendingUrl;
+                } else {
+                    // Featured Gallery 새로고침
+                    console.log('🔄 Refreshing Featured Gallery');
+                    loadFeaturedGallery();
+                }
+            }
+        });
     }
     
     // 인증 상태 확인 및 모달 자동 닫기
@@ -3223,15 +3253,39 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('🗑️ pendingShareUrl 삭제 완료');
     });
 
-    // ⚠️ 간단하게: 현재 탭에서 OAuth (팝업 X)
+    // ⚠️ 2025.11.06: OAuth 팝업 방식 (원래 창 유지)
     googleLoginBtn?.addEventListener('click', () => {
-        console.log('🔵 Google 로그인 - 현재 탭에서 진행');
-        window.location.href = '/api/auth/google';
+        console.log('🔵 Google 로그인 - 팝업 열기');
+        const width = 500;
+        const height = 600;
+        const left = (window.screen.width - width) / 2;
+        const top = (window.screen.height - height) / 2;
+        const popup = window.open(
+            '/api/auth/google',
+            'google_oauth',
+            `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
+        );
+        if (!popup) {
+            console.error('❌ 팝업이 차단되었습니다. 현재 탭으로 진행합니다.');
+            window.location.href = '/api/auth/google';
+        }
     });
 
     kakaoLoginBtn?.addEventListener('click', () => {
-        console.log('🔵 Kakao 로그인 - 현재 탭에서 진행');
-        window.location.href = '/api/auth/kakao';
+        console.log('🔵 Kakao 로그인 - 팝업 열기');
+        const width = 500;
+        const height = 600;
+        const left = (window.screen.width - width) / 2;
+        const top = (window.screen.height - height) / 2;
+        const popup = window.open(
+            '/api/auth/kakao',
+            'kakao_oauth',
+            `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
+        );
+        if (!popup) {
+            console.error('❌ 팝업이 차단되었습니다. 현재 탭으로 진행합니다.');
+            window.location.href = '/api/auth/kakao';
+        }
     });
     
     // OAuth 팝업 닫힌 후 인증 상태 확인 및 Featured Gallery 열기
