@@ -2032,32 +2032,17 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         try {
-            // 📅 메타데이터 자동 생성 (임시값)
-            const today = new Date().toLocaleDateString('ko-KR', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-            
-            // 📄 HTML 콘텐츠 생성 (완전한 독립 HTML 문서)
-            const appOrigin = window.location.origin;
-            const htmlContent = generateShareHTML(
-                linkName,
-                '여행자', // 임시 발신자 (나중에 실제 사용자 이름으로)
-                '파리, 프랑스', // 임시 위치 (나중에 실제 위치로)
-                today,
-                currentShareItems, // 선택된 가이드들
-                appOrigin
-            );
-
-            // 📦 서버로 보낼 데이터 준비
+            // 📦 서버로 보낼 데이터 준비 (서버에서 HTML 생성)
             const requestData = {
                 name: linkName,
-                htmlContent: htmlContent,
                 guideIds: currentShareItems.map(item => item.id),
+                guides: currentShareItems.map(item => ({
+                    id: item.id,
+                    imageDataUrl: item.imageDataUrl,
+                    description: item.description || item.aiContent || '',
+                    locationName: item.locationName || item.location || null
+                })),
                 thumbnail: currentShareItems[0]?.imageDataUrl || null,
-                sender: '여행자', // TODO: 실제 사용자 이름
-                location: '파리, 프랑스', // TODO: 실제 위치 정보
                 featured: false
             };
 

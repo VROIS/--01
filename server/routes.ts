@@ -1271,52 +1271,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`.trim()
         : user?.email?.split('@')[0] || '여행자';
       
-      // ✅ 요청 데이터 검증 (Zod 스키마)
-      const validation = insertSharedHtmlPageSchema.safeParse(req.body);
-      if (!validation.success) {
+      console.log(`🔐 공유 페이지 생성 요청 - 사용자: ${senderName}`);
+      
+      // 📦 프론트엔드에서 전달받은 가이드 데이터 사용
+      const { name, guideIds, guides: frontendGuides, thumbnail, featured } = req.body;
+      
+      if (!name || !frontendGuides || frontendGuides.length === 0) {
         return res.status(400).json({ 
-          error: '잘못된 요청 데이터입니다.', 
-          details: validation.error.errors 
+          error: '링크 이름과 가이드 데이터가 필요합니다.' 
         });
       }
       
-      const pageData = validation.data;
+      console.log(`📦 가이드 개수: ${frontendGuides.length}`);
       
       // 📍 첫 번째 가이드에서 위치 정보 가져오기
-      let locationName = undefined;
-      if (pageData.guideIds && pageData.guideIds.length > 0) {
-        const firstGuide = await storage.getGuide(pageData.guideIds[0]);
-        locationName = firstGuide?.locationName || undefined;
-      }
+      const locationName = frontendGuides[0]?.locationName || undefined;
+      console.log(`📍 위치 정보: ${locationName || '(없음)'}`);
       
-      // 🔄 서버에서 HTML 생성 (실제 사용자 정보와 위치 정보 포함)
-      const guides = await storage.getGuidesByIds(pageData.guideIds || []);
-      
-      // Base64 이미지 로드
-      const guidesWithBase64 = await Promise.all(
-        guides.map(async (guide) => {
-          const imagePath = path.join(process.cwd(), guide.imageUrl || '');
-          let imageBase64 = '';
-          
-          if (fs.existsSync(imagePath)) {
-            const imageBuffer = fs.readFileSync(imagePath);
-            imageBase64 = imageBuffer.toString('base64');
-          }
-          
-          return {
-            id: guide.id,
-            title: guide.id,
-            description: guide.aiGeneratedContent || '',
-            imageBase64,
-            location: guide.locationName || undefined,
-            locationName: guide.locationName || undefined
-          };
-        })
-      );
+      // 🔄 프론트엔드 데이터를 HTML 템플릿 형식으로 변환
+      const guidesWithBase64 = frontendGuides.map((guide: any) => {
+        // base64 이미지에서 "data:image/...;base64," 부분 제거
+        let imageBase64 = guide.imageDataUrl || '';
+        if (imageBase64.includes('base64,')) {
+          imageBase64 = imageBase64.split('base64,')[1];
+        }
+        
+        return {
+          id: guide.id,
+          title: guide.id,
+          description: guide.description || '',
+          imageBase64,
+          location: guide.locationName || undefined,
+          locationName: guide.locationName || undefined
+        };
+      });
       
       // HTML 생성
+      console.log(`🔨 HTML 생성 중... (작성자: ${senderName})`);
       const htmlContent = generateShareHtml({
-        title: pageData.name,
+        title: name,
         items: guidesWithBase64,
         createdAt: new Date().toISOString(),
         location: locationName,
@@ -1324,18 +1317,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         includeAudio: false // 오디오 기능은 현재 비활성화
       });
       
-      // pageData에 생성된 htmlContent 추가
-      const pageWithHtml = {
-        ...pageData,
-        htmlContent
+      console.log(`✅ HTML 생성 완료 (${(htmlContent.length / 1024 / 1024).toFixed(2)} MB)`);
+      
+      // 페이지 데이터 준비
+      const pageData = {
+        name,
+        htmlContent,
+        guideIds: guideIds || frontendGuides.map((g: any) => g.id),
+        thumbnail,
+        featured: featured || false
       };
       
       // 🆕 공유 HTML 페이지 생성 (짧은 ID 자동 생성)
-      const sharedPage = await storage.createSharedHtmlPage(userId, pageWithHtml);
+      const sharedPage = await storage.createSharedHtmlPage(userId, pageData as any);
       
       // 🔗 짧은 URL 생성
-      // 예: https://yourdomain.replit.dev/s/abc12345
       const shareUrl = `${req.protocol}://${req.get('host')}/s/${sharedPage.id}`;
+      
+      console.log(`✅ 공유 페이지 생성 완료: /s/${sharedPage.id}`);
       
       // ✅ 성공 응답
       res.json({
