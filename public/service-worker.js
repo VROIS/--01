@@ -59,8 +59,38 @@ self.addEventListener('fetch', event => {
     return;
   }
   
-  // ⚠️ 공유 페이지 HTML (/s/* 또는 /shared/*.html)은 캐시하지 않음
-  if (url.pathname.startsWith('/s/') || url.pathname.startsWith('/shared/')) {
+  // 🔥 공유 페이지 HTML (/s/*) - Cache First 전략으로 오프라인 영구 사용 지원
+  // 1회 클릭 시 자동 다운로드되어 오프라인에서도 영구히 사용 가능
+  if (url.pathname.startsWith('/s/')) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(cache => {
+        return cache.match(event.request).then(cachedResponse => {
+          if (cachedResponse) {
+            // 캐시 히트 - 즉시 반환 (오프라인 지원)
+            return cachedResponse;
+          }
+          
+          // 네트워크에서 가져와서 캐시에 저장
+          return fetch(event.request).then(networkResponse => {
+            if (networkResponse && networkResponse.status === 200) {
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          }).catch(() => {
+            // 네트워크 실패 시 적절한 에러 응답
+            return new Response('오프라인 상태이며 캐시된 데이터가 없습니다.', {
+              status: 503,
+              headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            });
+          });
+        });
+      })
+    );
+    return;
+  }
+  
+  // /shared/*.html은 캐시하지 않음 (구 시스템)
+  if (url.pathname.startsWith('/shared/')) {
     event.respondWith(fetch(event.request));
     return;
   }

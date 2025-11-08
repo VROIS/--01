@@ -12,11 +12,12 @@ interface SharePageData {
   items: ShareItem[];
   createdAt: string;
   location?: string;
+  sender?: string;
   includeAudio: boolean;
 }
 
 export function generateShareHtml(data: SharePageData): string {
-  const { title, items, createdAt, location, includeAudio } = data;
+  const { title, items, createdAt, location, sender, includeAudio } = data;
   
   // 최대 20개 아이템으로 제한
   const limitedItems = items.slice(0, 20);
@@ -418,7 +419,7 @@ export function generateShareHtml(data: SharePageData): string {
     <div class="header">
         <h1>${title}</h1>
         <div class="metadata">
-            <p>👤 공유된 가이드</p>
+            <p>👤 ${sender || '여행자'} 님이 보냄</p>
             ${location ? `<p>📍 ${location}</p>` : ''}
             <p>📅 ${new Date(createdAt).toLocaleDateString('ko-KR')}</p>
         </div>

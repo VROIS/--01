@@ -1260,10 +1260,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(401).json({ error: '관리자 인증이 필요합니다.' });
   };
 
-  app.post('/api/share/create', async (req, res) => {
+  app.post('/api/share/create', isAuthenticated, async (req: any, res) => {
     try {
-      // 🔑 사용자 ID (현재 임시, 나중에 req.user.id로 변경 필요)
-      const userId = 'temp-user-id'; // TODO: Get from session when auth is ready
+      // 🔑 사용자 ID (인증된 사용자에서 가져오기)
+      const userId = getUserId(req.user);
+      
+      // 👤 사용자 정보 조회 (sender 이름용)
+      const user = await storage.getUser(userId);
+      const senderName = user?.firstName 
+        ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`.trim()
+        : user?.email?.split('@')[0] || '여행자';
       
       // ✅ 요청 데이터 검증 (Zod 스키마)
       const validation = insertSharedHtmlPageSchema.safeParse(req.body);
@@ -1276,8 +1282,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const pageData = validation.data;
       
+      // 📍 첫 번째 가이드에서 위치 정보 가져오기
+      let locationName = undefined;
+      if (pageData.guideIds && pageData.guideIds.length > 0) {
+        const firstGuide = await storage.getGuide(pageData.guideIds[0]);
+        locationName = firstGuide?.locationName || undefined;
+      }
+      
+      // 🔄 서버에서 HTML 생성 (실제 사용자 정보와 위치 정보 포함)
+      const guides = await storage.getGuidesByIds(pageData.guideIds || []);
+      
+      // Base64 이미지 로드
+      const guidesWithBase64 = await Promise.all(
+        guides.map(async (guide) => {
+          const imagePath = path.join(process.cwd(), guide.imageUrl || '');
+          let imageBase64 = '';
+          
+          if (fs.existsSync(imagePath)) {
+            const imageBuffer = fs.readFileSync(imagePath);
+            imageBase64 = imageBuffer.toString('base64');
+          }
+          
+          return {
+            id: guide.id,
+            title: guide.id,
+            description: guide.aiGeneratedContent || '',
+            imageBase64,
+            location: guide.locationName || undefined,
+            locationName: guide.locationName || undefined
+          };
+        })
+      );
+      
+      // HTML 생성
+      const htmlContent = generateShareHtml({
+        title: pageData.name,
+        items: guidesWithBase64,
+        createdAt: new Date().toISOString(),
+        location: locationName,
+        sender: senderName,
+        includeAudio: pageData.includeAudio || false
+      });
+      
+      // pageData에 생성된 htmlContent 추가
+      const pageWithHtml = {
+        ...pageData,
+        htmlContent
+      };
+      
       // 🆕 공유 HTML 페이지 생성 (짧은 ID 자동 생성)
-      const sharedPage = await storage.createSharedHtmlPage(userId, pageData);
+      const sharedPage = await storage.createSharedHtmlPage(userId, pageWithHtml);
       
       // 🔗 짧은 URL 생성
       // 예: https://yourdomain.replit.dev/s/abc12345
