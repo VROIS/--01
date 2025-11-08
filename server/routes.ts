@@ -1321,7 +1321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: new Date().toISOString(),
         location: locationName,
         sender: senderName,
-        includeAudio: pageData.includeAudio || false
+        includeAudio: false // 오디오 기능은 현재 비활성화
       });
       
       // pageData에 생성된 htmlContent 추가
