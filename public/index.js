@@ -2032,16 +2032,52 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         try {
-            // 📦 서버로 보낼 데이터 준비 (서버에서 HTML 생성)
+            // 📅 메타데이터 자동 생성
+            const today = new Date().toLocaleDateString('ko-KR', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            // 👤 사용자 정보 가져오기 (서버에서)
+            let senderName = '여행자';
+            let locationName = '파리, 프랑스';
+            
+            try {
+                const userResponse = await fetch('/api/auth/user');
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    if (userData.firstName) {
+                        senderName = `${userData.firstName}${userData.lastName ? ' ' + userData.lastName : ''}`.trim();
+                    } else if (userData.email) {
+                        senderName = userData.email.split('@')[0];
+                    }
+                }
+            } catch (e) {
+                console.warn('사용자 정보 로드 실패:', e);
+            }
+            
+            // 📍 위치 정보 가져오기 (첫 번째 가이드에서)
+            if (currentShareItems[0]?.locationName) {
+                locationName = currentShareItems[0].locationName;
+            }
+            
+            // 📄 HTML 콘텐츠 생성 (완전한 독립 HTML 문서)
+            const appOrigin = window.location.origin;
+            const htmlContent = generateShareHTML(
+                linkName,
+                senderName,
+                locationName,
+                today,
+                currentShareItems, // 선택된 가이드들
+                appOrigin
+            );
+
+            // 📦 서버로 보낼 데이터 준비
             const requestData = {
                 name: linkName,
+                htmlContent: htmlContent,
                 guideIds: currentShareItems.map(item => item.id),
-                guides: currentShareItems.map(item => ({
-                    id: item.id,
-                    imageDataUrl: item.imageDataUrl,
-                    description: item.description || item.aiContent || '',
-                    locationName: item.locationName || item.location || null
-                })),
                 thumbnail: currentShareItems[0]?.imageDataUrl || null,
                 featured: false
             };
