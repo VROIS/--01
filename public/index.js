@@ -3438,6 +3438,23 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('✅ 샘플 이미지 추가 완료!');
     };
 
+    // URL 해시 변화 감지 (Featured 공유 페이지 리턴 버튼 지원)
+    // Featured 페이지에서 window.location.href='/#archive' 사용 시
+    // hashchange 이벤트로 정상적인 페이지 전환 → 카메라 상태 유지
+    window.addEventListener('hashchange', () => {
+        const hash = window.location.hash;
+        
+        if (hash === '#archive') {
+            showArchivePage();
+        } else if (hash === '' || hash === '#main') {
+            showMainPage();
+        } else if (hash === '#settings') {
+            showSettingsPage();
+        } else if (hash === '#features') {
+            showFeaturesPage();
+        }
+    });
+
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/service-worker.js')
