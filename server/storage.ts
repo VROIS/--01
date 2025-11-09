@@ -854,8 +854,8 @@ export class DatabaseStorage implements IStorage {
     // ⚠️ CRITICAL: Featured 페이지는 X 버튼만 사용 (리턴 버튼 없음)
     // X 버튼으로 탭 닫기 → 앱으로 복귀 → 라이브뷰 상태 유지
     htmlContent = htmlContent.replace(
-      /z-index:\s*\d+;/,
-      'z-index: 99999;'
+      /(id="closeWindowBtn"[^>]*z-index:\s*)\d+/,
+      '$1 99999'
     );
 
     // 5. HTML 파일 덮어쓰기
