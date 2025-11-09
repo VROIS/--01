@@ -839,11 +839,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         function stopAudio() {
-            if (synth.speaking) synth.cancel();
+            if (synth.speaking) {
+                synth.pause();
+                synth.cancel();
+            }
             const playIcon = document.getElementById('play-icon');
             const pauseIcon = document.getElementById('pause-icon');
-            playIcon.style.display = 'block';
-            pauseIcon.style.display = 'none';
+            if (playIcon) playIcon.style.display = 'block';
+            if (pauseIcon) pauseIcon.style.display = 'none';
         }
         
         function playAudio(text) {
@@ -986,9 +989,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 stopAudio();
                 setTimeout(() => {
                     window.location.href = homeButton.href;
-                }, 100);
+                }, 200);
             });
         }
+        
+        // 페이지 이탈 시 오디오 정지 (백그라운드 재생 방지)
+        window.addEventListener('beforeunload', () => {
+            stopAudio();
+        });
     </script>
     
     <!-- ⚠️ 핵심 로직: Service Worker 등록 (오프라인 지원) -->
