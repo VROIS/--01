@@ -866,7 +866,32 @@ export class DatabaseStorage implements IStorage {
       htmlContent = htmlContent.replace(/(<body[^>]*>)/, `$1\n${closeButtonHtml}`);
     }
 
-    // 5. HTML 파일 덮어쓰기
+    // 5. Featured 전용 리턴 버튼 추가
+    // ⚠️ CRITICAL: Featured 페이지에만 표시, 보관함으로 이동
+    const appOrigin = process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+      : 'https://my-handguide.replit.app';
+    
+    const returnButtonHtml = `
+        <!-- 🔙 추천 갤러리 전용 리턴 버튼 (왼쪽 상단, 앱과 통일) -->
+        <div id="featured-return-btn" style="position: sticky; top: 0; z-index: 100; height: 60px; display: flex; align-items: center; padding: 0 1rem; background: #4285F4;">
+            <button onclick="window.location.href='${appOrigin}/#archive'" style="width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(255, 255, 255, 0.95); color: #4285F4; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.3s;" aria-label="보관함으로 돌아가기">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 1.5rem; height: 1.5rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+            </button>
+        </div>
+        `;
+    
+    // 리턴 버튼이 없으면 gallery-view 안에 첫 번째로 추가
+    if (!htmlContent.includes('id="featured-return-btn"')) {
+      htmlContent = htmlContent.replace(
+        /(<div id="gallery-view">)/,
+        `$1\n${returnButtonHtml}`
+      );
+    }
+
+    // 6. HTML 파일 덮어쓰기
     fs.writeFileSync(htmlPath, htmlContent, 'utf8');
     console.log(`✅ Featured HTML 재생성 완료: ${page.htmlFilePath}`);
   }
