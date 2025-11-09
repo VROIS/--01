@@ -984,7 +984,9 @@ document.addEventListener('DOMContentLoaded', () => {
             homeButton.addEventListener('click', (e) => {
                 e.preventDefault();
                 stopAudio();
-                window.location.href = homeButton.href;
+                setTimeout(() => {
+                    window.location.href = homeButton.href;
+                }, 100);
             });
         }
     </script>
