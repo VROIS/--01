@@ -1111,8 +1111,15 @@ document.addEventListener('DOMContentLoaded', () => {
         cameraStartOverlay.classList.add('hidden');
         mainFooter.classList.remove('hidden');
 
+        // 카메라 상태 복원 (Featured 페이지에서 돌아온 경우)
+        const cameraWasActive = localStorage.getItem('cameraWasActive') === 'true';
+        
         if (stream && !isCameraActive) {
             resumeCamera();
+        } else if (!stream && cameraWasActive) {
+            // Featured 페이지 이동으로 stream이 없어진 경우 카메라 재시작
+            console.log('🔄 Restoring camera after Featured page visit');
+            handleStartFeaturesClick();
         }
     }
 
@@ -1362,6 +1369,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             if (!stream) {
                 await startCamera();
+                // 카메라 시작 시 상태 저장
+                localStorage.setItem('cameraWasActive', 'true');
             } else {
                 resumeCamera();
             }
@@ -1418,6 +1427,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (stream) {
             stream.getTracks().forEach(track => track.enabled = false);
             isCameraActive = false;
+            // 카메라 상태 저장 (Featured 페이지 이동 대비)
+            localStorage.setItem('cameraWasActive', 'false');
         }
     }
 
@@ -1426,6 +1437,8 @@ document.addEventListener('DOMContentLoaded', () => {
             stream.getTracks().forEach(track => track.enabled = true);
             isCameraActive = true;
             video.play().catch(e => console.error("Video resume play failed:", e));
+            // 카메라 상태 저장
+            localStorage.setItem('cameraWasActive', 'true');
         }
     }
 
