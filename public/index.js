@@ -3227,7 +3227,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     backBtn?.addEventListener('click', () => cameFromArchive ? showArchivePage() : showMainPage());
     archiveBackBtn?.addEventListener('click', showMainPage);
-    settingsBackBtn?.addEventListener('click', showArchivePage);
+    // 설정 페이지 닫기 버튼 (보관함 이동 대신 창 닫기)
+    settingsBackBtn?.addEventListener('click', () => {
+        window.close();
+    });
     
     // 🔓 테스트용 로그아웃 버튼
     const testLogoutBtn = document.getElementById('testLogoutBtn');
